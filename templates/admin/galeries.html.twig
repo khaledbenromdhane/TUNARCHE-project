@@ -1,0 +1,500 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Galeries Management{% endblock %}
+
+{% block page_title %}Galeries{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Galeries</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-admin-outline btn-sm" id="exportGaleriesBtn">
+            <i class="fas fa-file-export me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#galerieModal" id="addGalerieBtn">
+            <i class="fas fa-palette me-1"></i> Add Galerie
+        </button>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-galeries.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       GALERIE STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="gal-stat-card animate-in">
+                <div class="gal-stat-icon gold">
+                    <i class="fas fa-building-columns"></i>
+                </div>
+                <div class="gal-stat-info">
+                    <span class="gal-stat-value" data-counter="18">0</span>
+                    <span class="gal-stat-label">Total Galleries</span>
+                </div>
+                <div class="gal-stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="gal-stat-card animate-in">
+                <div class="gal-stat-icon teal">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <div class="gal-stat-info">
+                    <span class="gal-stat-value" data-counter="452">0</span>
+                    <span class="gal-stat-label">Available Artworks</span>
+                </div>
+                <div class="gal-stat-trend up"><i class="fas fa-arrow-up"></i> 24%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="gal-stat-card animate-in">
+                <div class="gal-stat-icon purple">
+                    <i class="fas fa-users-line"></i>
+                </div>
+                <div class="gal-stat-info">
+                    <span class="gal-stat-value" data-counter="124">0</span>
+                    <span class="gal-stat-label">Featured Artists</span>
+                </div>
+                <div class="gal-stat-trend up"><i class="fas fa-arrow-up"></i> 18%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="gal-stat-card animate-in">
+                <div class="gal-stat-icon gold">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="gal-stat-info">
+                    <span class="gal-stat-value" data-counter="86">0</span>
+                    <span class="gal-stat-label">Staff Members</span>
+                </div>
+                <div class="gal-stat-trend down"><i class="fas fa-arrow-down"></i> 3%</div>
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       GALERIES TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card gal-table-card animate-in">
+
+        {# ── Table Header with Filters ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="admin-table-title mb-0">
+                    <i class="fas fa-images me-2 text-accent"></i>All Galleries
+                </h3>
+                <span class="gal-count-badge">18</span>
+            </div>
+            <div class="gal-table-filters d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
+                <div class="gal-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control admin-form-control" id="galerieSearch" placeholder="Search galleries…">
+                </div>
+                <select class="form-select admin-select" id="categoryFilter">
+                    <option value="" selected>All Categories</option>
+                    <option value="contemporary">Contemporary</option>
+                    <option value="classical">Classical</option>
+                    <option value="modern">Modern</option>
+                    <option value="sculpture">Sculpture</option>
+                    <option value="photography">Photography</option>
+                    <option value="abstract">Abstract</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Responsive Table ── #}
+        <div class="table-responsive">
+            <table class="admin-table gal-table" id="galeriesTable">
+                <thead>
+                    <tr>
+                        <th class="th-check"><input type="checkbox" class="form-check-input" id="selectAllGaleries"></th>
+                        <th class="sortable" data-sort="id">ID <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="name">Galerie <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="category">Category <i class="fas fa-sort"></i></th>
+                        <th>Artworks</th>
+                        <th>Artists</th>
+                        <th>Staff</th>
+                        <th class="th-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="galeriesTableBody">
+
+                    {# ── Galerie Row 1 ── #}
+                    <tr data-galerie-id="1" data-category="contemporary">
+                        <td><input type="checkbox" class="form-check-input galerie-check"></td>
+                        <td class="gal-id">#GAL-001</td>
+                        <td>
+                            <div class="gal-name-cell">
+                                <div class="gal-icon-avatar contemporary">
+                                    <i class="fas fa-building-columns"></i>
+                                </div>
+                                <span class="gal-name">Le Louvre Moderne</span>
+                            </div>
+                        </td>
+                        <td><span class="category-badge cat-contemporary">Contemporary</span></td>
+                        <td><span class="gal-artwork-count"><i class="fas fa-palette me-1 text-muted"></i>45</span></td>
+                        <td>
+                            <div class="gal-artists-list">
+                                <span class="artist-tag">Picasso</span>
+                                <span class="artist-tag">Monet</span>
+                                <span class="artist-tag">Van Gogh</span>
+                                <span class="artist-more">+2</span>
+                            </div>
+                        </td>
+                        <td><span class="gal-staff-count"><i class="fas fa-user-tie me-1 text-muted"></i>8</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-galerie-btn" title="View" data-bs-toggle="tooltip" data-galerie-id="1"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-galerie-btn" title="Edit" data-bs-toggle="tooltip" data-galerie-id="1"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-galerie-btn" title="Delete" data-bs-toggle="tooltip" data-galerie-id="1" data-galerie-name="Le Louvre Moderne"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Galerie Row 2 ── #}
+                    <tr data-galerie-id="2" data-category="classical">
+                        <td><input type="checkbox" class="form-check-input galerie-check"></td>
+                        <td class="gal-id">#GAL-002</td>
+                        <td>
+                            <div class="gal-name-cell">
+                                <div class="gal-icon-avatar classical">
+                                    <i class="fas fa-building-columns"></i>
+                                </div>
+                                <span class="gal-name">Renaissance Hall</span>
+                            </div>
+                        </td>
+                        <td><span class="category-badge cat-classical">Classical</span></td>
+                        <td><span class="gal-artwork-count"><i class="fas fa-palette me-1 text-muted"></i>32</span></td>
+                        <td>
+                            <div class="gal-artists-list">
+                                <span class="artist-tag">Da Vinci</span>
+                                <span class="artist-tag">Michelangelo</span>
+                            </div>
+                        </td>
+                        <td><span class="gal-staff-count"><i class="fas fa-user-tie me-1 text-muted"></i>6</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-galerie-btn" title="View" data-bs-toggle="tooltip" data-galerie-id="2"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-galerie-btn" title="Edit" data-bs-toggle="tooltip" data-galerie-id="2"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-galerie-btn" title="Delete" data-bs-toggle="tooltip" data-galerie-id="2" data-galerie-name="Renaissance Hall"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Galerie Row 3 ── #}
+                    <tr data-galerie-id="3" data-category="modern">
+                        <td><input type="checkbox" class="form-check-input galerie-check"></td>
+                        <td class="gal-id">#GAL-003</td>
+                        <td>
+                            <div class="gal-name-cell">
+                                <div class="gal-icon-avatar modern">
+                                    <i class="fas fa-building-columns"></i>
+                                </div>
+                                <span class="gal-name">Urban Canvas</span>
+                            </div>
+                        </td>
+                        <td><span class="category-badge cat-modern">Modern</span></td>
+                        <td><span class="gal-artwork-count"><i class="fas fa-palette me-1 text-muted"></i>58</span></td>
+                        <td>
+                            <div class="gal-artists-list">
+                                <span class="artist-tag">Banksy</span>
+                                <span class="artist-tag">Warhol</span>
+                                <span class="artist-tag">Haring</span>
+                                <span class="artist-more">+4</span>
+                            </div>
+                        </td>
+                        <td><span class="gal-staff-count"><i class="fas fa-user-tie me-1 text-muted"></i>12</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-galerie-btn" title="View" data-bs-toggle="tooltip" data-galerie-id="3"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-galerie-btn" title="Edit" data-bs-toggle="tooltip" data-galerie-id="3"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-galerie-btn" title="Delete" data-bs-toggle="tooltip" data-galerie-id="3" data-galerie-name="Urban Canvas"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Galerie Row 4 ── #}
+                    <tr data-galerie-id="4" data-category="sculpture">
+                        <td><input type="checkbox" class="form-check-input galerie-check"></td>
+                        <td class="gal-id">#GAL-004</td>
+                        <td>
+                            <div class="gal-name-cell">
+                                <div class="gal-icon-avatar sculpture">
+                                    <i class="fas fa-building-columns"></i>
+                                </div>
+                                <span class="gal-name">Sculptural Forms</span>
+                            </div>
+                        </td>
+                        <td><span class="category-badge cat-sculpture">Sculpture</span></td>
+                        <td><span class="gal-artwork-count"><i class="fas fa-palette me-1 text-muted"></i>28</span></td>
+                        <td>
+                            <div class="gal-artists-list">
+                                <span class="artist-tag">Rodin</span>
+                                <span class="artist-tag">Brancusi</span>
+                                <span class="artist-tag">Moore</span>
+                            </div>
+                        </td>
+                        <td><span class="gal-staff-count"><i class="fas fa-user-tie me-1 text-muted"></i>5</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-galerie-btn" title="View" data-bs-toggle="tooltip" data-galerie-id="4"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-galerie-btn" title="Edit" data-bs-toggle="tooltip" data-galerie-id="4"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-galerie-btn" title="Delete" data-bs-toggle="tooltip" data-galerie-id="4" data-galerie-name="Sculptural Forms"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Galerie Row 5 ── #}
+                    <tr data-galerie-id="5" data-category="photography">
+                        <td><input type="checkbox" class="form-check-input galerie-check"></td>
+                        <td class="gal-id">#GAL-005</td>
+                        <td>
+                            <div class="gal-name-cell">
+                                <div class="gal-icon-avatar photography">
+                                    <i class="fas fa-building-columns"></i>
+                                </div>
+                                <span class="gal-name">Lens & Light</span>
+                            </div>
+                        </td>
+                        <td><span class="category-badge cat-photography">Photography</span></td>
+                        <td><span class="gal-artwork-count"><i class="fas fa-palette me-1 text-muted"></i>67</span></td>
+                        <td>
+                            <div class="gal-artists-list">
+                                <span class="artist-tag">Cartier-Bresson</span>
+                                <span class="artist-tag">Adams</span>
+                                <span class="artist-more">+3</span>
+                            </div>
+                        </td>
+                        <td><span class="gal-staff-count"><i class="fas fa-user-tie me-1 text-muted"></i>7</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-galerie-btn" title="View" data-bs-toggle="tooltip" data-galerie-id="5"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-galerie-btn" title="Edit" data-bs-toggle="tooltip" data-galerie-id="5"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-galerie-btn" title="Delete" data-bs-toggle="tooltip" data-galerie-id="5" data-galerie-name="Lens & Light"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Galerie Row 6 ── #}
+                    <tr data-galerie-id="6" data-category="abstract">
+                        <td><input type="checkbox" class="form-check-input galerie-check"></td>
+                        <td class="gal-id">#GAL-006</td>
+                        <td>
+                            <div class="gal-name-cell">
+                                <div class="gal-icon-avatar abstract">
+                                    <i class="fas fa-building-columns"></i>
+                                </div>
+                                <span class="gal-name">Abstract Dimensions</span>
+                            </div>
+                        </td>
+                        <td><span class="category-badge cat-abstract">Abstract</span></td>
+                        <td><span class="gal-artwork-count"><i class="fas fa-palette me-1 text-muted"></i>41</span></td>
+                        <td>
+                            <div class="gal-artists-list">
+                                <span class="artist-tag">Kandinsky</span>
+                                <span class="artist-tag">Mondrian</span>
+                                <span class="artist-tag">Pollock</span>
+                            </div>
+                        </td>
+                        <td><span class="gal-staff-count"><i class="fas fa-user-tie me-1 text-muted"></i>9</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-galerie-btn" title="View" data-bs-toggle="tooltip" data-galerie-id="6"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-galerie-btn" title="Edit" data-bs-toggle="tooltip" data-galerie-id="6"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-galerie-btn" title="Delete" data-bs-toggle="tooltip" data-galerie-id="6" data-galerie-name="Abstract Dimensions"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer ── #}
+        <div class="admin-table-footer">
+            <div class="admin-table-info">Showing <strong>1–6</strong> of <strong>18</strong> galleries</div>
+            <nav aria-label="Galleries pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════════
+       ADD/EDIT GALERIE MODAL
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="galerieModal" tabindex="-1" aria-labelledby="galerieModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content gal-modal-content">
+            <div class="modal-header gal-modal-header">
+                <div class="gal-header-icon">
+                    <i class="fas fa-palette" id="galerieModalIcon"></i>
+                </div>
+                <div>
+                    <h5 class="modal-title" id="galerieModalLabel">Add Galerie</h5>
+                    <p class="modal-subtitle" id="galerieModalSubtitle">Fill in the details to create a new gallery</p>
+                </div>
+                <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body gal-modal-body">
+                <form id="galerieForm">
+                    <input type="hidden" id="formGalerieId">
+                    
+                    <div class="row g-3">
+                        <!-- Galerie ID (readonly) -->
+                        <div class="col-md-6">
+                            <label for="inputGalerieId" class="form-label-custom">
+                                <i class="fas fa-hashtag me-1"></i>Galerie ID
+                            </label>
+                            <input type="text" class="form-control admin-form-control" id="inputGalerieId" placeholder="#GAL-XXX" readonly>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-md-6">
+                            <label for="inputGalerieCategory" class="form-label-custom">
+                                <i class="fas fa-tag me-1"></i>Category <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select admin-select" id="inputGalerieCategory" required>
+                                <option value="">Select category...</option>
+                                <option value="contemporary">Contemporary</option>
+                                <option value="classical">Classical</option>
+                                <option value="modern">Modern</option>
+                                <option value="sculpture">Sculpture</option>
+                                <option value="photography">Photography</option>
+                                <option value="abstract">Abstract</option>
+                            </select>
+                        </div>
+
+                        <!-- Galerie Name -->
+                        <div class="col-12">
+                            <label for="inputGalerieName" class="form-label-custom">
+                                <i class="fas fa-building-columns me-1"></i>Galerie Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control admin-form-control" id="inputGalerieName" placeholder="Enter gallery name" required>
+                        </div>
+
+                        <!-- Number of Artworks -->
+                        <div class="col-md-6">
+                            <label for="inputGalerieArtworks" class="form-label-custom">
+                                <i class="fas fa-palette me-1"></i>Available Artworks <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control admin-form-control" id="inputGalerieArtworks" placeholder="0" min="0" required>
+                        </div>
+
+                        <!-- Number of Staff -->
+                        <div class="col-md-6">
+                            <label for="inputGalerieStaff" class="form-label-custom">
+                                <i class="fas fa-user-tie me-1"></i>Staff Members <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control admin-form-control" id="inputGalerieStaff" placeholder="0" min="0" required>
+                        </div>
+
+                        <!-- Artists (comma-separated) -->
+                        <div class="col-12">
+                            <label for="inputGalerieArtists" class="form-label-custom">
+                                <i class="fas fa-users-line me-1"></i>Featured Artists <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control admin-form-control" id="inputGalerieArtists" placeholder="Enter artist names (comma-separated)" required>
+                            <small class="form-text text-muted">Separate multiple artists with commas (e.g., Picasso, Monet, Van Gogh)</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer gal-modal-footer">
+                <button type="button" class="btn btn-admin-outline" data-bs-dismiss="modal">
+                    <i class="fas fa-xmark me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-admin-primary" id="saveGalerieBtn">
+                    <i class="fas fa-check me-2"></i><span id="saveGalerieBtnText">Save Galerie</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════
+   DELETE CONFIRMATION ALERT
+═══════════════════════════════════════════════════════════════ #}
+<div class="delete-alert-overlay" id="deleteGalerieAlertOverlay">
+    <div class="delete-alert-box">
+        <div class="delete-alert-icon">
+            <i class="fas fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="delete-alert-title">Delete Galerie?</h3>
+        <p class="delete-alert-message">
+            Are you sure you want to delete <strong id="deleteGalerieName"></strong>? This action cannot be undone.
+        </p>
+        <div class="delete-alert-actions">
+            <button class="btn btn-admin-outline" id="cancelGalerieDeleteBtn">
+                <i class="fas fa-xmark me-2"></i>Cancel
+            </button>
+            <button class="btn btn-delete" id="confirmGalerieDeleteBtn">
+                <i class="fas fa-trash-can me-2"></i>Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+═══════════════════════════════════════════════════════════════ #}
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <!-- Success Toast -->
+    <div id="galerieToastSuccess" class="toast custom-toast toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-circle-check toast-icon me-2"></i>
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="galerieToastSuccessMsg">Galerie created successfully!</div>
+        <div class="toast-progress-bar"></div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="galerieToastError" class="toast custom-toast toast-error" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-circle-xmark toast-icon me-2"></i>
+            <strong class="me-auto">Error</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="galerieToastErrorMsg">Something went wrong!</div>
+        <div class="toast-progress-bar"></div>
+    </div>
+
+    <!-- Warning Toast -->
+    <div id="galerieToastWarning" class="toast custom-toast toast-warning" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-triangle-exclamation toast-icon me-2"></i>
+            <strong class="me-auto">Warning</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="galerieToastWarningMsg">Please check your input!</div>
+        <div class="toast-progress-bar"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-galeries.js') }}"></script>
+{% endblock %}

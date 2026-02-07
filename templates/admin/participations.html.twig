@@ -1,0 +1,545 @@
+{# ═══════════════════════════════════════════════════════════════
+   Admin Participations Management Page
+   Route: /admin/participation
+   Features:
+     – Styled participation listing table
+     – Add/Edit participation modal with blurred backdrop
+     – Conditional mode_paiement field (only for paid events)
+     – Bootstrap Toasts for success/error notifications
+     – Custom animated alert for delete confirmation
+     – Fully responsive, luxury dark + gold/purple theme
+═══════════════════════════════════════════════════════════════ #}
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Participations Management{% endblock %}
+
+{% block page_title %}Participations{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Participations</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-admin-outline btn-sm" id="exportParticipationsBtn">
+            <i class="fas fa-file-export me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#participationModal" id="addParticipationBtn">
+            <i class="fas fa-user-plus me-1"></i> Add Participation
+        </button>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-participations.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       PARTICIPATION STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="part-stat-card animate-in">
+                <div class="part-stat-icon gold">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="part-stat-info">
+                    <span class="part-stat-value" data-counter="1847">0</span>
+                    <span class="part-stat-label">Total Participations</span>
+                </div>
+                <div class="part-stat-trend up"><i class="fas fa-arrow-up"></i> 18%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="part-stat-card animate-in">
+                <div class="part-stat-icon teal">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="part-stat-info">
+                    <span class="part-stat-value" data-counter="1342">0</span>
+                    <span class="part-stat-label">Accepted</span>
+                </div>
+                <div class="part-stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="part-stat-card animate-in">
+                <div class="part-stat-icon purple">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="part-stat-info">
+                    <span class="part-stat-value" data-counter="428">0</span>
+                    <span class="part-stat-label">Pending</span>
+                </div>
+                <div class="part-stat-trend down"><i class="fas fa-arrow-down"></i> 5%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="part-stat-card animate-in">
+                <div class="part-stat-icon gold">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="part-stat-info">
+                    <span class="part-stat-value" data-counter="77">0</span>
+                    <span class="part-stat-label">Refused</span>
+                </div>
+                <div class="part-stat-trend up"><i class="fas fa-arrow-up"></i> 3%</div>
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       PARTICIPATIONS TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card part-table-card animate-in">
+
+        {# ── Table Header with Filters ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="admin-table-title mb-0">
+                    <i class="fas fa-clipboard-list me-2 text-accent"></i>All Participations
+                </h3>
+                <span class="part-count-badge">1847</span>
+            </div>
+            <div class="part-table-filters d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
+                <div class="part-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control admin-form-control" id="participationSearch" placeholder="Search participations…">
+                </div>
+                <select class="form-select admin-select" id="statusFilter">
+                    <option value="" selected>All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="refused">Refused</option>
+                </select>
+                <select class="form-select admin-select" id="paiementModeFilter">
+                    <option value="" selected>All Payment</option>
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="online">Online</option>
+                    <option value="free">Free Event</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Responsive Table ── #}
+        <div class="table-responsive">
+            <table class="admin-table part-table" id="participationsTable">
+                <thead>
+                    <tr>
+                        <th class="th-check"><input type="checkbox" class="form-check-input" id="selectAllParticipations"></th>
+                        <th class="sortable" data-sort="id">ID <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="user">User <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="event">Événement <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="date">Date <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="status">Status <i class="fas fa-sort"></i></th>
+                        <th>Nbr</th>
+                        <th>Paiement</th>
+                        <th class="th-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="participationsTableBody">
+
+                    {# ── Participation Row 1 ── #}
+                    <tr data-participation-id="1" data-status="accepted" data-paiement="card">
+                        <td><input type="checkbox" class="form-check-input part-check"></td>
+                        <td class="part-id">#PART-001</td>
+                        <td>
+                            <div class="part-user-cell">
+                                <img src="https://ui-avatars.com/api/?name=Sophie+Martin&background=c9a84c&color=0a0a12&bold=true" class="part-user-avatar" alt="User">
+                                <div>
+                                    <span class="part-user-name">Sophie Martin</span>
+                                    <span class="part-user-email">sophie@tunarche.com</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="part-event-name">Gala Night 2026</span></td>
+                        <td><span class="part-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Feb 14, 2026</span></td>
+                        <td><span class="status-badge status-accepted">Accepted</span></td>
+                        <td><span class="part-number">2</span></td>
+                        <td><span class="paiement-mode-badge pm-card"><i class="fas fa-credit-card me-1"></i>Card</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-part-btn" title="View" data-bs-toggle="tooltip" data-participation-id="1"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-part-btn" title="Edit" data-bs-toggle="tooltip" data-participation-id="1"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-part-btn" title="Delete" data-bs-toggle="tooltip" data-participation-id="1" data-participation-user="Sophie Martin"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Participation Row 2 ── #}
+                    <tr data-participation-id="2" data-status="pending" data-paiement="online">
+                        <td><input type="checkbox" class="form-check-input part-check"></td>
+                        <td class="part-id">#PART-002</td>
+                        <td>
+                            <div class="part-user-cell">
+                                <img src="https://ui-avatars.com/api/?name=Ahmed+Ben&background=7c5cbf&color=fff&bold=true" class="part-user-avatar" alt="User">
+                                <div>
+                                    <span class="part-user-name">Ahmed Ben Ali</span>
+                                    <span class="part-user-email">ahmed@tunarche.com</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="part-event-name">Jazz & Wine Evening</span></td>
+                        <td><span class="part-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Mar 05, 2026</span></td>
+                        <td><span class="status-badge status-pending">Pending</span></td>
+                        <td><span class="part-number">1</span></td>
+                        <td><span class="paiement-mode-badge pm-online"><i class="fas fa-globe me-1"></i>Online</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-part-btn" title="View" data-bs-toggle="tooltip" data-participation-id="2"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-part-btn" title="Edit" data-bs-toggle="tooltip" data-participation-id="2"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-part-btn" title="Delete" data-bs-toggle="tooltip" data-participation-id="2" data-participation-user="Ahmed Ben Ali"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Participation Row 3 ── #}
+                    <tr data-participation-id="3" data-status="accepted" data-paiement="free">
+                        <td><input type="checkbox" class="form-check-input part-check"></td>
+                        <td class="part-id">#PART-003</td>
+                        <td>
+                            <div class="part-user-cell">
+                                <img src="https://ui-avatars.com/api/?name=Clara+Dubois&background=2ec4b6&color=0a0a12&bold=true" class="part-user-avatar" alt="User">
+                                <div>
+                                    <span class="part-user-name">Clara Dubois</span>
+                                    <span class="part-user-email">clara@tunarche.com</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="part-event-name">Art Moderne Exhibition</span></td>
+                        <td><span class="part-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Feb 22, 2026</span></td>
+                        <td><span class="status-badge status-accepted">Accepted</span></td>
+                        <td><span class="part-number">3</span></td>
+                        <td><span class="paiement-mode-badge pm-free"><i class="fas fa-gift me-1"></i>Free</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-part-btn" title="View" data-bs-toggle="tooltip" data-participation-id="3"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-part-btn" title="Edit" data-bs-toggle="tooltip" data-participation-id="3"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-part-btn" title="Delete" data-bs-toggle="tooltip" data-participation-id="3" data-participation-user="Clara Dubois"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Participation Row 4 ── #}
+                    <tr data-participation-id="4" data-status="refused" data-paiement="cash">
+                        <td><input type="checkbox" class="form-check-input part-check"></td>
+                        <td class="part-id">#PART-004</td>
+                        <td>
+                            <div class="part-user-cell">
+                                <img src="https://ui-avatars.com/api/?name=Marc+Lefevre&background=c9a84c&color=0a0a12&bold=true" class="part-user-avatar" alt="User">
+                                <div>
+                                    <span class="part-user-name">Marc Lefevre</span>
+                                    <span class="part-user-email">marc@tunarche.com</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="part-event-name">Photography Workshop</span></td>
+                        <td><span class="part-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Mar 12, 2026</span></td>
+                        <td><span class="status-badge status-refused">Refused</span></td>
+                        <td><span class="part-number">1</span></td>
+                        <td><span class="paiement-mode-badge pm-cash"><i class="fas fa-money-bill-wave me-1"></i>Cash</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-part-btn" title="View" data-bs-toggle="tooltip" data-participation-id="4"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-part-btn" title="Edit" data-bs-toggle="tooltip" data-participation-id="4"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-part-btn" title="Delete" data-bs-toggle="tooltip" data-participation-id="4" data-participation-user="Marc Lefevre"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Participation Row 5 ── #}
+                    <tr data-participation-id="5" data-status="accepted" data-paiement="card">
+                        <td><input type="checkbox" class="form-check-input part-check"></td>
+                        <td class="part-id">#PART-005</td>
+                        <td>
+                            <div class="part-user-cell">
+                                <img src="https://ui-avatars.com/api/?name=Lina+Haddad&background=7c5cbf&color=fff&bold=true" class="part-user-avatar" alt="User">
+                                <div>
+                                    <span class="part-user-name">Lina Haddad</span>
+                                    <span class="part-user-email">lina@tunarche.com</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="part-event-name">Festival des Arts Vivants</span></td>
+                        <td><span class="part-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Apr 01, 2026</span></td>
+                        <td><span class="status-badge status-accepted">Accepted</span></td>
+                        <td><span class="part-number">4</span></td>
+                        <td><span class="paiement-mode-badge pm-card"><i class="fas fa-credit-card me-1"></i>Card</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-part-btn" title="View" data-bs-toggle="tooltip" data-participation-id="5"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-part-btn" title="Edit" data-bs-toggle="tooltip" data-participation-id="5"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-part-btn" title="Delete" data-bs-toggle="tooltip" data-participation-id="5" data-participation-user="Lina Haddad"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Participation Row 6 ── #}
+                    <tr data-participation-id="6" data-status="pending" data-paiement="free">
+                        <td><input type="checkbox" class="form-check-input part-check"></td>
+                        <td class="part-id">#PART-006</td>
+                        <td>
+                            <div class="part-user-cell">
+                                <img src="https://ui-avatars.com/api/?name=Thomas+Blanc&background=2ec4b6&color=0a0a12&bold=true" class="part-user-avatar" alt="User">
+                                <div>
+                                    <span class="part-user-name">Thomas Blanc</span>
+                                    <span class="part-user-email">thomas@tunarche.com</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="part-event-name">Digital Art Conference</span></td>
+                        <td><span class="part-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Mar 20, 2026</span></td>
+                        <td><span class="status-badge status-pending">Pending</span></td>
+                        <td><span class="part-number">1</span></td>
+                        <td><span class="paiement-mode-badge pm-free"><i class="fas fa-gift me-1"></i>Free</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-part-btn" title="View" data-bs-toggle="tooltip" data-participation-id="6"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-part-btn" title="Edit" data-bs-toggle="tooltip" data-participation-id="6"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-part-btn" title="Delete" data-bs-toggle="tooltip" data-participation-id="6" data-participation-user="Thomas Blanc"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer / Pagination ── #}
+        <div class="admin-table-footer">
+            <div class="table-footer-info">
+                Showing <strong>1–6</strong> of <strong>1847</strong> participations
+            </div>
+            <nav aria-label="Participations pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">…</a></li>
+                    <li class="page-item"><a class="page-link" href="#">308</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       ADD / EDIT PARTICIPATION MODAL
+       – Blurred backdrop (backdrop-filter: blur)
+       – All required input fields
+       – Conditional mode_paiement field (only for paid events)
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="participationModal" tabindex="-1" aria-labelledby="participationModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content part-modal-content">
+
+                {# ── Modal Header ── #}
+                <div class="modal-header part-modal-header">
+                    <div class="modal-header-icon part-header-icon">
+                        <i class="fas fa-user-plus" id="partModalIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title" id="participationModalLabel">Add Participation</h5>
+                        <p class="modal-subtitle mb-0" id="partModalSubtitle">Fill in the details to register a new participation</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                {# ── Modal Body ── #}
+                <div class="modal-body part-modal-body">
+                    <form id="participationForm" novalidate>
+                        <input type="hidden" id="formParticipationId" value="">
+
+                        <div class="row g-3">
+                            {# ── ID Participation ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputPartId"><i class="fas fa-hashtag me-1 text-accent"></i> ID Participation</label>
+                                    <input type="text" class="form-control modal-input" id="inputPartId" placeholder="Auto-generated" readonly>
+                                    <small class="form-hint">Auto-generated by system</small>
+                                </div>
+                            </div>
+
+                            {# ── Date Participation ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputPartDate"><i class="fas fa-calendar-day me-1 text-accent"></i> Date Participation <span class="required">*</span></label>
+                                    <input type="date" class="form-control modal-input" id="inputPartDate" required>
+                                    <div class="invalid-feedback">Please select a date.</div>
+                                </div>
+                            </div>
+
+                            {# ── ID User (Select) ── #}
+                            <div class="col-md-12">
+                                <div class="form-floating-custom">
+                                    <label for="inputPartUser"><i class="fas fa-user me-1 text-accent"></i> User <span class="required">*</span></label>
+                                    <select class="form-select modal-input" id="inputPartUser" required>
+                                        <option value="" disabled selected>Select user…</option>
+                                        <option value="1">Sophie Martin (sophie@tunarche.com)</option>
+                                        <option value="2">Ahmed Ben Ali (ahmed@tunarche.com)</option>
+                                        <option value="3">Clara Dubois (clara@tunarche.com)</option>
+                                        <option value="4">Marc Lefevre (marc@tunarche.com)</option>
+                                        <option value="5">Lina Haddad (lina@tunarche.com)</option>
+                                        <option value="6">Thomas Blanc (thomas@tunarche.com)</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a user.</div>
+                                </div>
+                            </div>
+
+                            {# ── ID Événement (Select) ── #}
+                            <div class="col-md-12">
+                                <div class="form-floating-custom">
+                                    <label for="inputPartEvent"><i class="fas fa-calendar-star me-1 text-accent"></i> Événement <span class="required">*</span></label>
+                                    <select class="form-select modal-input" id="inputPartEvent" required>
+                                        <option value="" disabled selected>Select event…</option>
+                                        <option value="1" data-paid="true">Gala Night 2026 (Paid)</option>
+                                        <option value="2" data-paid="false">Art Moderne Exhibition (Free)</option>
+                                        <option value="3" data-paid="true">Jazz & Wine Evening (Paid)</option>
+                                        <option value="4" data-paid="true">Photography Workshop (Paid)</option>
+                                        <option value="5" data-paid="false">Digital Art Conference (Free)</option>
+                                        <option value="6" data-paid="true">Festival des Arts Vivants (Paid)</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select an event.</div>
+                                </div>
+                            </div>
+
+                            {# ── Status ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputPartStatus"><i class="fas fa-check-circle me-1 text-accent"></i> Status <span class="required">*</span></label>
+                                    <select class="form-select modal-input" id="inputPartStatus" required>
+                                        <option value="" disabled selected>Select status…</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="refused">Refused</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a status.</div>
+                                </div>
+                            </div>
+
+                            {# ── Nbr Participation ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputPartNbr"><i class="fas fa-users me-1 text-accent"></i> Nbr Participants <span class="required">*</span></label>
+                                    <input type="number" class="form-control modal-input" id="inputPartNbr" placeholder="0" min="1" required>
+                                    <div class="invalid-feedback">Enter number of participants.</div>
+                                </div>
+                            </div>
+
+                            {# ── Mode Paiement (Conditional) ── #}
+                            <div class="col-md-12" id="paiementModeField" style="display: none;">
+                                <div class="form-floating-custom">
+                                    <label for="inputPartPaiement"><i class="fas fa-credit-card me-1 text-accent"></i> Mode Paiement <span class="required">*</span></label>
+                                    <select class="form-select modal-input" id="inputPartPaiement">
+                                        <option value="" disabled selected>Select payment method…</option>
+                                        <option value="cash"><i class="fas fa-money-bill-wave"></i> Cash</option>
+                                        <option value="card"><i class="fas fa-credit-card"></i> Card</option>
+                                        <option value="online"><i class="fas fa-globe"></i> Online</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a payment method.</div>
+                                    <small class="form-hint text-warning"><i class="fas fa-info-circle me-1"></i>Payment required for paid events</small>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                {# ── Modal Footer ── #}
+                <div class="modal-footer part-modal-footer">
+                    <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-modal-save" id="saveParticipationBtn">
+                        <i class="fas fa-check me-1"></i> <span id="saveParticipationBtnText">Save Participation</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       CUSTOM DELETE CONFIRMATION ALERT
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="custom-alert-overlay" id="deletePartAlertOverlay">
+        <div class="custom-alert-box" id="deletePartAlertBox">
+            <div class="alert-icon-wrap danger-part">
+                <i class="fas fa-user-xmark"></i>
+            </div>
+            <h4 class="alert-title">Delete Participation?</h4>
+            <p class="alert-message">Are you sure you want to delete the participation for <strong id="deletePartUser"></strong>? This action cannot be undone.</p>
+            <div class="alert-actions">
+                <button class="btn btn-alert-cancel" id="cancelPartDeleteBtn">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button class="btn btn-alert-confirm" id="confirmPartDeleteBtn">
+                    <i class="fas fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="partToastContainer" style="z-index: 1090;">
+
+        <div class="toast admin-toast toast-success" id="partToastSuccess" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Success</strong>
+                    <p class="toast-message mb-0" id="partToastSuccessMsg">Operation completed successfully.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar success"></div></div>
+        </div>
+
+        <div class="toast admin-toast toast-error" id="partToastError" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Error</strong>
+                    <p class="toast-message mb-0" id="partToastErrorMsg">Something went wrong.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar error"></div></div>
+        </div>
+
+        <div class="toast admin-toast toast-warning" id="partToastWarning" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Warning</strong>
+                    <p class="toast-message mb-0" id="partToastWarningMsg">Please check your input.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar warning"></div></div>
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-participations.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,504 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Évaluations Management{% endblock %}
+
+{% block page_title %}Évaluations{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Évaluations</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-admin-outline btn-sm" id="exportEvaluationsBtn">
+            <i class="fas fa-file-export me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#evaluationModal" id="addEvaluationBtn">
+            <i class="fas fa-star me-1"></i> Add Évaluation
+        </button>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-evaluations.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       EVALUATION STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="eval-stat-card animate-in">
+                <div class="eval-stat-icon gold">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="eval-stat-info">
+                    <span class="eval-stat-value" data-counter="328">0</span>
+                    <span class="eval-stat-label">Total Évaluations</span>
+                </div>
+                <div class="eval-stat-trend up"><i class="fas fa-arrow-up"></i> 14%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="eval-stat-card animate-in">
+                <div class="eval-stat-icon teal">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="eval-stat-info">
+                    <span class="eval-stat-value" data-counter="4.6" data-decimal="true">0</span>
+                    <span class="eval-stat-label">Average Rating</span>
+                </div>
+                <div class="eval-stat-trend up"><i class="fas fa-arrow-up"></i> 0.3</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="eval-stat-card animate-in">
+                <div class="eval-stat-icon purple">
+                    <i class="fas fa-thumbs-up"></i>
+                </div>
+                <div class="eval-stat-info">
+                    <span class="eval-stat-value" data-counter="284">0</span>
+                    <span class="eval-stat-label">Positive Reviews</span>
+                </div>
+                <div class="eval-stat-trend up"><i class="fas fa-arrow-up"></i> 22%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="eval-stat-card animate-in">
+                <div class="eval-stat-icon pink">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="eval-stat-info">
+                    <span class="eval-stat-value" data-counter="12">0</span>
+                    <span class="eval-stat-label">Pending Reviews</span>
+                </div>
+                <div class="eval-stat-trend down"><i class="fas fa-arrow-down"></i> 8%</div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════
+       EVALUATION TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card animate-in">
+        {# ── Table Header ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0">All Évaluations</h5>
+                <span class="eval-count-badge" id="evaluationCount">328</span>
+            </div>
+            <div class="admin-table-controls">
+                <div class="eval-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="evaluationSearchInput" class="form-control" placeholder="Search evaluations...">
+                </div>
+                <select id="evaluationRatingFilter" class="form-select">
+                    <option value="">All Ratings</option>
+                    <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
+                    <option value="4">⭐⭐⭐⭐ (4 stars)</option>
+                    <option value="3">⭐⭐⭐ (3 stars)</option>
+                    <option value="2">⭐⭐ (2 stars)</option>
+                    <option value="1">⭐ (1 star)</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Table Body ── #}
+        <div class="table-responsive">
+            <table class="admin-table eval-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;"><input type="checkbox" class="form-check-input" id="selectAllEvaluations"></th>
+                        <th class="sortable" data-sort="id">ID <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="titre">Title <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="commentaire">Comment <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="date">Date <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="note">Rating <i class="fas fa-sort ms-1"></i></th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="evaluationTableBody">
+                    {# Sample Row 1 #}
+                    <tr data-evaluation-id="1" data-rating="5">
+                        <td><input type="checkbox" class="form-check-input evaluation-check"></td>
+                        <td class="eval-id">1</td>
+                        <td>
+                            <div class="eval-titre-cell">
+                                <div class="eval-icon-avatar excellent">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="eval-titre">Excellent Formation Experience</span>
+                            </div>
+                        </td>
+                        <td><span class="eval-commentaire">Outstanding course content with excellent instructor guidance. Highly recommended!</span></td>
+                        <td><span class="eval-date"><i class="fas fa-calendar me-1"></i>2026-02-05</span></td>
+                        <td>
+                            <div class="eval-rating">
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <span class="rating-text">5.0</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evaluation-btn" title="View" data-bs-toggle="tooltip" data-evaluation-id="1"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evaluation-btn" title="Edit" data-bs-toggle="tooltip" data-evaluation-id="1"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evaluation-btn" title="Delete" data-bs-toggle="tooltip" data-evaluation-id="1" data-evaluation-titre="Excellent Formation Experience"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 2 #}
+                    <tr data-evaluation-id="2" data-rating="4">
+                        <td><input type="checkbox" class="form-check-input evaluation-check"></td>
+                        <td class="eval-id">2</td>
+                        <td>
+                            <div class="eval-titre-cell">
+                                <div class="eval-icon-avatar good">
+                                    <i class="fas fa-thumbs-up"></i>
+                                </div>
+                                <span class="eval-titre">Very Good Workshop</span>
+                            </div>
+                        </td>
+                        <td><span class="eval-commentaire">Great hands-on experience. Could use more time for practice sessions.</span></td>
+                        <td><span class="eval-date"><i class="fas fa-calendar me-1"></i>2026-02-03</span></td>
+                        <td>
+                            <div class="eval-rating">
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star"></i>
+                                <span class="rating-text">4.0</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evaluation-btn" title="View" data-bs-toggle="tooltip" data-evaluation-id="2"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evaluation-btn" title="Edit" data-bs-toggle="tooltip" data-evaluation-id="2"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evaluation-btn" title="Delete" data-bs-toggle="tooltip" data-evaluation-id="2" data-evaluation-titre="Very Good Workshop"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 3 #}
+                    <tr data-evaluation-id="3" data-rating="3">
+                        <td><input type="checkbox" class="form-check-input evaluation-check"></td>
+                        <td class="eval-id">3</td>
+                        <td>
+                            <div class="eval-titre-cell">
+                                <div class="eval-icon-avatar average">
+                                    <i class="fas fa-minus"></i>
+                                </div>
+                                <span class="eval-titre">Average Experience</span>
+                            </div>
+                        </td>
+                        <td><span class="eval-commentaire">Content was okay but delivery could be improved. Room for enhancement.</span></td>
+                        <td><span class="eval-date"><i class="fas fa-calendar me-1"></i>2026-02-01</span></td>
+                        <td>
+                            <div class="eval-rating">
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <span class="rating-text">3.0</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evaluation-btn" title="View" data-bs-toggle="tooltip" data-evaluation-id="3"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evaluation-btn" title="Edit" data-bs-toggle="tooltip" data-evaluation-id="3"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evaluation-btn" title="Delete" data-bs-toggle="tooltip" data-evaluation-id="3" data-evaluation-titre="Average Experience"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 4 #}
+                    <tr data-evaluation-id="4" data-rating="5">
+                        <td><input type="checkbox" class="form-check-input evaluation-check"></td>
+                        <td class="eval-id">4</td>
+                        <td>
+                            <div class="eval-titre-cell">
+                                <div class="eval-icon-avatar excellent">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <span class="eval-titre">Amazing Masterclass</span>
+                            </div>
+                        </td>
+                        <td><span class="eval-commentaire">Absolutely phenomenal! The instructor was world-class and content was top-notch.</span></td>
+                        <td><span class="eval-date"><i class="fas fa-calendar me-1"></i>2026-01-28</span></td>
+                        <td>
+                            <div class="eval-rating">
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <span class="rating-text">5.0</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evaluation-btn" title="View" data-bs-toggle="tooltip" data-evaluation-id="4"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evaluation-btn" title="Edit" data-bs-toggle="tooltip" data-evaluation-id="4"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evaluation-btn" title="Delete" data-bs-toggle="tooltip" data-evaluation-id="4" data-evaluation-titre="Amazing Masterclass"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 5 #}
+                    <tr data-evaluation-id="5" data-rating="4">
+                        <td><input type="checkbox" class="form-check-input evaluation-check"></td>
+                        <td class="eval-id">5</td>
+                        <td>
+                            <div class="eval-titre-cell">
+                                <div class="eval-icon-avatar good">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <span class="eval-titre">Great Learning Path</span>
+                            </div>
+                        </td>
+                        <td><span class="eval-commentaire">Well-structured course with practical examples. Learned a lot!</span></td>
+                        <td><span class="eval-date"><i class="fas fa-calendar me-1"></i>2026-01-25</span></td>
+                        <td>
+                            <div class="eval-rating">
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star"></i>
+                                <span class="rating-text">4.0</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evaluation-btn" title="View" data-bs-toggle="tooltip" data-evaluation-id="5"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evaluation-btn" title="Edit" data-bs-toggle="tooltip" data-evaluation-id="5"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evaluation-btn" title="Delete" data-bs-toggle="tooltip" data-evaluation-id="5" data-evaluation-titre="Great Learning Path"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 6 #}
+                    <tr data-evaluation-id="6" data-rating="2">
+                        <td><input type="checkbox" class="form-check-input evaluation-check"></td>
+                        <td class="eval-id">6</td>
+                        <td>
+                            <div class="eval-titre-cell">
+                                <div class="eval-icon-avatar poor">
+                                    <i class="fas fa-exclamation"></i>
+                                </div>
+                                <span class="eval-titre">Needs Improvement</span>
+                            </div>
+                        </td>
+                        <td><span class="eval-commentaire">Not met expectations. Content was outdated and instructor seemed unprepared.</span></td>
+                        <td><span class="eval-date"><i class="fas fa-calendar me-1"></i>2026-01-20</span></td>
+                        <td>
+                            <div class="eval-rating">
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star filled"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <span class="rating-text">2.0</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evaluation-btn" title="View" data-bs-toggle="tooltip" data-evaluation-id="6"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evaluation-btn" title="Edit" data-bs-toggle="tooltip" data-evaluation-id="6"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evaluation-btn" title="Delete" data-bs-toggle="tooltip" data-evaluation-id="6" data-evaluation-titre="Needs Improvement"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer ── #}
+        <div class="admin-table-footer">
+            <div class="admin-table-info">Showing <strong>1–6</strong> of <strong>328</strong> evaluations</div>
+            <nav aria-label="Evaluations pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">…</a></li>
+                    <li class="page-item"><a class="page-link" href="#">55</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════════
+       ADD/EDIT EVALUATION MODAL
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="evaluationModal" tabindex="-1" aria-labelledby="evaluationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content eval-modal-content">
+                <div class="modal-header eval-modal-header">
+                    <div class="eval-header-icon">
+                        <i class="fas fa-star" id="evaluationModalIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title" id="evaluationModalLabel">Add Évaluation</h5>
+                        <p class="modal-subtitle" id="evaluationModalSubtitle">Fill in the details to create a new evaluation</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body eval-modal-body">
+                    <form id="evaluationForm" novalidate>
+                        <input type="hidden" id="formEvaluationId" value="">
+
+                        <div class="row g-3">
+                            {# ID Évaluation #}
+                            <div class="col-md-6">
+                                <label for="inputEvaluationId" class="form-label-custom"><i class="fas fa-hashtag me-1"></i> ID Évaluation</label>
+                                <input type="text" class="form-control admin-form-control" id="inputEvaluationId" placeholder="Auto-generated" readonly>
+                                <small class="form-text-muted">Auto-generated by system</small>
+                            </div>
+
+                            {# Date #}
+                            <div class="col-md-6">
+                                <label for="inputDate" class="form-label-custom"><i class="fas fa-calendar-days me-1"></i> Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control admin-form-control" id="inputDate" required>
+                                <div class="invalid-feedback">Please select a date.</div>
+                            </div>
+
+                            {# Titre #}
+                            <div class="col-md-12">
+                                <label for="inputTitre" class="form-label-custom"><i class="fas fa-heading me-1"></i> Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control admin-form-control" id="inputTitre" placeholder="e.g., Excellent Formation Experience" required>
+                                <div class="invalid-feedback">Please enter a title.</div>
+                            </div>
+
+                            {# Rating (Star Rating) #}
+                            <div class="col-md-12">
+                                <label class="form-label-custom"><i class="fas fa-star me-1"></i> Rating <span class="text-danger">*</span></label>
+                                <div class="star-rating-input">
+                                    <input type="radio" name="rating" id="star5" value="5" required>
+                                    <label for="star5" class="star-label"><i class="fas fa-star"></i></label>
+                                    
+                                    <input type="radio" name="rating" id="star4" value="4">
+                                    <label for="star4" class="star-label"><i class="fas fa-star"></i></label>
+                                    
+                                    <input type="radio" name="rating" id="star3" value="3">
+                                    <label for="star3" class="star-label"><i class="fas fa-star"></i></label>
+                                    
+                                    <input type="radio" name="rating" id="star2" value="2">
+                                    <label for="star2" class="star-label"><i class="fas fa-star"></i></label>
+                                    
+                                    <input type="radio" name="rating" id="star1" value="1">
+                                    <label for="star1" class="star-label"><i class="fas fa-star"></i></label>
+                                    
+                                    <span class="rating-value-display">0/5</span>
+                                </div>
+                                <div class="invalid-feedback d-block" id="ratingError" style="display: none !important;">Please select a rating.</div>
+                            </div>
+
+                            {# Commentaire #}
+                            <div class="col-md-12">
+                                <label for="inputCommentaire" class="form-label-custom"><i class="fas fa-comment me-1"></i> Comment <span class="text-danger">*</span></label>
+                                <textarea class="form-control admin-form-control" id="inputCommentaire" rows="5" placeholder="Enter your evaluation comment..." required></textarea>
+                                <div class="invalid-feedback">Please enter a comment.</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer eval-modal-footer">
+                    <button type="button" class="btn btn-admin-outline" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-admin-primary" id="saveEvaluationBtn">
+                        <i class="fas fa-check me-1"></i> <span id="saveEvaluationBtnText">Add Évaluation</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       DELETE CONFIRMATION ALERT
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="delete-alert-overlay" id="deleteEvaluationAlert">
+        <div class="delete-alert-card">
+            <div class="delete-alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4 class="delete-alert-title">Delete Évaluation?</h4>
+            <p class="delete-alert-message">
+                Are you sure you want to delete <strong id="deleteEvaluationName">this evaluation</strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="delete-alert-actions">
+                <button class="btn btn-admin-outline" id="cancelDeleteEvaluationBtn">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button class="btn btn-danger" id="confirmDeleteEvaluationBtn">
+                    <i class="fas fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        {# Success Toast #}
+        <div id="evaluationToastSuccess" class="toast custom-toast toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-check-circle toast-icon me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="evaluationToastSuccessMsg">Évaluation added successfully!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        {# Error Toast #}
+        <div id="evaluationToastError" class="toast custom-toast toast-error" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-times-circle toast-icon me-2"></i>
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="evaluationToastErrorMsg">An error occurred!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        {# Warning Toast #}
+        <div id="evaluationToastWarning" class="toast custom-toast toast-warning" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-triangle-exclamation toast-icon me-2"></i>
+                <strong class="me-auto">Warning</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="evaluationToastWarningMsg">Please check your input!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-evaluations.js') }}"></script>
+{% endblock %}

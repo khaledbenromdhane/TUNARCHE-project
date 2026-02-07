@@ -1,0 +1,649 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Commentaires Management{% endblock %}
+
+{% block page_title %}Commentaires{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Commentaires</li>
+{% endblock %}
+
+{% block page_actions %}
+    <button class="btn btn-admin-primary" id="addCommentaireBtn">
+        <i class="fas fa-comment-medical me-2"></i>Add Commentaire
+    </button>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-commentaires.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       COMMENTAIRE STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="com-stat-card animate-in">
+                <div class="com-stat-icon gold">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="com-stat-info">
+                    <span class="com-stat-value">1,247</span>
+                    <span class="com-stat-label">Total Comments</span>
+                </div>
+                <div class="com-stat-trend up"><i class="fas fa-arrow-up"></i> 18%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="com-stat-card animate-in">
+                <div class="com-stat-icon teal">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="com-stat-info">
+                    <span class="com-stat-value">1,089</span>
+                    <span class="com-stat-label">Visible Comments</span>
+                </div>
+                <div class="com-stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="com-stat-card animate-in">
+                <div class="com-stat-icon pink">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="com-stat-info">
+                    <span class="com-stat-value">8,432</span>
+                    <span class="com-stat-label">Total Likes</span>
+                </div>
+                <div class="com-stat-trend up"><i class="fas fa-arrow-up"></i> 24%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="com-stat-card animate-in">
+                <div class="com-stat-icon red">
+                    <i class="fas fa-flag"></i>
+                </div>
+                <div class="com-stat-info">
+                    <span class="com-stat-value">23</span>
+                    <span class="com-stat-label">Reported Comments</span>
+                </div>
+                <div class="com-stat-trend down"><i class="fas fa-arrow-down"></i> 5%</div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════
+       COMMENTAIRES TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card com-table-card animate-in">
+
+        {# ── Table Header with Filters ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="admin-table-title mb-0">
+                    <i class="fas fa-list me-2 text-accent"></i>All Comments
+                </h3>
+                <span class="com-count-badge">8</span>
+            </div>
+            <div class="admin-table-controls d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
+                <div class="com-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control admin-form-control" id="searchCommentaire" placeholder="Search comments...">
+                </div>
+                <select class="form-select admin-select" id="filterCommentaireStatus" style="max-width: 150px;">
+                    <option value="">All Status</option>
+                    <option value="visible">Visible</option>
+                    <option value="hidden">Hidden</option>
+                </select>
+                <select class="form-select admin-select" id="filterCommentaireSignale" style="max-width: 150px;">
+                    <option value="">All Reports</option>
+                    <option value="true">Reported</option>
+                    <option value="false">Not Reported</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Responsive Table ── #}
+        <div class="table-responsive">
+            <table class="admin-table com-table">
+                <thead>
+                    <tr>
+                        <th class="th-check"><input type="checkbox" class="form-check-input" id="selectAllCommentaires"></th>
+                        <th class="sortable" data-column="id">ID <i class="fas fa-sort"></i></th>
+                        <th>User</th>
+                        <th>Publication</th>
+                        <th class="sortable" data-column="status">Status <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-column="likes">Likes <i class="fas fa-sort"></i></th>
+                        <th>Parent</th>
+                        <th>Reported</th>
+                        <th class="th-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {# ── Commentaire Row 1 ── #}
+                    <tr data-fulltext="This artwork is absolutely stunning! The colors and composition are perfect." data-raison="">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">1</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Marie Dubois</span>
+                                    <small class="com-user-id">User #15</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Modern Art Exhibition</span>
+                                <small class="com-pub-id">(Pub #42)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge visible">Visible</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>124</span>
+                            </div>
+                        </td>
+                        <td><span class="com-parent">—</span></td>
+                        <td><span class="com-reported-badge false"><i class="fas fa-check-circle"></i> No</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                    {# ── Commentaire Row 2 ── #}
+                    <tr data-fulltext="Great event! Looking forward to the next one." data-raison="">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">2</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Jean Martin</span>
+                                    <small class="com-user-id">User #23</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Art Workshop 2026</span>
+                                <small class="com-pub-id">(Pub #38)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge visible">Visible</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>87</span>
+                            </div>
+                        </td>
+                        <td><span class="com-parent">—</span></td>
+                        <td><span class="com-reported-badge false"><i class="fas fa-check-circle"></i> No</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                    {# ── Commentaire Row 3 (Reply) ── #}
+                    <tr data-fulltext="Thank you Marie! Glad you enjoyed it." data-raison="">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">3</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Sophie Laurent</span>
+                                    <small class="com-user-id">User #8</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Modern Art Exhibition</span>
+                                <small class="com-pub-id">(Pub #42)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge visible">Visible</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>32</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="com-parent reply">
+                                <i class="fas fa-reply me-1"></i>Reply to #1
+                            </span>
+                        </td>
+                        <td><span class="com-reported-badge false"><i class="fas fa-check-circle"></i> No</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                    {# ── Commentaire Row 4 (Hidden) ── #}
+                    <tr data-fulltext="Not impressed with the quality of this piece." data-raison="">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">4</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Pierre Leroy</span>
+                                    <small class="com-user-id">User #31</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Abstract Collection</span>
+                                <small class="com-pub-id">(Pub #29)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge hidden">Hidden</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>5</span>
+                            </div>
+                        </td>
+                        <td><span class="com-parent">—</span></td>
+                        <td><span class="com-reported-badge false"><i class="fas fa-check-circle"></i> No</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                    {# ── Commentaire Row 5 (Reported) ── #}
+                    <tr data-fulltext="This is completely inappropriate content!" data-raison="Offensive language and inappropriate content">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">5</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Anonymous User</span>
+                                    <small class="com-user-id">User #99</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Classic Paintings</span>
+                                <small class="com-pub-id">(Pub #15)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge hidden">Hidden</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>2</span>
+                            </div>
+                        </td>
+                        <td><span class="com-parent">—</span></td>
+                        <td><span class="com-reported-badge true"><i class="fas fa-flag"></i> Yes</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                    {# ── Commentaire Row 6 ── #}
+                    <tr data-fulltext="Beautiful work! The artist captured the essence perfectly." data-raison="">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">6</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Camille Bernard</span>
+                                    <small class="com-user-id">User #47</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Portrait Gallery</span>
+                                <small class="com-pub-id">(Pub #51)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge visible">Visible</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>156</span>
+                            </div>
+                        </td>
+                        <td><span class="com-parent">—</span></td>
+                        <td><span class="com-reported-badge false"><i class="fas fa-check-circle"></i> No</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                    {# ── Commentaire Row 7 (Reported) ── #}
+                    <tr data-fulltext="Spam message with external links." data-raison="Spam and promotional content">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">7</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Spammer Bot</span>
+                                    <small class="com-user-id">User #120</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Sculpture Exhibition</span>
+                                <small class="com-pub-id">(Pub #33)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge hidden">Hidden</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>0</span>
+                            </div>
+                        </td>
+                        <td><span class="com-parent">—</span></td>
+                        <td><span class="com-reported-badge true"><i class="fas fa-flag"></i> Yes</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                    {# ── Commentaire Row 8 ── #}
+                    <tr data-fulltext="Incredible talent on display here. Highly recommend visiting!" data-raison="">
+                        <td><input type="checkbox" class="form-check-input com-checkbox"></td>
+                        <td><span class="com-id">8</span></td>
+                        <td>
+                            <div class="com-user-cell">
+                                <div class="com-user-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <span class="com-user-name">Lucas Petit</span>
+                                    <small class="com-user-id">User #62</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="com-pub-cell">
+                                <i class="fas fa-image text-muted me-2"></i>
+                                <span class="com-pub-title">Digital Art Showcase</span>
+                                <small class="com-pub-id">(Pub #67)</small>
+                            </div>
+                        </td>
+                        <td><span class="com-status-badge visible">Visible</span></td>
+                        <td>
+                            <div class="com-likes">
+                                <i class="fas fa-heart me-1"></i>
+                                <span>203</span>
+                            </div>
+                        </td>
+                        <td><span class="com-parent">—</span></td>
+                        <td><span class="com-reported-badge false"><i class="fas fa-check-circle"></i> No</span></td>
+                        <td>
+                            <button class="table-action-btn btn-edit-commentaire" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="table-action-btn delete btn-delete-commentaire" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer ── #}
+        <div class="admin-table-footer">
+            <div class="table-footer-info">Showing <strong>1–8</strong> of <strong>8</strong> commentaires</div>
+            <nav aria-label="Commentaires pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       ADD/EDIT COMMENTAIRE MODAL
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="commentaireModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content com-modal-content">
+                <div class="modal-header com-modal-header">
+                    <div class="com-header-icon">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title">Add Commentaire</h5>
+                        <p class="modal-subtitle">Create a new comment</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="modal-body com-modal-body">
+                    <form id="commentaireForm">
+                        <input type="hidden" id="commentaireIdHidden">
+                        
+                        <div class="row g-3">
+                            <!-- ID Commentaire (readonly) -->
+                            <div class="col-md-4">
+                                <label for="commentaireId" class="form-label-custom">
+                                    <i class="fas fa-hashtag me-1"></i>ID Commentaire
+                                </label>
+                                <input type="text" class="form-control admin-form-control" id="commentaireId" readonly>
+                            </div>
+
+                            <!-- ID User (Select) -->
+                            <div class="col-md-4">
+                                <label for="commentaireUserId" class="form-label-custom">
+                                    <i class="fas fa-user me-1"></i>User <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select admin-select" id="commentaireUserId" required>
+                                    <option value="">Select user...</option>
+                                    <option value="15">Marie Dubois (#15)</option>
+                                    <option value="23">Jean Martin (#23)</option>
+                                    <option value="8">Sophie Laurent (#8)</option>
+                                    <option value="31">Pierre Leroy (#31)</option>
+                                    <option value="47">Camille Bernard (#47)</option>
+                                    <option value="62">Lucas Petit (#62)</option>
+                                    <option value="99">Anonymous User (#99)</option>
+                                    <option value="120">Other User (#120)</option>
+                                </select>
+                            </div>
+
+                            <!-- ID Publication (Select) -->
+                            <div class="col-md-4">
+                                <label for="commentairePublicationId" class="form-label-custom">
+                                    <i class="fas fa-image me-1"></i>Publication <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select admin-select" id="commentairePublicationId" required>
+                                    <option value="">Select publication...</option>
+                                    <option value="42">Modern Art Exhibition (#42)</option>
+                                    <option value="38">Art Workshop 2026 (#38)</option>
+                                    <option value="29">Abstract Collection (#29)</option>
+                                    <option value="15">Classic Paintings (#15)</option>
+                                    <option value="51">Portrait Gallery (#51)</option>
+                                    <option value="33">Sculpture Exhibition (#33)</option>
+                                    <option value="67">Digital Art Showcase (#67)</option>
+                                </select>
+                            </div>
+
+                            <!-- Comment Text -->
+                            <div class="col-12">
+                                <label for="commentaireText" class="form-label-custom">
+                                    <i class="fas fa-comment-dots me-1"></i>Comment Text <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control admin-form-control" id="commentaireText" rows="3" placeholder="Enter comment text..." required></textarea>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-md-4">
+                                <label for="commentaireStatus" class="form-label-custom">
+                                    <i class="fas fa-eye me-1"></i>Status <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select admin-select" id="commentaireStatus" required>
+                                    <option value="visible">Visible</option>
+                                    <option value="hidden">Hidden</option>
+                                </select>
+                            </div>
+
+                            <!-- Number of Likes -->
+                            <div class="col-md-4">
+                                <label for="commentaireLikes" class="form-label-custom">
+                                    <i class="fas fa-heart me-1"></i>Likes <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control admin-form-control" id="commentaireLikes" placeholder="0" min="0" value="0" required>
+                            </div>
+
+                            <!-- Parent ID (Optional) -->
+                            <div class="col-md-4">
+                                <label for="commentaireParentId" class="form-label-custom">
+                                    <i class="fas fa-reply me-1"></i>Parent ID (Reply)
+                                </label>
+                                <input type="number" class="form-control admin-form-control" id="commentaireParentId" placeholder="Optional" min="1">
+                                <small class="form-text text-muted">Leave empty for main comment</small>
+                            </div>
+
+                            <!-- Est Signalé Toggle -->
+                            <div class="col-12">
+                                <div class="form-check form-switch com-toggle">
+                                    <input class="form-check-input" type="checkbox" id="commentaireEstSignale">
+                                    <label class="form-check-label" for="commentaireEstSignale">
+                                        <i class="fas fa-flag me-2"></i>Comment is reported
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Raison Signalement (Conditional) -->
+                            <div class="col-12" id="raisonSignalementGroup" style="display: none;">
+                                <label for="commentaireRaisonSignalement" class="form-label-custom">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Report Reason <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control admin-form-control" id="commentaireRaisonSignalement" rows="3" placeholder="Describe the reason for reporting this comment..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer com-modal-footer">
+                    <button type="button" class="btn btn-admin-outline" data-bs-dismiss="modal">
+                        <i class="fas fa-xmark me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-admin-primary" id="saveCommentaireBtn">
+                        <i class="fas fa-check me-2"></i>Save Comment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       DELETE CONFIRMATION ALERT
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="delete-alert-overlay" id="deleteAlertOverlay">
+        <div class="delete-alert-card">
+            <div class="delete-alert-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="delete-alert-title">Delete Commentaire?</h3>
+            <p class="delete-alert-message" id="deleteAlertMessage">
+                Are you sure you want to delete this comment? This action cannot be undone.
+            </p>
+            <div class="delete-alert-actions">
+                <button class="btn btn-admin-outline" id="cancelDeleteBtn">
+                    <i class="fas fa-xmark me-2"></i>Cancel
+                </button>
+                <button class="btn btn-delete" id="confirmDeleteBtn">
+                    <i class="fas fa-trash-can me-2"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <!-- Success Toast -->
+        <div id="successToast" class="toast custom-toast toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-circle-check toast-icon me-2"></i>
+                <strong class="me-auto toast-title">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">Commentaire created successfully!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        <!-- Error Toast -->
+        <div id="errorToast" class="toast custom-toast toast-error" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-circle-xmark toast-icon me-2"></i>
+                <strong class="me-auto toast-title">Error</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">Something went wrong!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        <!-- Warning Toast -->
+        <div id="warningToast" class="toast custom-toast toast-warning" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-triangle-exclamation toast-icon me-2"></i>
+                <strong class="me-auto toast-title">Warning</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">Please check your input!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-commentaires.js') }}"></script>
+{% endblock %}

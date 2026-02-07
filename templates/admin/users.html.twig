@@ -1,0 +1,546 @@
+{# ═══════════════════════════════════════════════════════════════
+   Admin Users Management Page
+   Route: /admin/user
+   Features:
+     – Styled user listing table with all required columns
+     – Add/Edit user modal with blurred backdrop
+     – Bootstrap Toasts for success/error notifications
+     – Custom animated alert confirmations (delete)
+     – Fully responsive design matching the luxury theme
+═══════════════════════════════════════════════════════════════ #}
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Users Management{% endblock %}
+
+{% block page_title %}Users Management{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Users</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-admin-outline btn-sm" id="exportUsersBtn">
+            <i class="fas fa-file-export me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#userModal" id="addUserBtn">
+            <i class="fas fa-user-plus me-1"></i> Add User
+        </button>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-users.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       USER STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="user-stat-card animate-in">
+                <div class="usc-icon gold"><i class="fas fa-users"></i></div>
+                <div class="usc-info">
+                    <span class="usc-value" data-counter="248">0</span>
+                    <span class="usc-label">Total Users</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="user-stat-card animate-in">
+                <div class="usc-icon purple"><i class="fas fa-user-shield"></i></div>
+                <div class="usc-info">
+                    <span class="usc-value" data-counter="12">0</span>
+                    <span class="usc-label">Admins</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="user-stat-card animate-in">
+                <div class="usc-icon teal"><i class="fas fa-palette"></i></div>
+                <div class="usc-info">
+                    <span class="usc-value" data-counter="86">0</span>
+                    <span class="usc-label">Artists</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="user-stat-card animate-in">
+                <div class="usc-icon gold"><i class="fas fa-user-check"></i></div>
+                <div class="usc-info">
+                    <span class="usc-value" data-counter="150">0</span>
+                    <span class="usc-label">Participants</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════
+       USERS TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card users-table-card animate-in">
+
+        {# ── Table Header with Filters ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="admin-table-title mb-0">
+                    <i class="fas fa-users me-2 text-accent"></i>All Users
+                </h3>
+                <span class="table-count-badge">248</span>
+            </div>
+            <div class="table-filters d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control admin-form-control" id="userSearch" placeholder="Search users…">
+                </div>
+                <select class="form-select admin-select" id="roleFilter">
+                    <option value="" selected>All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="artiste">Artiste</option>
+                    <option value="participant">Participant</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Responsive Table ── #}
+        <div class="table-responsive">
+            <table class="admin-table users-table" id="usersTable">
+                <thead>
+                    <tr>
+                        <th class="th-check"><input type="checkbox" class="form-check-input" id="selectAllUsers"></th>
+                        <th class="sortable" data-sort="id">ID <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="nom">Nom <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="prenom">Prénom <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="email">Email <i class="fas fa-sort"></i></th>
+                        <th>Téléphone</th>
+                        <th class="sortable" data-sort="role">Rôle <i class="fas fa-sort"></i></th>
+                        <th class="th-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+
+                    {# ── User Row 1 ── #}
+                    <tr data-user-id="1" data-role="admin">
+                        <td><input type="checkbox" class="form-check-input user-check"></td>
+                        <td class="user-id">#001</td>
+                        <td>
+                            <div class="table-user">
+                                <img src="https://ui-avatars.com/api/?name=Laurent+Sophie&background=c9a84c&color=0a0a12&bold=true&size=36" class="table-user-avatar" alt="Avatar">
+                                <span class="table-user-name">Laurent</span>
+                            </div>
+                        </td>
+                        <td>Sophie</td>
+                        <td>
+                            <span class="user-email">
+                                <i class="fas fa-envelope me-1 text-muted"></i>sophie.laurent@email.com
+                            </span>
+                        </td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 22 345 678</span></td>
+                        <td><span class="role-badge role-admin"><i class="fas fa-shield-halved me-1"></i>Admin</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="1"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="1"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="1" data-user-name="Sophie Laurent"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── User Row 2 ── #}
+                    <tr data-user-id="2" data-role="artiste">
+                        <td><input type="checkbox" class="form-check-input user-check"></td>
+                        <td class="user-id">#002</td>
+                        <td>
+                            <div class="table-user">
+                                <img src="https://ui-avatars.com/api/?name=Benali+Ahmed&background=7c5cbf&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
+                                <span class="table-user-name">Benali</span>
+                            </div>
+                        </td>
+                        <td>Ahmed</td>
+                        <td>
+                            <span class="user-email">
+                                <i class="fas fa-envelope me-1 text-muted"></i>ahmed.benali@email.com
+                            </span>
+                        </td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 55 123 456</span></td>
+                        <td><span class="role-badge role-artiste"><i class="fas fa-palette me-1"></i>Artiste</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="2"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="2"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="2" data-user-name="Ahmed Benali"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── User Row 3 ── #}
+                    <tr data-user-id="3" data-role="participant">
+                        <td><input type="checkbox" class="form-check-input user-check"></td>
+                        <td class="user-id">#003</td>
+                        <td>
+                            <div class="table-user">
+                                <img src="https://ui-avatars.com/api/?name=Dubois+Clara&background=2ec4b6&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
+                                <span class="table-user-name">Dubois</span>
+                            </div>
+                        </td>
+                        <td>Clara</td>
+                        <td>
+                            <span class="user-email">
+                                <i class="fas fa-envelope me-1 text-muted"></i>clara.dubois@email.com
+                            </span>
+                        </td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 98 765 432</span></td>
+                        <td><span class="role-badge role-participant"><i class="fas fa-user me-1"></i>Participant</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="3"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="3"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="3" data-user-name="Clara Dubois"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── User Row 4 ── #}
+                    <tr data-user-id="4" data-role="artiste">
+                        <td><input type="checkbox" class="form-check-input user-check"></td>
+                        <td class="user-id">#004</td>
+                        <td>
+                            <div class="table-user">
+                                <img src="https://ui-avatars.com/api/?name=Mabrouk+Lina&background=9b7fd4&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
+                                <span class="table-user-name">Mabrouk</span>
+                            </div>
+                        </td>
+                        <td>Lina</td>
+                        <td>
+                            <span class="user-email">
+                                <i class="fas fa-envelope me-1 text-muted"></i>lina.mabrouk@email.com
+                            </span>
+                        </td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 27 891 234</span></td>
+                        <td><span class="role-badge role-artiste"><i class="fas fa-palette me-1"></i>Artiste</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="4"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="4"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="4" data-user-name="Lina Mabrouk"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── User Row 5 ── #}
+                    <tr data-user-id="5" data-role="admin">
+                        <td><input type="checkbox" class="form-check-input user-check"></td>
+                        <td class="user-id">#005</td>
+                        <td>
+                            <div class="table-user">
+                                <img src="https://ui-avatars.com/api/?name=Fontaine+Marc&background=c9a84c&color=0a0a12&bold=true&size=36" class="table-user-avatar" alt="Avatar">
+                                <span class="table-user-name">Fontaine</span>
+                            </div>
+                        </td>
+                        <td>Marc</td>
+                        <td>
+                            <span class="user-email">
+                                <i class="fas fa-envelope me-1 text-muted"></i>marc.fontaine@email.com
+                            </span>
+                        </td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 50 432 876</span></td>
+                        <td><span class="role-badge role-admin"><i class="fas fa-shield-halved me-1"></i>Admin</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="5"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="5"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="5" data-user-name="Marc Fontaine"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── User Row 6 ── #}
+                    <tr data-user-id="6" data-role="participant">
+                        <td><input type="checkbox" class="form-check-input user-check"></td>
+                        <td class="user-id">#006</td>
+                        <td>
+                            <div class="table-user">
+                                <img src="https://ui-avatars.com/api/?name=Trabelsi+Yassine&background=2ec4b6&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
+                                <span class="table-user-name">Trabelsi</span>
+                            </div>
+                        </td>
+                        <td>Yassine</td>
+                        <td>
+                            <span class="user-email">
+                                <i class="fas fa-envelope me-1 text-muted"></i>yassine.trabelsi@email.com
+                            </span>
+                        </td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 92 111 333</span></td>
+                        <td><span class="role-badge role-participant"><i class="fas fa-user me-1"></i>Participant</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="6"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="6"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="6" data-user-name="Yassine Trabelsi"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── User Row 7 ── #}
+                    <tr data-user-id="7" data-role="artiste">
+                        <td><input type="checkbox" class="form-check-input user-check"></td>
+                        <td class="user-id">#007</td>
+                        <td>
+                            <div class="table-user">
+                                <img src="https://ui-avatars.com/api/?name=Chaker+Nour&background=e74c3c&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
+                                <span class="table-user-name">Chaker</span>
+                            </div>
+                        </td>
+                        <td>Nour</td>
+                        <td>
+                            <span class="user-email">
+                                <i class="fas fa-envelope me-1 text-muted"></i>nour.chaker@email.com
+                            </span>
+                        </td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 23 456 789</span></td>
+                        <td><span class="role-badge role-artiste"><i class="fas fa-palette me-1"></i>Artiste</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="7"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="7"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="7" data-user-name="Nour Chaker"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer / Pagination ── #}
+        <div class="admin-table-footer">
+            <div class="table-footer-info">
+                Showing <strong>1–7</strong> of <strong>248</strong> users
+            </div>
+            <nav aria-label="Users pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">…</a></li>
+                    <li class="page-item"><a class="page-link" href="#">36</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       ADD / EDIT USER MODAL
+       – Blurred backdrop (backdrop-filter: blur)
+       – Form with all required fields
+       – Select dropdown for role
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content user-modal-content">
+
+                {# ── Modal Header ── #}
+                <div class="modal-header user-modal-header">
+                    <div class="modal-header-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title" id="userModalLabel">Add New User</h5>
+                        <p class="modal-subtitle mb-0">Fill in the details to create a new user account</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                {# ── Modal Body ── #}
+                <div class="modal-body user-modal-body">
+                    <form id="userForm" novalidate>
+                        <input type="hidden" id="formUserId" value="">
+
+                        <div class="row g-3">
+                            {# ── ID User (auto or manual) ── #}
+                            <div class="col-md-4">
+                                <div class="form-floating-custom">
+                                    <label for="inputIdUser"><i class="fas fa-hashtag me-1 text-accent"></i> ID User</label>
+                                    <input type="text" class="form-control modal-input" id="inputIdUser" placeholder="Auto-generated" readonly>
+                                    <small class="form-hint">Auto-generated by system</small>
+                                </div>
+                            </div>
+
+                            {# ── Nom ── #}
+                            <div class="col-md-4">
+                                <div class="form-floating-custom">
+                                    <label for="inputNom"><i class="fas fa-user me-1 text-accent"></i> Nom <span class="required">*</span></label>
+                                    <input type="text" class="form-control modal-input" id="inputNom" placeholder="Last name" required>
+                                    <div class="invalid-feedback">Please enter the last name.</div>
+                                </div>
+                            </div>
+
+                            {# ── Prénom ── #}
+                            <div class="col-md-4">
+                                <div class="form-floating-custom">
+                                    <label for="inputPrenom"><i class="fas fa-user me-1 text-accent"></i> Prénom <span class="required">*</span></label>
+                                    <input type="text" class="form-control modal-input" id="inputPrenom" placeholder="First name" required>
+                                    <div class="invalid-feedback">Please enter the first name.</div>
+                                </div>
+                            </div>
+
+                            {# ── Email ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputEmail"><i class="fas fa-envelope me-1 text-accent"></i> Email <span class="required">*</span></label>
+                                    <input type="email" class="form-control modal-input" id="inputEmail" placeholder="email@example.com" required>
+                                    <div class="invalid-feedback">Please enter a valid email.</div>
+                                </div>
+                            </div>
+
+                            {# ── Password ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputPassword"><i class="fas fa-lock me-1 text-accent"></i> Password <span class="required">*</span></label>
+                                    <div class="password-input-wrap">
+                                        <input type="password" class="form-control modal-input" id="inputPassword" placeholder="••••••••" required minlength="6">
+                                        <button type="button" class="password-toggle-btn" id="togglePassword" aria-label="Toggle password visibility">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback">Min 6 characters required.</div>
+                                </div>
+                            </div>
+
+                            {# ── Téléphone ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputTelephone"><i class="fas fa-phone me-1 text-accent"></i> Téléphone <span class="required">*</span></label>
+                                    <input type="tel" class="form-control modal-input" id="inputTelephone" placeholder="+216 XX XXX XXX" required>
+                                    <div class="invalid-feedback">Please enter a phone number.</div>
+                                </div>
+                            </div>
+
+                            {# ── Role Select ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputRole"><i class="fas fa-user-tag me-1 text-accent"></i> Rôle <span class="required">*</span></label>
+                                    <select class="form-select modal-input" id="inputRole" required>
+                                        <option value="" disabled selected>Select a role…</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="artiste">Artiste</option>
+                                        <option value="participant">Participant</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select a role.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                {# ── Modal Footer ── #}
+                <div class="modal-footer user-modal-footer">
+                    <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-modal-save" id="saveUserBtn">
+                        <i class="fas fa-check me-1"></i> <span id="saveUserBtnText">Save User</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       CUSTOM DELETE CONFIRMATION ALERT
+       – Animated overlay with blurred backdrop
+       – Replaces default browser confirm()
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="custom-alert-overlay" id="deleteAlertOverlay">
+        <div class="custom-alert-box" id="deleteAlertBox">
+            <div class="alert-icon-wrap danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4 class="alert-title">Delete User?</h4>
+            <p class="alert-message">Are you sure you want to delete <strong id="deleteUserName"></strong>? This action cannot be undone.</p>
+            <div class="alert-actions">
+                <button class="btn btn-alert-cancel" id="cancelDeleteBtn">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button class="btn btn-alert-confirm" id="confirmDeleteBtn">
+                    <i class="fas fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS CONTAINER
+       – Bootstrap Toasts with themed styling
+       – Success, Error, Warning, Info variants
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer" style="z-index: 1090;">
+
+        {# ── Success Toast Template ── #}
+        <div class="toast admin-toast toast-success" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Success</strong>
+                    <p class="toast-message mb-0" id="toastSuccessMsg">Operation completed successfully.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar success"></div></div>
+        </div>
+
+        {# ── Error Toast Template ── #}
+        <div class="toast admin-toast toast-error" id="toastError" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Error</strong>
+                    <p class="toast-message mb-0" id="toastErrorMsg">Something went wrong.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar error"></div></div>
+        </div>
+
+        {# ── Warning Toast Template ── #}
+        <div class="toast admin-toast toast-warning" id="toastWarning" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Warning</strong>
+                    <p class="toast-message mb-0" id="toastWarningMsg">Please check your input.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar warning"></div></div>
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-users.js') }}"></script>
+{% endblock %}

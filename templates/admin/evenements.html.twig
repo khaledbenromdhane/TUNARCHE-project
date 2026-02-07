@@ -1,0 +1,588 @@
+{# ═══════════════════════════════════════════════════════════════
+   Admin Événements Management Page
+   Route: /admin/evenement
+   Features:
+     – Styled event listing table with all required columns
+     – Add/Edit event modal with blurred backdrop
+     – Payment toggle switch (true/false)
+     – Bootstrap Toasts for success/error notifications
+     – Custom animated alert for delete confirmation
+     – Fully responsive, luxury dark + gold/purple theme
+═══════════════════════════════════════════════════════════════ #}
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Événements Management{% endblock %}
+
+{% block page_title %}Événements{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Événements</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-admin-outline btn-sm" id="exportEventsBtn">
+            <i class="fas fa-file-export me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#eventModal" id="addEventBtn">
+            <i class="fas fa-calendar-plus me-1"></i> Add Événement
+        </button>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-events.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       EVENT STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="evt-stat-card animate-in">
+                <div class="evt-stat-icon gold">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="evt-stat-info">
+                    <span class="evt-stat-value" data-counter="184">0</span>
+                    <span class="evt-stat-label">Total Events</span>
+                </div>
+                <div class="evt-stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="evt-stat-card animate-in">
+                <div class="evt-stat-icon purple">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="evt-stat-info">
+                    <span class="evt-stat-value" data-counter="23">0</span>
+                    <span class="evt-stat-label">Upcoming</span>
+                </div>
+                <div class="evt-stat-trend up"><i class="fas fa-arrow-up"></i> 8%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="evt-stat-card animate-in">
+                <div class="evt-stat-icon teal">
+                    <i class="fas fa-users-between-lines"></i>
+                </div>
+                <div class="evt-stat-info">
+                    <span class="evt-stat-value" data-counter="4820">0</span>
+                    <span class="evt-stat-label">Total Attendees</span>
+                </div>
+                <div class="evt-stat-trend up"><i class="fas fa-arrow-up"></i> 24%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="evt-stat-card animate-in">
+                <div class="evt-stat-icon gold">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="evt-stat-info">
+                    <span class="evt-stat-value" data-counter="67">0</span>
+                    <span class="evt-stat-label">Paid Events</span>
+                </div>
+                <div class="evt-stat-trend down"><i class="fas fa-arrow-down"></i> 3%</div>
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       EVENTS TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card evt-table-card animate-in">
+
+        {# ── Table Header with Filters ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="admin-table-title mb-0">
+                    <i class="fas fa-calendar-alt me-2 text-accent"></i>All Événements
+                </h3>
+                <span class="evt-count-badge">184</span>
+            </div>
+            <div class="evt-table-filters d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
+                <div class="evt-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control admin-form-control" id="eventSearch" placeholder="Search events…">
+                </div>
+                <select class="form-select admin-select" id="typeFilter">
+                    <option value="" selected>All Types</option>
+                    <option value="exposition">Exposition</option>
+                    <option value="concert">Concert</option>
+                    <option value="gala">Gala</option>
+                    <option value="atelier">Atelier</option>
+                    <option value="conference">Conférence</option>
+                    <option value="festival">Festival</option>
+                </select>
+                <select class="form-select admin-select" id="paiementFilter">
+                    <option value="" selected>All Payment</option>
+                    <option value="true">Paid</option>
+                    <option value="false">Free</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Responsive Table ── #}
+        <div class="table-responsive">
+            <table class="admin-table evt-table" id="eventsTable">
+                <thead>
+                    <tr>
+                        <th class="th-check"><input type="checkbox" class="form-check-input" id="selectAllEvents"></th>
+                        <th class="sortable" data-sort="id">ID <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="nom">Nom <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="type">Type <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="participants">Participants <i class="fas fa-sort"></i></th>
+                        <th class="sortable" data-sort="date">Date <i class="fas fa-sort"></i></th>
+                        <th>Heure</th>
+                        <th>Lieu</th>
+                        <th class="sortable" data-sort="paiement">Paiement <i class="fas fa-sort"></i></th>
+                        <th class="th-actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+
+                    {# ── Event Row 1 ── #}
+                    <tr data-event-id="1" data-type="gala" data-paiement="true">
+                        <td><input type="checkbox" class="form-check-input evt-check"></td>
+                        <td class="evt-id">#EVT-001</td>
+                        <td>
+                            <div class="evt-name-cell">
+                                <div class="evt-icon-mini gold"><i class="fas fa-star"></i></div>
+                                <div>
+                                    <span class="evt-name">Gala Night 2026</span>
+                                    <span class="evt-desc-hint">Annual luxury gala evening</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge type-gala">Gala</span></td>
+                        <td><span class="participant-count"><i class="fas fa-users me-1"></i>320</span></td>
+                        <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Feb 14, 2026</span></td>
+                        <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>20:00</span></td>
+                        <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Palais des Arts, Tunis</span></td>
+                        <td><span class="paiement-badge paid"><i class="fas fa-check-circle me-1"></i>Paid</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evt-btn" title="View" data-bs-toggle="tooltip" data-event-id="1"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evt-btn" title="Edit" data-bs-toggle="tooltip" data-event-id="1"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evt-btn" title="Delete" data-bs-toggle="tooltip" data-event-id="1" data-event-name="Gala Night 2026"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Event Row 2 ── #}
+                    <tr data-event-id="2" data-type="exposition" data-paiement="false">
+                        <td><input type="checkbox" class="form-check-input evt-check"></td>
+                        <td class="evt-id">#EVT-002</td>
+                        <td>
+                            <div class="evt-name-cell">
+                                <div class="evt-icon-mini purple"><i class="fas fa-palette"></i></div>
+                                <div>
+                                    <span class="evt-name">Art Moderne Exhibition</span>
+                                    <span class="evt-desc-hint">Contemporary art showcase</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge type-exposition">Exposition</span></td>
+                        <td><span class="participant-count"><i class="fas fa-users me-1"></i>150</span></td>
+                        <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Feb 22, 2026</span></td>
+                        <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>10:00</span></td>
+                        <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Galerie Nationale, Sfax</span></td>
+                        <td><span class="paiement-badge free"><i class="fas fa-gift me-1"></i>Free</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evt-btn" title="View" data-bs-toggle="tooltip" data-event-id="2"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evt-btn" title="Edit" data-bs-toggle="tooltip" data-event-id="2"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evt-btn" title="Delete" data-bs-toggle="tooltip" data-event-id="2" data-event-name="Art Moderne Exhibition"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Event Row 3 ── #}
+                    <tr data-event-id="3" data-type="concert" data-paiement="true">
+                        <td><input type="checkbox" class="form-check-input evt-check"></td>
+                        <td class="evt-id">#EVT-003</td>
+                        <td>
+                            <div class="evt-name-cell">
+                                <div class="evt-icon-mini teal"><i class="fas fa-music"></i></div>
+                                <div>
+                                    <span class="evt-name">Jazz & Wine Evening</span>
+                                    <span class="evt-desc-hint">Live jazz with fine wines</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge type-concert">Concert</span></td>
+                        <td><span class="participant-count"><i class="fas fa-users me-1"></i>85</span></td>
+                        <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Mar 05, 2026</span></td>
+                        <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>19:30</span></td>
+                        <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Le Théâtre, Sousse</span></td>
+                        <td><span class="paiement-badge paid"><i class="fas fa-check-circle me-1"></i>Paid</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evt-btn" title="View" data-bs-toggle="tooltip" data-event-id="3"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evt-btn" title="Edit" data-bs-toggle="tooltip" data-event-id="3"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evt-btn" title="Delete" data-bs-toggle="tooltip" data-event-id="3" data-event-name="Jazz & Wine Evening"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Event Row 4 ── #}
+                    <tr data-event-id="4" data-type="atelier" data-paiement="true">
+                        <td><input type="checkbox" class="form-check-input evt-check"></td>
+                        <td class="evt-id">#EVT-004</td>
+                        <td>
+                            <div class="evt-name-cell">
+                                <div class="evt-icon-mini gold"><i class="fas fa-camera"></i></div>
+                                <div>
+                                    <span class="evt-name">Photography Workshop</span>
+                                    <span class="evt-desc-hint">Master portrait photography</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge type-atelier">Atelier</span></td>
+                        <td><span class="participant-count"><i class="fas fa-users me-1"></i>40</span></td>
+                        <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Mar 12, 2026</span></td>
+                        <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>14:00</span></td>
+                        <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Studio Lumière, Tunis</span></td>
+                        <td><span class="paiement-badge paid"><i class="fas fa-check-circle me-1"></i>Paid</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evt-btn" title="View" data-bs-toggle="tooltip" data-event-id="4"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evt-btn" title="Edit" data-bs-toggle="tooltip" data-event-id="4"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evt-btn" title="Delete" data-bs-toggle="tooltip" data-event-id="4" data-event-name="Photography Workshop"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Event Row 5 ── #}
+                    <tr data-event-id="5" data-type="conference" data-paiement="false">
+                        <td><input type="checkbox" class="form-check-input evt-check"></td>
+                        <td class="evt-id">#EVT-005</td>
+                        <td>
+                            <div class="evt-name-cell">
+                                <div class="evt-icon-mini purple"><i class="fas fa-microphone-lines"></i></div>
+                                <div>
+                                    <span class="evt-name">Digital Art Conference</span>
+                                    <span class="evt-desc-hint">Future of digital creativity</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge type-conference">Conférence</span></td>
+                        <td><span class="participant-count"><i class="fas fa-users me-1"></i>200</span></td>
+                        <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Mar 20, 2026</span></td>
+                        <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>09:00</span></td>
+                        <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Centre Culturel, Carthage</span></td>
+                        <td><span class="paiement-badge free"><i class="fas fa-gift me-1"></i>Free</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evt-btn" title="View" data-bs-toggle="tooltip" data-event-id="5"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evt-btn" title="Edit" data-bs-toggle="tooltip" data-event-id="5"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evt-btn" title="Delete" data-bs-toggle="tooltip" data-event-id="5" data-event-name="Digital Art Conference"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Event Row 6 ── #}
+                    <tr data-event-id="6" data-type="festival" data-paiement="true">
+                        <td><input type="checkbox" class="form-check-input evt-check"></td>
+                        <td class="evt-id">#EVT-006</td>
+                        <td>
+                            <div class="evt-name-cell">
+                                <div class="evt-icon-mini teal"><i class="fas fa-masks-theater"></i></div>
+                                <div>
+                                    <span class="evt-name">Festival des Arts Vivants</span>
+                                    <span class="evt-desc-hint">3-day performing arts festival</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge type-festival">Festival</span></td>
+                        <td><span class="participant-count"><i class="fas fa-users me-1"></i>1500</span></td>
+                        <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Apr 01, 2026</span></td>
+                        <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>11:00</span></td>
+                        <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Parc du Belvédère, Tunis</span></td>
+                        <td><span class="paiement-badge paid"><i class="fas fa-check-circle me-1"></i>Paid</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evt-btn" title="View" data-bs-toggle="tooltip" data-event-id="6"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evt-btn" title="Edit" data-bs-toggle="tooltip" data-event-id="6"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evt-btn" title="Delete" data-bs-toggle="tooltip" data-event-id="6" data-event-name="Festival des Arts Vivants"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# ── Event Row 7 ── #}
+                    <tr data-event-id="7" data-type="exposition" data-paiement="false">
+                        <td><input type="checkbox" class="form-check-input evt-check"></td>
+                        <td class="evt-id">#EVT-007</td>
+                        <td>
+                            <div class="evt-name-cell">
+                                <div class="evt-icon-mini purple"><i class="fas fa-paintbrush"></i></div>
+                                <div>
+                                    <span class="evt-name">Sculpture Contemporaine</span>
+                                    <span class="evt-desc-hint">Modern sculpture showcase</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="type-badge type-exposition">Exposition</span></td>
+                        <td><span class="participant-count"><i class="fas fa-users me-1"></i>75</span></td>
+                        <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>Apr 15, 2026</span></td>
+                        <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>10:00</span></td>
+                        <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>Musée du Bardo, Tunis</span></td>
+                        <td><span class="paiement-badge free"><i class="fas fa-gift me-1"></i>Free</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-evt-btn" title="View" data-bs-toggle="tooltip" data-event-id="7"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-evt-btn" title="Edit" data-bs-toggle="tooltip" data-event-id="7"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-evt-btn" title="Delete" data-bs-toggle="tooltip" data-event-id="7" data-event-name="Sculpture Contemporaine"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer / Pagination ── #}
+        <div class="admin-table-footer">
+            <div class="table-footer-info">
+                Showing <strong>1–7</strong> of <strong>184</strong> events
+            </div>
+            <nav aria-label="Events pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">…</a></li>
+                    <li class="page-item"><a class="page-link" href="#">27</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       ADD / EDIT EVENT MODAL
+       – Blurred backdrop (backdrop-filter: blur)
+       – All required input fields
+       – Paiement as toggle switch
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content evt-modal-content">
+
+                {# ── Modal Header ── #}
+                <div class="modal-header evt-modal-header">
+                    <div class="modal-header-icon evt-header-icon">
+                        <i class="fas fa-calendar-plus" id="evtModalIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title" id="eventModalLabel">Add Événement</h5>
+                        <p class="modal-subtitle mb-0" id="evtModalSubtitle">Fill in the details to create a new event</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                {# ── Modal Body ── #}
+                <div class="modal-body evt-modal-body">
+                    <form id="eventForm" novalidate>
+                        <input type="hidden" id="formEventId" value="">
+
+                        <div class="row g-3">
+                            {# ── ID Événement ── #}
+                            <div class="col-md-4">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtId"><i class="fas fa-hashtag me-1 text-accent"></i> ID Événement</label>
+                                    <input type="text" class="form-control modal-input" id="inputEvtId" placeholder="Auto-generated" readonly>
+                                    <small class="form-hint">Auto-generated by system</small>
+                                </div>
+                            </div>
+
+                            {# ── Nom ── #}
+                            <div class="col-md-8">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtNom"><i class="fas fa-bookmark me-1 text-accent"></i> Nom <span class="required">*</span></label>
+                                    <input type="text" class="form-control modal-input" id="inputEvtNom" placeholder="Event name" required>
+                                    <div class="invalid-feedback">Please enter the event name.</div>
+                                </div>
+                            </div>
+
+                            {# ── Type Événement ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtType"><i class="fas fa-tags me-1 text-accent"></i> Type Événement <span class="required">*</span></label>
+                                    <select class="form-select modal-input" id="inputEvtType" required>
+                                        <option value="" disabled selected>Select event type…</option>
+                                        <option value="exposition">Exposition</option>
+                                        <option value="concert">Concert</option>
+                                        <option value="gala">Gala</option>
+                                        <option value="atelier">Atelier</option>
+                                        <option value="conference">Conférence</option>
+                                        <option value="festival">Festival</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please select an event type.</div>
+                                </div>
+                            </div>
+
+                            {# ── Nbr Participants ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtParticipants"><i class="fas fa-users me-1 text-accent"></i> Nbr Participants <span class="required">*</span></label>
+                                    <input type="number" class="form-control modal-input" id="inputEvtParticipants" placeholder="0" min="1" required>
+                                    <div class="invalid-feedback">Enter number of participants.</div>
+                                </div>
+                            </div>
+
+                            {# ── Date ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtDate"><i class="fas fa-calendar-day me-1 text-accent"></i> Date <span class="required">*</span></label>
+                                    <input type="date" class="form-control modal-input" id="inputEvtDate" required>
+                                    <div class="invalid-feedback">Please select a date.</div>
+                                </div>
+                            </div>
+
+                            {# ── Heure ── #}
+                            <div class="col-md-6">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtHeure"><i class="fas fa-clock me-1 text-accent"></i> Heure <span class="required">*</span></label>
+                                    <input type="time" class="form-control modal-input" id="inputEvtHeure" required>
+                                    <div class="invalid-feedback">Please select a time.</div>
+                                </div>
+                            </div>
+
+                            {# ── Lieu ── #}
+                            <div class="col-md-12">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtLieu"><i class="fas fa-map-marker-alt me-1 text-accent"></i> Lieu <span class="required">*</span></label>
+                                    <input type="text" class="form-control modal-input" id="inputEvtLieu" placeholder="Event venue" required>
+                                    <div class="invalid-feedback">Please enter the location.</div>
+                                </div>
+                            </div>
+
+                            {# ── Description ── #}
+                            <div class="col-md-12">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtDesc"><i class="fas fa-align-left me-1 text-accent"></i> Description</label>
+                                    <textarea class="form-control modal-input evt-textarea" id="inputEvtDesc" rows="3" placeholder="Write a short description of the event…"></textarea>
+                                </div>
+                            </div>
+
+                            {# ── Paiement Toggle ── #}
+                            <div class="col-md-12">
+                                <div class="paiement-toggle-wrap">
+                                    <div class="paiement-toggle-label">
+                                        <i class="fas fa-credit-card me-2 text-accent"></i>
+                                        <div>
+                                            <span class="ptl-title">Paiement Required</span>
+                                            <span class="ptl-desc">Toggle on if this is a paid event</span>
+                                        </div>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="inputEvtPaiement">
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label-text" id="paiementStatusText">Free</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                {# ── Modal Footer ── #}
+                <div class="modal-footer evt-modal-footer">
+                    <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-modal-save" id="saveEventBtn">
+                        <i class="fas fa-check me-1"></i> <span id="saveEventBtnText">Save Event</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       CUSTOM DELETE CONFIRMATION ALERT
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="custom-alert-overlay" id="deleteEvtAlertOverlay">
+        <div class="custom-alert-box" id="deleteEvtAlertBox">
+            <div class="alert-icon-wrap danger-evt">
+                <i class="fas fa-calendar-xmark"></i>
+            </div>
+            <h4 class="alert-title">Delete Event?</h4>
+            <p class="alert-message">Are you sure you want to delete <strong id="deleteEvtName"></strong>? This action cannot be undone.</p>
+            <div class="alert-actions">
+                <button class="btn btn-alert-cancel" id="cancelEvtDeleteBtn">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button class="btn btn-alert-confirm" id="confirmEvtDeleteBtn">
+                    <i class="fas fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="evtToastContainer" style="z-index: 1090;">
+
+        <div class="toast admin-toast toast-success" id="evtToastSuccess" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Success</strong>
+                    <p class="toast-message mb-0" id="evtToastSuccessMsg">Operation completed successfully.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar success"></div></div>
+        </div>
+
+        <div class="toast admin-toast toast-error" id="evtToastError" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Error</strong>
+                    <p class="toast-message mb-0" id="evtToastErrorMsg">Something went wrong.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar error"></div></div>
+        </div>
+
+        <div class="toast admin-toast toast-warning" id="evtToastWarning" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="toast-body-custom">
+                <div class="toast-icon"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="toast-content">
+                    <strong class="toast-title">Warning</strong>
+                    <p class="toast-message mb-0" id="evtToastWarningMsg">Please check your input.</p>
+                </div>
+                <button type="button" class="btn-close-toast" data-bs-dismiss="toast" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="toast-progress"><div class="toast-progress-bar warning"></div></div>
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-events.js') }}"></script>
+{% endblock %}

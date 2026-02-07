@@ -1,0 +1,440 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Formations Management{% endblock %}
+
+{% block page_title %}Formations{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Formations</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-admin-outline btn-sm" id="exportFormationsBtn">
+            <i class="fas fa-file-export me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#formationModal" id="addFormationBtn">
+            <i class="fas fa-graduation-cap me-1"></i> Add Formation
+        </button>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-formations.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       FORMATION STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="form-stat-card animate-in">
+                <div class="form-stat-icon gold">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="form-stat-info">
+                    <span class="form-stat-value" data-counter="42">0</span>
+                    <span class="form-stat-label">Total Formations</span>
+                </div>
+                <div class="form-stat-trend up"><i class="fas fa-arrow-up"></i> 18%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="form-stat-card animate-in">
+                <div class="form-stat-icon teal">
+                    <i class="fas fa-chalkboard-user"></i>
+                </div>
+                <div class="form-stat-info">
+                    <span class="form-stat-value" data-counter="28">0</span>
+                    <span class="form-stat-label">Active Formations</span>
+                </div>
+                <div class="form-stat-trend up"><i class="fas fa-arrow-up"></i> 25%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="form-stat-card animate-in">
+                <div class="form-stat-icon purple">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="form-stat-info">
+                    <span class="form-stat-value" data-counter="14">0</span>
+                    <span class="form-stat-label">Completed</span>
+                </div>
+                <div class="form-stat-trend down"><i class="fas fa-arrow-down"></i> 5%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="form-stat-card animate-in">
+                <div class="form-stat-icon pink">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="form-stat-info">
+                    <span class="form-stat-value" data-counter="389">0</span>
+                    <span class="form-stat-label">Participants</span>
+                </div>
+                <div class="form-stat-trend up"><i class="fas fa-arrow-up"></i> 32%</div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════
+       FORMATION TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card animate-in">
+        {# ── Table Header ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0">All Formations</h5>
+                <span class="form-count-badge" id="formationCount">42</span>
+            </div>
+            <div class="admin-table-controls">
+                <div class="form-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="formationSearchInput" class="form-control" placeholder="Search formations...">
+                </div>
+                <select id="formationTypeFilter" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="masterclass">Masterclass</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Table Body ── #}
+        <div class="table-responsive">
+            <table class="admin-table form-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;"><input type="checkbox" class="form-check-input" id="selectAllFormations"></th>
+                        <th class="sortable" data-sort="id">ID <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="nom">Formation Name <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="date">Date <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="type">Type <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="description">Description <i class="fas fa-sort ms-1"></i></th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="formationTableBody">
+                    {# Sample Row 1 #}
+                    <tr data-formation-id="1" data-type="beginner">
+                        <td><input type="checkbox" class="form-check-input formation-check"></td>
+                        <td class="form-id">1</td>
+                        <td>
+                            <div class="form-nom-cell">
+                                <div class="form-icon-avatar beginner">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <span class="form-nom">Introduction to Art History</span>
+                            </div>
+                        </td>
+                        <td><span class="form-date"><i class="fas fa-calendar me-1"></i>2026-03-15</span></td>
+                        <td><span class="type-badge type-beginner">Beginner</span></td>
+                        <td><span class="form-description">Comprehensive introduction to art history from ancient to modern times.</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-formation-btn" title="View" data-bs-toggle="tooltip" data-formation-id="1"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-formation-btn" title="Edit" data-bs-toggle="tooltip" data-formation-id="1"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-formation-btn" title="Delete" data-bs-toggle="tooltip" data-formation-id="1" data-formation-nom="Introduction to Art History"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 2 #}
+                    <tr data-formation-id="2" data-type="intermediate">
+                        <td><input type="checkbox" class="form-check-input formation-check"></td>
+                        <td class="form-id">2</td>
+                        <td>
+                            <div class="form-nom-cell">
+                                <div class="form-icon-avatar intermediate">
+                                    <i class="fas fa-palette"></i>
+                                </div>
+                                <span class="form-nom">Oil Painting Techniques</span>
+                            </div>
+                        </td>
+                        <td><span class="form-date"><i class="fas fa-calendar me-1"></i>2026-04-10</span></td>
+                        <td><span class="type-badge type-intermediate">Intermediate</span></td>
+                        <td><span class="form-description">Master oil painting techniques from Renaissance to contemporary styles.</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-formation-btn" title="View" data-bs-toggle="tooltip" data-formation-id="2"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-formation-btn" title="Edit" data-bs-toggle="tooltip" data-formation-id="2"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-formation-btn" title="Delete" data-bs-toggle="tooltip" data-formation-id="2" data-formation-nom="Oil Painting Techniques"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 3 #}
+                    <tr data-formation-id="3" data-type="advanced">
+                        <td><input type="checkbox" class="form-check-input formation-check"></td>
+                        <td class="form-id">3</td>
+                        <td>
+                            <div class="form-nom-cell">
+                                <div class="form-icon-avatar advanced">
+                                    <i class="fas fa-medal"></i>
+                                </div>
+                                <span class="form-nom">Contemporary Art Curation</span>
+                            </div>
+                        </td>
+                        <td><span class="form-date"><i class="fas fa-calendar me-1"></i>2026-05-20</span></td>
+                        <td><span class="type-badge type-advanced">Advanced</span></td>
+                        <td><span class="form-description">Advanced techniques for curating contemporary art exhibitions.</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-formation-btn" title="View" data-bs-toggle="tooltip" data-formation-id="3"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-formation-btn" title="Edit" data-bs-toggle="tooltip" data-formation-id="3"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-formation-btn" title="Delete" data-bs-toggle="tooltip" data-formation-id="3" data-formation-nom="Contemporary Art Curation"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 4 #}
+                    <tr data-formation-id="4" data-type="workshop">
+                        <td><input type="checkbox" class="form-check-input formation-check"></td>
+                        <td class="form-id">4</td>
+                        <td>
+                            <div class="form-nom-cell">
+                                <div class="form-icon-avatar workshop">
+                                    <i class="fas fa-hands"></i>
+                                </div>
+                                <span class="form-nom">Sculpture Workshop</span>
+                            </div>
+                        </td>
+                        <td><span class="form-date"><i class="fas fa-calendar me-1"></i>2026-06-05</span></td>
+                        <td><span class="type-badge type-workshop">Workshop</span></td>
+                        <td><span class="form-description">Hands-on workshop for creating sculptures with various materials.</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-formation-btn" title="View" data-bs-toggle="tooltip" data-formation-id="4"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-formation-btn" title="Edit" data-bs-toggle="tooltip" data-formation-id="4"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-formation-btn" title="Delete" data-bs-toggle="tooltip" data-formation-id="4" data-formation-nom="Sculpture Workshop"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 5 #}
+                    <tr data-formation-id="5" data-type="masterclass">
+                        <td><input type="checkbox" class="form-check-input formation-check"></td>
+                        <td class="form-id">5</td>
+                        <td>
+                            <div class="form-nom-cell">
+                                <div class="form-icon-avatar masterclass">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="form-nom">Photography Masterclass</span>
+                            </div>
+                        </td>
+                        <td><span class="form-date"><i class="fas fa-calendar me-1"></i>2026-07-12</span></td>
+                        <td><span class="type-badge type-masterclass">Masterclass</span></td>
+                        <td><span class="form-description">Elite masterclass with renowned photographers covering all aspects.</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-formation-btn" title="View" data-bs-toggle="tooltip" data-formation-id="5"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-formation-btn" title="Edit" data-bs-toggle="tooltip" data-formation-id="5"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-formation-btn" title="Delete" data-bs-toggle="tooltip" data-formation-id="5" data-formation-nom="Photography Masterclass"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 6 #}
+                    <tr data-formation-id="6" data-type="beginner">
+                        <td><input type="checkbox" class="form-check-input formation-check"></td>
+                        <td class="form-id">6</td>
+                        <td>
+                            <div class="form-nom-cell">
+                                <div class="form-icon-avatar beginner">
+                                    <i class="fas fa-pen-nib"></i>
+                                </div>
+                                <span class="form-nom">Drawing Fundamentals</span>
+                            </div>
+                        </td>
+                        <td><span class="form-date"><i class="fas fa-calendar me-1"></i>2026-08-18</span></td>
+                        <td><span class="type-badge type-beginner">Beginner</span></td>
+                        <td><span class="form-description">Learn the basic principles and techniques of drawing.</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-formation-btn" title="View" data-bs-toggle="tooltip" data-formation-id="6"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-formation-btn" title="Edit" data-bs-toggle="tooltip" data-formation-id="6"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-formation-btn" title="Delete" data-bs-toggle="tooltip" data-formation-id="6" data-formation-nom="Drawing Fundamentals"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer ── #}
+        <div class="admin-table-footer">
+            <div class="admin-table-info">Showing <strong>1–6</strong> of <strong>42</strong> formations</div>
+            <nav aria-label="Formations pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">…</a></li>
+                    <li class="page-item"><a class="page-link" href="#">7</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════════
+       ADD/EDIT FORMATION MODAL
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="formationModal" tabindex="-1" aria-labelledby="formationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content form-modal-content">
+                <div class="modal-header form-modal-header">
+                    <div class="form-header-icon">
+                        <i class="fas fa-graduation-cap" id="formationModalIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title" id="formationModalLabel">Add Formation</h5>
+                        <p class="modal-subtitle" id="formationModalSubtitle">Fill in the details to create a new formation</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body form-modal-body">
+                    <form id="formationForm" novalidate>
+                        <input type="hidden" id="formFormationId" value="">
+
+                        <div class="row g-3">
+                            {# ID Formation #}
+                            <div class="col-md-6">
+                                <label for="inputFormationId" class="form-label-custom"><i class="fas fa-hashtag me-1"></i> ID Formation</label>
+                                <input type="text" class="form-control admin-form-control" id="inputFormationId" placeholder="Auto-generated" readonly>
+                                <small class="form-text-muted">Auto-generated by system</small>
+                            </div>
+
+                            {# Date Formation #}
+                            <div class="col-md-6">
+                                <label for="inputDateForm" class="form-label-custom"><i class="fas fa-calendar-days me-1"></i> Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control admin-form-control" id="inputDateForm" required>
+                                <div class="invalid-feedback">Please select a date.</div>
+                            </div>
+
+                            {# Nom Formation #}
+                            <div class="col-md-12">
+                                <label for="inputNomForm" class="form-label-custom"><i class="fas fa-heading me-1"></i> Formation Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control admin-form-control" id="inputNomForm" placeholder="e.g., Introduction to Art History" required>
+                                <div class="invalid-feedback">Please enter a formation name.</div>
+                            </div>
+
+                            {# Type #}
+                            <div class="col-md-12">
+                                <label for="inputType" class="form-label-custom"><i class="fas fa-tag me-1"></i> Type <span class="text-danger">*</span></label>
+                                <select class="form-select admin-select" id="inputType" required>
+                                    <option value="" disabled selected>Select type…</option>
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                    <option value="workshop">Workshop</option>
+                                    <option value="masterclass">Masterclass</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a type.</div>
+                            </div>
+
+                            {# Description #}
+                            <div class="col-md-12">
+                                <label for="inputDescription" class="form-label-custom"><i class="fas fa-align-left me-1"></i> Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control admin-form-control" id="inputDescription" rows="4" placeholder="Enter formation description..." required></textarea>
+                                <div class="invalid-feedback">Please enter a description.</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer form-modal-footer">
+                    <button type="button" class="btn btn-admin-outline" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-admin-primary" id="saveFormationBtn">
+                        <i class="fas fa-check me-1"></i> <span id="saveFormationBtnText">Add Formation</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       DELETE CONFIRMATION ALERT
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="delete-alert-overlay" id="deleteFormationAlert">
+        <div class="delete-alert-card">
+            <div class="delete-alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4 class="delete-alert-title">Delete Formation?</h4>
+            <p class="delete-alert-message">
+                Are you sure you want to delete <strong id="deleteFormationName">this formation</strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="delete-alert-actions">
+                <button class="btn btn-admin-outline" id="cancelDeleteFormationBtn">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button class="btn btn-danger" id="confirmDeleteFormationBtn">
+                    <i class="fas fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        {# Success Toast #}
+        <div id="formationToastSuccess" class="toast custom-toast toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-check-circle toast-icon me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="formationToastSuccessMsg">Formation added successfully!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        {# Error Toast #}
+        <div id="formationToastError" class="toast custom-toast toast-error" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-times-circle toast-icon me-2"></i>
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="formationToastErrorMsg">An error occurred!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        {# Warning Toast #}
+        <div id="formationToastWarning" class="toast custom-toast toast-warning" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-triangle-exclamation toast-icon me-2"></i>
+                <strong class="me-auto">Warning</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="formationToastWarningMsg">Please check your input!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-formations.js') }}"></script>
+{% endblock %}

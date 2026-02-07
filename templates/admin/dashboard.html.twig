@@ -1,0 +1,432 @@
+{# ═══════════════════════════════════════════════════════════════
+   Admin Dashboard – Main overview page
+   Extends: admin/base.html.twig
+   Contains: Stat cards, recent data table, quick actions
+═══════════════════════════════════════════════════════════════ #}
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item active" aria-current="page">Overview</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2">
+        <button class="btn btn-admin-outline">
+            <i class="fas fa-download me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary">
+            <i class="fas fa-plus me-1"></i> Create Event
+        </button>
+    </div>
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       STATISTICS CARDS ROW
+       – Total Users, Events, Blogs, Revenue
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-4 mb-4">
+
+        {# ── Total Users ── #}
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="stat-card animate-in">
+                <div class="stat-card-shimmer"></div>
+                <div class="stat-card-header">
+                    <div class="stat-card-icon gold">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <span class="stat-card-trend up">
+                        <i class="fas fa-arrow-up me-1"></i>12.5%
+                    </span>
+                </div>
+                <div class="stat-card-value" data-counter="2486">0</div>
+                <div class="stat-card-label">Total Users</div>
+            </div>
+        </div>
+
+        {# ── Total Events ── #}
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="stat-card animate-in">
+                <div class="stat-card-shimmer"></div>
+                <div class="stat-card-header">
+                    <div class="stat-card-icon purple">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <span class="stat-card-trend up">
+                        <i class="fas fa-arrow-up me-1"></i>8.3%
+                    </span>
+                </div>
+                <div class="stat-card-value" data-counter="184">0</div>
+                <div class="stat-card-label">Total Events</div>
+            </div>
+        </div>
+
+        {# ── Total Blogs ── #}
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="stat-card animate-in">
+                <div class="stat-card-shimmer"></div>
+                <div class="stat-card-header">
+                    <div class="stat-card-icon teal">
+                        <i class="fas fa-feather-alt"></i>
+                    </div>
+                    <span class="stat-card-trend up">
+                        <i class="fas fa-arrow-up me-1"></i>23.1%
+                    </span>
+                </div>
+                <div class="stat-card-value" data-counter="539">0</div>
+                <div class="stat-card-label">Blog Articles</div>
+            </div>
+        </div>
+
+        {# ── Revenue ── #}
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="stat-card animate-in">
+                <div class="stat-card-shimmer"></div>
+                <div class="stat-card-header">
+                    <div class="stat-card-icon gold">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <span class="stat-card-trend down">
+                        <i class="fas fa-arrow-down me-1"></i>3.2%
+                    </span>
+                </div>
+                <div class="stat-card-value">$<span data-counter="48250">0</span></div>
+                <div class="stat-card-label">Total Revenue</div>
+            </div>
+        </div>
+
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       DATA TABLE – Recent Users
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="admin-table-card animate-in">
+
+                {# ── Table Header ── #}
+                <div class="admin-table-header">
+                    <h3 class="admin-table-title">
+                        <i class="fas fa-users me-2 text-accent"></i>Recent Users
+                    </h3>
+                    <div class="admin-table-actions">
+                        <input type="text" class="form-control admin-form-control" placeholder="Search users…" style="width: 200px;">
+                        <select class="form-select admin-select" style="width: 140px;">
+                            <option selected>All Status</option>
+                            <option>Active</option>
+                            <option>Pending</option>
+                            <option>Inactive</option>
+                        </select>
+                        <button class="btn btn-admin-primary">
+                            <i class="fas fa-plus me-1"></i> Add User
+                        </button>
+                    </div>
+                </div>
+
+                {# ── Table Body ── #}
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input">
+                                </th>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Events</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {# ── Row 1 ── #}
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="table-user">
+                                        <img src="https://ui-avatars.com/api/?name=Sophie+Laurent&background=7c5cbf&color=fff&size=36" class="table-user-avatar" alt="Avatar">
+                                        <div class="table-user-info">
+                                            <div class="table-user-name">Sophie Laurent</div>
+                                            <div class="table-user-email">sophie@tunarche.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="text-accent">Event Manager</span></td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>24</td>
+                                <td>Jan 15, 2026</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="table-action-btn" title="View" data-bs-toggle="tooltip"><i class="fas fa-eye"></i></button>
+                                        <button class="table-action-btn" title="Edit" data-bs-toggle="tooltip"><i class="fas fa-pen"></i></button>
+                                        <button class="table-action-btn delete" title="Delete" data-bs-toggle="tooltip"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {# ── Row 2 ── #}
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="table-user">
+                                        <img src="https://ui-avatars.com/api/?name=Ahmed+Benali&background=c9a84c&color=0a0a12&size=36" class="table-user-avatar" alt="Avatar">
+                                        <div class="table-user-info">
+                                            <div class="table-user-name">Ahmed Benali</div>
+                                            <div class="table-user-email">ahmed@tunarche.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Artist</td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>12</td>
+                                <td>Jan 20, 2026</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="table-action-btn" title="View" data-bs-toggle="tooltip"><i class="fas fa-eye"></i></button>
+                                        <button class="table-action-btn" title="Edit" data-bs-toggle="tooltip"><i class="fas fa-pen"></i></button>
+                                        <button class="table-action-btn delete" title="Delete" data-bs-toggle="tooltip"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {# ── Row 3 ── #}
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="table-user">
+                                        <img src="https://ui-avatars.com/api/?name=Clara+Dubois&background=2ec4b6&color=fff&size=36" class="table-user-avatar" alt="Avatar">
+                                        <div class="table-user-info">
+                                            <div class="table-user-name">Clara Dubois</div>
+                                            <div class="table-user-email">clara@tunarche.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Blogger</td>
+                                <td><span class="status-badge pending">Pending</span></td>
+                                <td>5</td>
+                                <td>Jan 28, 2026</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="table-action-btn" title="View" data-bs-toggle="tooltip"><i class="fas fa-eye"></i></button>
+                                        <button class="table-action-btn" title="Edit" data-bs-toggle="tooltip"><i class="fas fa-pen"></i></button>
+                                        <button class="table-action-btn delete" title="Delete" data-bs-toggle="tooltip"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {# ── Row 4 ── #}
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="table-user">
+                                        <img src="https://ui-avatars.com/api/?name=Marc+Fontaine&background=e74c3c&color=fff&size=36" class="table-user-avatar" alt="Avatar">
+                                        <div class="table-user-info">
+                                            <div class="table-user-name">Marc Fontaine</div>
+                                            <div class="table-user-email">marc@tunarche.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Visitor</td>
+                                <td><span class="status-badge inactive">Inactive</span></td>
+                                <td>0</td>
+                                <td>Feb 01, 2026</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="table-action-btn" title="View" data-bs-toggle="tooltip"><i class="fas fa-eye"></i></button>
+                                        <button class="table-action-btn" title="Edit" data-bs-toggle="tooltip"><i class="fas fa-pen"></i></button>
+                                        <button class="table-action-btn delete" title="Delete" data-bs-toggle="tooltip"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {# ── Row 5 ── #}
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input"></td>
+                                <td>
+                                    <div class="table-user">
+                                        <img src="https://ui-avatars.com/api/?name=Lina+Mabrouk&background=9b7fd4&color=fff&size=36" class="table-user-avatar" alt="Avatar">
+                                        <div class="table-user-info">
+                                            <div class="table-user-name">Lina Mabrouk</div>
+                                            <div class="table-user-email">lina@tunarche.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="text-accent">Gallery Curator</span></td>
+                                <td><span class="status-badge active">Active</span></td>
+                                <td>18</td>
+                                <td>Feb 03, 2026</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="table-action-btn" title="View" data-bs-toggle="tooltip"><i class="fas fa-eye"></i></button>
+                                        <button class="table-action-btn" title="Edit" data-bs-toggle="tooltip"><i class="fas fa-pen"></i></button>
+                                        <button class="table-action-btn delete" title="Delete" data-bs-toggle="tooltip"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                {# ── Table Footer / Pagination ── #}
+                <div class="admin-table-footer">
+                    <span>Showing <strong>1-5</strong> of <strong>248</strong> users</span>
+                    <nav aria-label="Table pagination">
+                        <ul class="pagination admin-pagination mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════
+       BOTTOM ROW – Upcoming Events & Recent Blogs
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-4">
+
+        {# ── Upcoming Events ── #}
+        <div class="col-xl-6">
+            <div class="admin-table-card animate-in">
+                <div class="admin-table-header">
+                    <h3 class="admin-table-title">
+                        <i class="fas fa-calendar-star me-2" style="color: var(--purple-light);"></i>Upcoming Events
+                    </h3>
+                    <a href="#" class="btn btn-admin-outline btn-sm">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Attendees</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span style="color: var(--gold);"><i class="fas fa-star"></i></span>
+                                        <strong>Gala Night 2026</strong>
+                                    </div>
+                                </td>
+                                <td>Feb 14, 2026</td>
+                                <td>320</td>
+                                <td><span class="status-badge active">Confirmed</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span style="color: var(--purple-light);"><i class="fas fa-palette"></i></span>
+                                        <strong>Art Exhibition</strong>
+                                    </div>
+                                </td>
+                                <td>Feb 22, 2026</td>
+                                <td>150</td>
+                                <td><span class="status-badge pending">Pending</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span style="color: var(--teal);"><i class="fas fa-music"></i></span>
+                                        <strong>Jazz & Wine Evening</strong>
+                                    </div>
+                                </td>
+                                <td>Mar 05, 2026</td>
+                                <td>85</td>
+                                <td><span class="status-badge active">Confirmed</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span style="color: var(--gold);"><i class="fas fa-camera"></i></span>
+                                        <strong>Photography Workshop</strong>
+                                    </div>
+                                </td>
+                                <td>Mar 12, 2026</td>
+                                <td>40</td>
+                                <td><span class="status-badge pending">Pending</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# ── Recent Blog Posts ── #}
+        <div class="col-xl-6">
+            <div class="admin-table-card animate-in">
+                <div class="admin-table-header">
+                    <h3 class="admin-table-title">
+                        <i class="fas fa-feather-alt me-2" style="color: var(--teal);"></i>Recent Blogs
+                    </h3>
+                    <a href="#" class="btn btn-admin-outline btn-sm">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Views</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>The Art of Modern Gala Design</strong></td>
+                                <td>Sophie L.</td>
+                                <td>1,240</td>
+                                <td><span class="status-badge active">Published</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Behind the Scenes: Event Planning</strong></td>
+                                <td>Ahmed B.</td>
+                                <td>856</td>
+                                <td><span class="status-badge active">Published</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Top 10 Exhibition Trends in 2026</strong></td>
+                                <td>Clara D.</td>
+                                <td>0</td>
+                                <td><span class="status-badge pending">Draft</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Capturing Moments: Photography Tips</strong></td>
+                                <td>Lina M.</td>
+                                <td>432</td>
+                                <td><span class="status-badge active">Published</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {# ── Floating Action Button ── #}
+    <button class="fab-button" title="Quick Action" data-bs-toggle="tooltip" data-bs-placement="left">
+        <i class="fas fa-plus"></i>
+    </button>
+
+{% endblock %}

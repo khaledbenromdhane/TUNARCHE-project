@@ -1,0 +1,524 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Œuvres Management{% endblock %}
+
+{% block page_title %}Œuvres{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Œuvres</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-admin-outline btn-sm" id="exportOeuvresBtn">
+            <i class="fas fa-file-export me-1"></i> Export
+        </button>
+        <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#oeuvreModal" id="addOeuvreBtn">
+            <i class="fas fa-palette me-1"></i> Add Œuvre
+        </button>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('assets/css/admin-oeuvres.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+
+    {# ═══════════════════════════════════════════════════════════
+       ŒUVRE STAT SUMMARY CARDS
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="oeuv-stat-card animate-in">
+                <div class="oeuv-stat-icon gold">
+                    <i class="fas fa-paint-brush"></i>
+                </div>
+                <div class="oeuv-stat-info">
+                    <span class="oeuv-stat-value" data-counter="247">0</span>
+                    <span class="oeuv-stat-label">Total Artworks</span>
+                </div>
+                <div class="oeuv-stat-trend up"><i class="fas fa-arrow-up"></i> 15%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="oeuv-stat-card animate-in">
+                <div class="oeuv-stat-icon teal">
+                    <i class="fas fa-euro-sign"></i>
+                </div>
+                <div class="oeuv-stat-info">
+                    <span class="oeuv-stat-value" data-counter="1850000">0</span>
+                    <span class="oeuv-stat-label">Total Value (€)</span>
+                </div>
+                <div class="oeuv-stat-trend up"><i class="fas fa-arrow-up"></i> 8%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="oeuv-stat-card animate-in">
+                <div class="oeuv-stat-icon purple">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="oeuv-stat-info">
+                    <span class="oeuv-stat-value" data-counter="189">0</span>
+                    <span class="oeuv-stat-label">New Condition</span>
+                </div>
+                <div class="oeuv-stat-trend up"><i class="fas fa-arrow-up"></i> 22%</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+            <div class="oeuv-stat-card animate-in">
+                <div class="oeuv-stat-icon pink">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="oeuv-stat-info">
+                    <span class="oeuv-stat-value" data-counter="52">0</span>
+                    <span class="oeuv-stat-label">Artists</span>
+                </div>
+                <div class="oeuv-stat-trend down"><i class="fas fa-arrow-down"></i> 3%</div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════
+       ŒUVRE TABLE CARD
+    ═══════════════════════════════════════════════════════════ #}
+    <div class="admin-table-card animate-in">
+        {# ── Table Header ── #}
+        <div class="admin-table-header">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="mb-0">All Artworks</h5>
+                <span class="oeuv-count-badge" id="oeuvreCount">247</span>
+            </div>
+            <div class="admin-table-controls">
+                <div class="oeuv-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="oeuvreSearchInput" class="form-control" placeholder="Search by title, artist, gallery...">
+                </div>
+                <select id="oeuvreConditionFilter" class="form-select">
+                    <option value="">All Conditions</option>
+                    <option value="neuf">Neuf</option>
+                    <option value="bon">Bon</option>
+                    <option value="endommagé">Endommagé</option>
+                </select>
+            </div>
+        </div>
+
+        {# ── Table Body ── #}
+        <div class="table-responsive">
+            <table class="admin-table oeuv-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;"><input type="checkbox" class="form-check-input" id="selectAllOeuvres"></th>
+                        <th class="sortable" data-sort="id">ID <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="titre">Title <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="nom">Artwork Name <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="galerie">Gallery <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="artiste">Artist <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="prix">Price <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="etat">Condition <i class="fas fa-sort ms-1"></i></th>
+                        <th class="sortable" data-sort="annee">Year <i class="fas fa-sort ms-1"></i></th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="oeuvreTableBody">
+                    {# Sample Row 1 #}
+                    <tr data-oeuvre-id="1" data-condition="neuf">
+                        <td><input type="checkbox" class="form-check-input oeuvre-check"></td>
+                        <td class="oeuv-id">1</td>
+                        <td>
+                            <div class="oeuv-titre-cell">
+                                <div class="oeuv-icon-avatar contemporary">
+                                    <i class="fas fa-paint-brush"></i>
+                                </div>
+                                <span class="oeuv-titre">La Nuit Étoilée</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-nom">Starry Night Reimagined</span></td>
+                        <td><span class="oeuv-galerie-badge"><i class="fas fa-building-columns me-1"></i>Galerie Moderne</span></td>
+                        <td>
+                            <div class="oeuv-artist-info">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span>Sophie Martin</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-prix">45,000 €</span></td>
+                        <td><span class="condition-badge cond-neuf">Neuf</span></td>
+                        <td><span class="oeuv-year">2024</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-oeuvre-btn" title="View" data-bs-toggle="tooltip" data-oeuvre-id="1"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-oeuvre-btn" title="Edit" data-bs-toggle="tooltip" data-oeuvre-id="1"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-oeuvre-btn" title="Delete" data-bs-toggle="tooltip" data-oeuvre-id="1" data-oeuvre-titre="La Nuit Étoilée"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 2 #}
+                    <tr data-oeuvre-id="2" data-condition="bon">
+                        <td><input type="checkbox" class="form-check-input oeuvre-check"></td>
+                        <td class="oeuv-id">2</td>
+                        <td>
+                            <div class="oeuv-titre-cell">
+                                <div class="oeuv-icon-avatar classical">
+                                    <i class="fas fa-palette"></i>
+                                </div>
+                                <span class="oeuv-titre">Portrait Renaissance</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-nom">Lady with Pearl</span></td>
+                        <td><span class="oeuv-galerie-badge"><i class="fas fa-building-columns me-1"></i>Galerie Classique</span></td>
+                        <td>
+                            <div class="oeuv-artist-info">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span>Ahmed Ben Ali</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-prix">120,000 €</span></td>
+                        <td><span class="condition-badge cond-bon">Bon</span></td>
+                        <td><span class="oeuv-year">2022</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-oeuvre-btn" title="View" data-bs-toggle="tooltip" data-oeuvre-id="2"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-oeuvre-btn" title="Edit" data-bs-toggle="tooltip" data-oeuvre-id="2"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-oeuvre-btn" title="Delete" data-bs-toggle="tooltip" data-oeuvre-id="2" data-oeuvre-titre="Portrait Renaissance"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 3 #}
+                    <tr data-oeuvre-id="3" data-condition="endommagé">
+                        <td><input type="checkbox" class="form-check-input oeuvre-check"></td>
+                        <td class="oeuv-id">3</td>
+                        <td>
+                            <div class="oeuv-titre-cell">
+                                <div class="oeuv-icon-avatar modern">
+                                    <i class="fas fa-spray-can"></i>
+                                </div>
+                                <span class="oeuv-titre">Abstract Dreams</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-nom">Color Explosion</span></td>
+                        <td><span class="oeuv-galerie-badge"><i class="fas fa-building-columns me-1"></i>Galerie Urbaine</span></td>
+                        <td>
+                            <div class="oeuv-artist-info">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span>Clara Dubois</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-prix">28,500 €</span></td>
+                        <td><span class="condition-badge cond-endommagé">Endommagé</span></td>
+                        <td><span class="oeuv-year">2021</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-oeuvre-btn" title="View" data-bs-toggle="tooltip" data-oeuvre-id="3"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-oeuvre-btn" title="Edit" data-bs-toggle="tooltip" data-oeuvre-id="3"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-oeuvre-btn" title="Delete" data-bs-toggle="tooltip" data-oeuvre-id="3" data-oeuvre-titre="Abstract Dreams"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 4 #}
+                    <tr data-oeuvre-id="4" data-condition="neuf">
+                        <td><input type="checkbox" class="form-check-input oeuvre-check"></td>
+                        <td class="oeuv-id">4</td>
+                        <td>
+                            <div class="oeuv-titre-cell">
+                                <div class="oeuv-icon-avatar sculpture">
+                                    <i class="fas fa-gem"></i>
+                                </div>
+                                <span class="oeuv-titre">Marble Elegance</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-nom">Venus Moderne</span></td>
+                        <td><span class="oeuv-galerie-badge"><i class="fas fa-building-columns me-1"></i>Galerie Sculpture</span></td>
+                        <td>
+                            <div class="oeuv-artist-info">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span>Marc Lefevre</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-prix">85,000 €</span></td>
+                        <td><span class="condition-badge cond-neuf">Neuf</span></td>
+                        <td><span class="oeuv-year">2025</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-oeuvre-btn" title="View" data-bs-toggle="tooltip" data-oeuvre-id="4"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-oeuvre-btn" title="Edit" data-bs-toggle="tooltip" data-oeuvre-id="4"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-oeuvre-btn" title="Delete" data-bs-toggle="tooltip" data-oeuvre-id="4" data-oeuvre-titre="Marble Elegance"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 5 #}
+                    <tr data-oeuvre-id="5" data-condition="bon">
+                        <td><input type="checkbox" class="form-check-input oeuvre-check"></td>
+                        <td class="oeuv-id">5</td>
+                        <td>
+                            <div class="oeuv-titre-cell">
+                                <div class="oeuv-icon-avatar photography">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                <span class="oeuv-titre">Urban Shadows</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-nom">City at Night</span></td>
+                        <td><span class="oeuv-galerie-badge"><i class="fas fa-building-columns me-1"></i>Galerie Photo</span></td>
+                        <td>
+                            <div class="oeuv-artist-info">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span>Lina Haddad</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-prix">12,000 €</span></td>
+                        <td><span class="condition-badge cond-bon">Bon</span></td>
+                        <td><span class="oeuv-year">2023</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-oeuvre-btn" title="View" data-bs-toggle="tooltip" data-oeuvre-id="5"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-oeuvre-btn" title="Edit" data-bs-toggle="tooltip" data-oeuvre-id="5"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-oeuvre-btn" title="Delete" data-bs-toggle="tooltip" data-oeuvre-id="5" data-oeuvre-titre="Urban Shadows"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {# Sample Row 6 #}
+                    <tr data-oeuvre-id="6" data-condition="neuf">
+                        <td><input type="checkbox" class="form-check-input oeuvre-check"></td>
+                        <td class="oeuv-id">6</td>
+                        <td>
+                            <div class="oeuv-titre-cell">
+                                <div class="oeuv-icon-avatar abstract">
+                                    <i class="fas fa-shapes"></i>
+                                </div>
+                                <span class="oeuv-titre">Geometric Harmony</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-nom">Lines of Light</span></td>
+                        <td><span class="oeuv-galerie-badge"><i class="fas fa-building-columns me-1"></i>Galerie Abstract</span></td>
+                        <td>
+                            <div class="oeuv-artist-info">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span>Thomas Blanc</span>
+                            </div>
+                        </td>
+                        <td><span class="oeuv-prix">55,000 €</span></td>
+                        <td><span class="condition-badge cond-neuf">Neuf</span></td>
+                        <td><span class="oeuv-year">2024</span></td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-action-btn view-oeuvre-btn" title="View" data-bs-toggle="tooltip" data-oeuvre-id="6"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-oeuvre-btn" title="Edit" data-bs-toggle="tooltip" data-oeuvre-id="6"><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-oeuvre-btn" title="Delete" data-bs-toggle="tooltip" data-oeuvre-id="6" data-oeuvre-titre="Geometric Harmony"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {# ── Table Footer ── #}
+        <div class="admin-table-footer">
+            <div class="admin-table-info">Showing <strong>1–6</strong> of <strong>247</strong> artworks</div>
+            <nav aria-label="Artworks pagination">
+                <ul class="pagination admin-pagination mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">…</a></li>
+                    <li class="page-item"><a class="page-link" href="#">42</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    {# ═══════════════════════════════════════════════════════════════
+       ADD/EDIT ŒUVRE MODAL
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="modal fade" id="oeuvreModal" tabindex="-1" aria-labelledby="oeuvreModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content oeuv-modal-content">
+                <div class="modal-header oeuv-modal-header">
+                    <div class="oeuv-header-icon">
+                        <i class="fas fa-palette" id="oeuvreModalIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title" id="oeuvreModalLabel">Add Œuvre</h5>
+                        <p class="modal-subtitle" id="oeuvreModalSubtitle">Fill in the details to create a new artwork</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body oeuv-modal-body">
+                    <form id="oeuvreForm" novalidate>
+                        <input type="hidden" id="formOeuvreId" value="">
+
+                        <div class="row g-3">
+                            {# ID Œuvre #}
+                            <div class="col-md-6">
+                                <label for="inputOeuvreId" class="form-label-custom"><i class="fas fa-hashtag me-1"></i> ID Œuvre</label>
+                                <input type="text" class="form-control admin-form-control" id="inputOeuvreId" placeholder="Auto-generated" readonly>
+                                <small class="form-text-muted">Auto-generated by system</small>
+                            </div>
+
+                            {# Year Created #}
+                            <div class="col-md-6">
+                                <label for="inputAnnee" class="form-label-custom"><i class="fas fa-calendar-alt me-1"></i> Year Created <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control admin-form-control" id="inputAnnee" min="1800" max="2026" placeholder="e.g., 2024" required>
+                                <div class="invalid-feedback">Please enter a valid year.</div>
+                            </div>
+
+                            {# Titre #}
+                            <div class="col-md-6">
+                                <label for="inputTitre" class="form-label-custom"><i class="fas fa-heading me-1"></i> Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control admin-form-control" id="inputTitre" placeholder="e.g., La Nuit Étoilée" required>
+                                <div class="invalid-feedback">Please enter a title.</div>
+                            </div>
+
+                            {# Nom Tableau #}
+                            <div class="col-md-6">
+                                <label for="inputNomTableau" class="form-label-custom"><i class="fas fa-signature me-1"></i> Artwork Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control admin-form-control" id="inputNomTableau" placeholder="e.g., Starry Night Reimagined" required>
+                                <div class="invalid-feedback">Please enter artwork name.</div>
+                            </div>
+
+                            {# Gallery #}
+                            <div class="col-md-6">
+                                <label for="inputGalerie" class="form-label-custom"><i class="fas fa-building-columns me-1"></i> Gallery <span class="text-danger">*</span></label>
+                                <select class="form-select admin-select" id="inputGalerie" required>
+                                    <option value="" disabled selected>Select gallery…</option>
+                                    <option value="1">Galerie Moderne</option>
+                                    <option value="2">Galerie Classique</option>
+                                    <option value="3">Galerie Urbaine</option>
+                                    <option value="4">Galerie Sculpture</option>
+                                    <option value="5">Galerie Photo</option>
+                                    <option value="6">Galerie Abstract</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a gallery.</div>
+                            </div>
+
+                            {# Artist #}
+                            <div class="col-md-6">
+                                <label for="inputArtiste" class="form-label-custom"><i class="fas fa-user-circle me-1"></i> Artist <span class="text-danger">*</span></label>
+                                <select class="form-select admin-select" id="inputArtiste" required>
+                                    <option value="" disabled selected>Select artist…</option>
+                                    <option value="1">Sophie Martin</option>
+                                    <option value="2">Ahmed Ben Ali</option>
+                                    <option value="3">Clara Dubois</option>
+                                    <option value="4">Marc Lefevre</option>
+                                    <option value="5">Lina Haddad</option>
+                                    <option value="6">Thomas Blanc</option>
+                                </select>
+                                <div class="invalid-feedback">Please select an artist.</div>
+                            </div>
+
+                            {# Prix #}
+                            <div class="col-md-6">
+                                <label for="inputPrix" class="form-label-custom"><i class="fas fa-euro-sign me-1"></i> Price (€) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control admin-form-control" id="inputPrix" min="0" step="0.01" placeholder="e.g., 45000" required>
+                                <div class="invalid-feedback">Please enter a valid price.</div>
+                            </div>
+
+                            {# Condition #}
+                            <div class="col-md-6">
+                                <label for="inputEtat" class="form-label-custom"><i class="fas fa-star me-1"></i> Condition <span class="text-danger">*</span></label>
+                                <select class="form-select admin-select" id="inputEtat" required>
+                                    <option value="" disabled selected>Select condition…</option>
+                                    <option value="neuf">Neuf</option>
+                                    <option value="bon">Bon</option>
+                                    <option value="endommagé">Endommagé</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a condition.</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer oeuv-modal-footer">
+                    <button type="button" class="btn btn-admin-outline" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-admin-primary" id="saveOeuvreBtn">
+                        <i class="fas fa-check me-1"></i> <span id="saveOeuvreBtnText">Add Œuvre</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       DELETE CONFIRMATION ALERT
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="delete-alert-overlay" id="deleteOeuvreAlert">
+        <div class="delete-alert-card">
+            <div class="delete-alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4 class="delete-alert-title">Delete Artwork?</h4>
+            <p class="delete-alert-message">
+                Are you sure you want to delete <strong id="deleteOeuvreName">this artwork</strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="delete-alert-actions">
+                <button class="btn btn-admin-outline" id="cancelDeleteOeuvreBtn">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button class="btn btn-danger" id="confirmDeleteOeuvreBtn">
+                    <i class="fas fa-trash-can me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════════ #}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        {# Success Toast #}
+        <div id="oeuvreToastSuccess" class="toast custom-toast toast-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-check-circle toast-icon me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="oeuvreToastSuccessMsg">Artwork added successfully!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        {# Error Toast #}
+        <div id="oeuvreToastError" class="toast custom-toast toast-error" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-times-circle toast-icon me-2"></i>
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="oeuvreToastErrorMsg">An error occurred!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+
+        {# Warning Toast #}
+        <div id="oeuvreToastWarning" class="toast custom-toast toast-warning" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-triangle-exclamation toast-icon me-2"></i>
+                <strong class="me-auto">Warning</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="oeuvreToastWarningMsg">Please check your input!</div>
+            <div class="toast-progress-bar"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/admin-oeuvres.js') }}"></script>
+{% endblock %}

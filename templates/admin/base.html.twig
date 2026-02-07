@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %} | BackOffice</title>
+
+    {# ── Bootstrap 5.3 CSS ── #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    {# ── Font Awesome 6 Icons ── #}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    {# ── Google Fonts – Poppins (all weights) ── #}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {# ── Admin Panel Custom Styles ── #}
+    <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
+
+    {% block stylesheets %}{% endblock %}
+</head>
+
+<body>
+    {# ═══════════════════════════════════════════════════════════════
+       TOP NAVBAR
+       – Logo / brand on the left
+       – Search bar center (optional)
+       – Notifications + Admin profile dropdown on the right
+    ═══════════════════════════════════════════════════════════════ #}
+    <nav class="navbar navbar-expand-lg fixed-top admin-navbar" id="topNavbar">
+        <div class="container-fluid px-4">
+
+            {# ── Sidebar Toggle Button ── #}
+            <button class="btn btn-link admin-sidebar-toggle me-3 d-lg-none" id="sidebarToggle" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            {# ── Brand / Logo ── #}
+            <a class="navbar-brand admin-brand d-flex align-items-center" href="{{ path('app_admin_dashboard') }}">
+                <span class="brand-icon me-2">
+                    <i class="fas fa-gem"></i>
+                </span>
+                <span class="brand-text">
+                    <span class="brand-primary">Artis</span><span class="brand-accent">Event</span>
+                </span>
+            </a>
+
+            {# ── Desktop Sidebar Toggle ── #}
+            <button class="btn btn-link admin-sidebar-toggle me-3 d-none d-lg-inline-flex" id="sidebarCollapseBtn" aria-label="Collapse sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            {# ── Right Side: Notifications & Profile ── #}
+            <div class="d-flex align-items-center ms-auto admin-nav-actions">
+
+                {# ── Search (desktop only) ── #}
+                <div class="admin-search d-none d-lg-flex me-2 me-lg-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search…" aria-label="Search">
+                    </div>
+                </div>
+
+                {# ── Mobile Search Toggle ── #}
+                <button class="btn btn-link admin-nav-icon me-2 d-lg-none" id="mobileSearchToggle" aria-label="Search">
+                    <i class="fas fa-search"></i>
+                </button>
+
+                {# ── Notifications Dropdown ── #}
+                <div class="dropdown me-2 me-md-3">
+                    <button class="btn btn-link admin-nav-icon position-relative" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge-dot"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end admin-dropdown notifications-dropdown">
+                        <li class="dropdown-header">
+                            <strong>Notifications</strong>
+                            <a href="#" class="float-end small text-accent">Mark all read</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item notification-item unread" href="#">
+                                <div class="notification-icon bg-gold"><i class="fas fa-calendar-check"></i></div>
+                                <div class="notification-content">
+                                    <p>New event "Gala Night" created</p>
+                                    <small>2 minutes ago</small>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item notification-item unread" href="#">
+                                <div class="notification-icon bg-purple"><i class="fas fa-user-plus"></i></div>
+                                <div class="notification-content">
+                                    <p>5 new users registered</p>
+                                    <small>1 hour ago</small>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item notification-item" href="#">
+                                <div class="notification-icon bg-teal"><i class="fas fa-blog"></i></div>
+                                <div class="notification-content">
+                                    <p>Blog post published successfully</p>
+                                    <small>3 hours ago</small>
+                                </div>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-center small text-accent" href="#">View all notifications</a></li>
+                    </ul>
+                </div>
+
+                {# ── Messages Icon ── #}
+                <button class="btn btn-link admin-nav-icon me-2 me-md-3 position-relative d-none d-sm-inline-flex" aria-label="Messages">
+                    <i class="fas fa-envelope"></i>
+                    <span class="badge-count">3</span>
+                </button>
+
+                {# ── Admin Profile Dropdown ── #}
+                <div class="dropdown">
+                    <button class="btn admin-profile-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="admin-avatar">
+                            <img src="https://ui-avatars.com/api/?name=Admin&background=c9a84c&color=0a0a12&bold=true&size=40" alt="Admin Avatar">
+                        </div>
+                        <div class="admin-info d-none d-md-block">
+                            <span class="admin-name">Admin User</span>
+                            <span class="admin-role">Super Admin</span>
+                        </div>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end admin-dropdown profile-dropdown">
+                        <li class="dropdown-header">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name=Admin&background=c9a84c&color=0a0a12&bold=true&size=60" class="rounded-circle me-3" width="48" height="48" alt="Avatar">
+                                <div>
+                                    <strong>Admin User</strong>
+                                    <p class="mb-0 small text-muted">admin@tunarche.com</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-user me-2 text-accent"></i> My Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-cog me-2 text-accent"></i> Settings
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-question-circle me-2 text-accent"></i> Help Center
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {# ── Mobile Search Bar (toggleable) ── #}
+    <div class="mobile-search-bar" id="mobileSearchBar">
+        <div class="container-fluid px-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" placeholder="Search anything…" aria-label="Mobile Search">
+                <button class="btn btn-link" id="closeMobileSearch" aria-label="Close search">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       SIDEBAR NAVIGATION
+       – Collapsible left sidebar with menu items
+       – Font Awesome icons for each item
+       – Active state highlighting
+    ═══════════════════════════════════════════════════════════════ #}
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-content">
+
+            {# ── Main Navigation ── #}
+            <div class="sidebar-section">
+                <span class="sidebar-section-title">Main Menu</span>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item {% if app.request.get('_route') == 'app_admin_dashboard' %}active{% endif %}">
+                        <a href="{{ path('app_admin_dashboard') }}" class="sidebar-link">
+                            <i class="fas fa-th-large"></i>
+                            <span class="sidebar-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item {% if 'users' in app.request.get('_route')|default('') %}active{% endif %}">
+                        <a href="{{ path('app_admin_users') }}" class="sidebar-link">
+                            <i class="fas fa-users"></i>
+                            <span class="sidebar-text">Users</span>
+                            <span class="sidebar-badge">248</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item {% if 'evenement' in app.request.get('_route')|default('') %}active{% endif %}">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle" data-dropdown="evenement-submenu">
+                            <i class="fas fa-calendar-star"></i>
+                            <span class="sidebar-text">Événements</span>
+                            <i class="fas fa-chevron-down sidebar-dropdown-icon"></i>
+                        </a>
+                        <ul class="sidebar-submenu" id="evenement-submenu">
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_evenements') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-calendar-days"></i>
+                                    <span>Événement</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_participations') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-users-between-lines"></i>
+                                    <span>Participation</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item {% if 'blog' in app.request.get('_route')|default('') %}active{% endif %}">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle" data-dropdown="blog-submenu">
+                            <i class="fas fa-feather-alt"></i>
+                            <span class="sidebar-text">Blogs</span>
+                            <i class="fas fa-chevron-down sidebar-dropdown-icon"></i>
+                        </a>
+                        <ul class="sidebar-submenu" id="blog-submenu">
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_commentaires') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-comments"></i>
+                                    <span>Commentaires</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_publications') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-file-alt"></i>
+                                    <span>Publications</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item {% if 'galerie' in app.request.get('_route')|default('') %}active{% endif %}">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle" data-dropdown="galerie-submenu">
+                            <i class="fas fa-images"></i>
+                            <span class="sidebar-text">Galerie</span>
+                            <i class="fas fa-chevron-down sidebar-dropdown-icon"></i>
+                        </a>
+                        <ul class="sidebar-submenu" id="galerie-submenu">
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_galeries') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-images"></i>
+                                    <span>Galerie</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_oeuvres') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-palette"></i>
+                                    <span>Œuvre</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item {% if 'formation' in app.request.get('_route')|default('') %}active{% endif %}">
+                        <a href="#" class="sidebar-link sidebar-dropdown-toggle" data-dropdown="formation-submenu">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span class="sidebar-text">Formation</span>
+                            <i class="fas fa-chevron-down sidebar-dropdown-icon"></i>
+                        </a>
+                        <ul class="sidebar-submenu" id="formation-submenu">
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_formations') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span>Formation</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_evaluations') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-clipboard-check"></i>
+                                    <span>Évaluation</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            {# ── Secondary Navigation ── #}
+            <div class="sidebar-section">
+                <span class="sidebar-section-title">Settings</span>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span class="sidebar-text">Analytics</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#" class="sidebar-link">
+                            <i class="fas fa-sliders-h"></i>
+                            <span class="sidebar-text">Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            {# ── Sidebar Footer ── #}
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-card">
+                    <div class="sfc-icon"><i class="fas fa-crown"></i></div>
+                    <p class="sfc-text">Upgrade to <strong>Pro</strong></p>
+                    <a href="#" class="btn btn-sm btn-gold">Upgrade</a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    {# ── Sidebar Overlay (mobile) ── #}
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    {# ═══════════════════════════════════════════════════════════════
+       MAIN CONTENT AREA
+       – Page header with breadcrumb
+       – Dynamic content block
+       – Footer
+    ═══════════════════════════════════════════════════════════════ #}
+    <main class="admin-main" id="adminMain">
+        <div class="admin-content">
+
+            {# ── Page Header / Breadcrumb ── #}
+            <div class="page-header">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                    <div>
+                        <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb admin-breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}"><i class="fas fa-home"></i></a></li>
+                                {% block breadcrumb %}
+                                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                                {% endblock %}
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="page-actions mt-3 mt-md-0">
+                        {% block page_actions %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+
+            {# ── Main Body Content ── #}
+            {% block body %}{% endblock %}
+
+        </div>
+
+        {# ── Footer ── #}
+        <footer class="admin-footer">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <p class="mb-0">&copy; {{ "now"|date("Y") }} <strong class="text-accent">Tun'Arche</strong>. All rights reserved.</p>
+                <p class="mb-0 small">Crafted with <i class="fas fa-heart text-danger"></i> for Arts & Events</p>
+            </div>
+        </footer>
+    </main>
+
+    {# ── Bootstrap 5.3 JS Bundle ── #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    {# ── Admin Panel Custom JS ── #}
+    <script src="{{ asset('assets/js/admin.js') }}"></script>
+
+    {% block javascripts %}{% endblock %}
+</body>
+</html>
