@@ -85,7 +85,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * Commentaires – Full comment management page (list, add, edit, delete).
+     * Commentaires – Full comment management page (list, add, edit, delete).fffff
      */
     #[Route('/commentaire', name: 'commentaires')]
     public function commentaires(): Response
