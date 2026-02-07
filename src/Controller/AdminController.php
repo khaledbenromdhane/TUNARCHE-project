@@ -76,7 +76,7 @@ class AdminController extends AbstractController
     }
 
     /**
-     * Évaluations – Full evaluation management page (list, add, edit, delete).
+     * Évaluations – Full evaluation management page (list, add, edit, delete).....
      */
     #[Route('/evaluation', name: 'evaluations')]
     public function evaluations(): Response
