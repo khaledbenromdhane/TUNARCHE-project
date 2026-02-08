@@ -3,8 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Evenement;
+use App\Entity\Participation;
 use App\Repository\EvenementRepository;
+use App\Repository\ParticipationRepository;
 use App\Service\EvenementService;
+use App\Service\ParticipationService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,7 +26,7 @@ class EvenementController extends AbstractController
     // ─── LIST (front-end page) ─────────────────────────────
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(Request $request, EvenementRepository $repo): Response
+    public function index(Request $request, EvenementRepository $repo, ParticipationRepository $participationRepo): Response
     {
         $q     = trim($request->query->get('q', ''));
         $sort  = $request->query->get('sort', 'date');
@@ -31,12 +34,113 @@ class EvenementController extends AbstractController
 
         $evenements = $repo->searchAndSort($q, '', '', $sort, $order);
 
-        return $this->render('evenement/index.html.twig', [
-            'evenements' => $evenements,
-            'q'          => $q,
-            'sort'       => $sort,
-            'order'      => $order,
+        // Group participations by event ID for the template
+        $participationsByEvent = [];
+        foreach ($evenements as $evt) {
+            $participationsByEvent[$evt->getId()] = $participationRepo->findByEvenement($evt->getId());
+        }
+
+        return $this->render('front/evenement.html.twig', [
+            'evenements'            => $evenements,
+            'participationsByEvent' => $participationsByEvent,
+            'q'                     => $q,
+            'sort'                  => $sort,
+            'order'                 => $order,
         ]);
+    }
+
+    // ─── FRONT PARTICIPATION CREATE ────────────────────────
+
+    #[Route('/participer', name: 'participate', methods: ['POST'])]
+    public function participate(Request $request, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo): Response
+    {
+        $data = [
+            'id_evenement'       => $request->request->get('id_evenement', ''),
+            'date_participation' => $request->request->get('date_participation', ''),
+            'nbr_participation'  => $request->request->get('nbr_participation', ''),
+            'statut'             => $request->request->get('statut', ''),
+            'mode_paiement'      => $request->request->get('mode_paiement', ''),
+        ];
+
+        $errors = $service->validate($data);
+
+        if (!empty($errors)) {
+            foreach ($errors as $field => $msg) {
+                $this->addFlash('error', $msg);
+            }
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $em = $m->getManager();
+        $participation = new Participation();
+
+        $evenement = $evenementRepo->find((int)$data['id_evenement']);
+        $participation->setEvenement($evenement);
+        $participation->setDateParticipation(\DateTime::createFromFormat('Y-m-d', $data['date_participation']));
+        $participation->setNbrParticipation((int)$data['nbr_participation']);
+        $participation->setStatut($data['statut']);
+
+        if ($evenement && $evenement->isPaiement() && !empty($data['mode_paiement'])) {
+            $participation->setModePaiement($data['mode_paiement']);
+        } else {
+            $participation->setModePaiement(null);
+        }
+
+        $em->persist($participation);
+        $em->flush();
+
+        $this->addFlash('success', 'Participation créée avec succès !');
+        return $this->redirectToRoute('app_evenement_index');
+    }
+
+    // ─── FRONT PARTICIPATION UPDATE ────────────────────────
+
+    #[Route('/participation/{id}/modifier', name: 'participation_update', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function participationUpdate(int $id, Request $request, ParticipationRepository $participationRepo, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo): Response
+    {
+        $participation = $participationRepo->find($id);
+
+        if (!$participation) {
+            $this->addFlash('error', 'Participation introuvable.');
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $data = [
+            'id_evenement'       => $request->request->get('id_evenement', ''),
+            'date_participation' => $request->request->get('date_participation', ''),
+            'nbr_participation'  => $request->request->get('nbr_participation', ''),
+            'statut'             => $request->request->get('statut', ''),
+            'mode_paiement'      => $request->request->get('mode_paiement', ''),
+        ];
+
+        $errors = $service->validate($data, $participation->getId());
+
+        if (!empty($errors)) {
+            foreach ($errors as $field => $msg) {
+                $this->addFlash('error', $msg);
+            }
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $em = $m->getManager();
+
+        $evenement = $evenementRepo->find((int)$data['id_evenement']);
+        $participation->setEvenement($evenement);
+        $participation->setDateParticipation(\DateTime::createFromFormat('Y-m-d', $data['date_participation']));
+        $participation->setNbrParticipation((int)$data['nbr_participation']);
+        $participation->setStatut($data['statut']);
+
+        if ($evenement && $evenement->isPaiement() && !empty($data['mode_paiement'])) {
+            $participation->setModePaiement($data['mode_paiement']);
+        } else {
+            $participation->setModePaiement(null);
+        }
+
+        $em->persist($participation);
+        $em->flush();
+
+        $this->addFlash('success', 'Participation modifiée avec succès !');
+        return $this->redirectToRoute('app_evenement_index');
     }
 
     // ─── CREATE (form-based, persisted to database) ────────
@@ -158,7 +262,7 @@ class EvenementController extends AbstractController
      */
     private function extractFormData(Request $request): array
     {
-        return [
+        $data = [
             'nom'              => $request->request->get('nom', ''),
             'type_evenement'   => $request->request->get('type_evenement', ''),
             'nbr_participant'  => $request->request->get('nbr_participant', ''),
@@ -168,6 +272,13 @@ class EvenementController extends AbstractController
             'description'      => $request->request->get('description', ''),
             'paiement'         => $request->request->has('paiement'),
         ];
+
+        $imageFile = $request->files->get('image');
+        if ($imageFile) {
+            $data['image_file'] = $imageFile;
+        }
+
+        return $data;
     }
 
     /**
@@ -187,5 +298,24 @@ class EvenementController extends AbstractController
 
         $heureObj = \DateTime::createFromFormat('H:i', $data['heure']);
         $evenement->setHeure($heureObj);
+
+        // Handle image upload
+        if (!empty($data['image_file'])) {
+            $file = $data['image_file'];
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/evenements';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0775, true);
+            }
+            // Remove old image if exists
+            if ($evenement->getImage()) {
+                $oldPath = $uploadDir . '/' . $evenement->getImage();
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+            $newFilename = uniqid('evt_') . '.' . $file->guessExtension();
+            $file->move($uploadDir, $newFilename);
+            $evenement->setImage($newFilename);
+        }
     }
 }

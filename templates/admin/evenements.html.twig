@@ -185,12 +185,17 @@
                             data-heure="{{ evt.heure|date('H:i') }}"
                             data-lieu="{{ evt.lieu }}"
                             data-description="{{ evt.description }}"
-                            data-nbr-participant="{{ evt.nbrParticipant }}">
+                            data-nbr-participant="{{ evt.nbrParticipant }}"
+                            data-image="{{ evt.image ?? '' }}">
                             <td><input type="checkbox" class="form-check-input evt-check"></td>
                             <td class="evt-id">#EVT-{{ '%03d'|format(evt.id) }}</td>
                             <td>
                                 <div class="evt-name-cell">
-                                    <div class="evt-icon-mini gold"><i class="fas fa-calendar-star"></i></div>
+                                    {% if evt.image %}
+                                        <img src="{{ asset('uploads/evenements/' ~ evt.image) }}" alt="{{ evt.nom }}" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                                    {% else %}
+                                        <div class="evt-icon-mini gold"><i class="fas fa-calendar-star"></i></div>
+                                    {% endif %}
                                     <div>
                                         <span class="evt-name">{{ evt.nom }}</span>
                                         <span class="evt-desc-hint">{{ evt.description|length > 40 ? evt.description|slice(0, 40) ~ '…' : evt.description }}</span>
@@ -274,7 +279,7 @@
 
                 {# ── Modal Body ── #}
                 <div class="modal-body evt-modal-body">
-                    <form id="eventForm" method="POST" action="{{ path('app_admin_evenement_store') }}" novalidate>
+                    <form id="eventForm" method="POST" action="{{ path('app_admin_evenement_store') }}" enctype="multipart/form-data" novalidate>
                         <input type="hidden" id="formEventId" name="event_id" value="">
 
                         <div class="row g-3">
@@ -369,6 +374,19 @@
                                         <span class="toggle-slider"></span>
                                         <span class="toggle-label-text" id="paiementStatusText">Free</span>
                                     </label>
+                                </div>
+                            </div>
+
+                            {# ── Image Upload ── #}
+                            <div class="col-md-12">
+                                <div class="form-floating-custom">
+                                    <label for="inputEvtImage"><i class="fas fa-image me-1 text-accent"></i> Image</label>
+                                    <input type="file" class="form-control modal-input" id="inputEvtImage" name="image" accept="image/*">
+                                    <small class="form-hint">JPG, PNG, GIF, WEBP. Max 5 Mo.</small>
+                                    <div id="currentImagePreview" style="margin-top: 0.5rem; display: none;">
+                                        <img id="currentImageImg" src="" alt="Current" style="max-width: 120px; max-height: 80px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                                        <small class="d-block" style="color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-top: 0.25rem;">Image actuelle</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>

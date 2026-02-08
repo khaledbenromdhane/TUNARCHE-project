@@ -81,6 +81,11 @@ class AdminController extends AbstractController
             'paiement'         => $request->request->has('paiement'),
         ];
 
+        $imageFile = $request->files->get('image');
+        if ($imageFile) {
+            $data['image_file'] = $imageFile;
+        }
+
         $errors = $service->validate($data);
 
         if (!empty($errors)) {
@@ -122,6 +127,11 @@ class AdminController extends AbstractController
             'description'      => $request->request->get('description', ''),
             'paiement'         => $request->request->has('paiement'),
         ];
+
+        $imageFile = $request->files->get('image');
+        if ($imageFile) {
+            $data['image_file'] = $imageFile;
+        }
 
         $errors = $service->validate($data);
 
@@ -178,6 +188,25 @@ class AdminController extends AbstractController
 
         $heureObj = \DateTime::createFromFormat('H:i', $data['heure']);
         $evenement->setHeure($heureObj);
+
+        // Handle image upload
+        if (!empty($data['image_file'])) {
+            $file = $data['image_file'];
+            $uploadDir = __DIR__ . '/../../public/uploads/evenements';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0775, true);
+            }
+            // Remove old image if exists
+            if ($evenement->getImage()) {
+                $oldPath = $uploadDir . '/' . $evenement->getImage();
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+            $newFilename = uniqid('evt_') . '.' . $file->guessExtension();
+            $file->move($uploadDir, $newFilename);
+            $evenement->setImage($newFilename);
+        }
     }
 
     /**

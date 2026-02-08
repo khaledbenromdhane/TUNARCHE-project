@@ -1,0 +1,809 @@
+{# ═══════════════════════════════════════════════════════════════
+   Front Evenement – Exhibition-style Event Listing
+   Route: /evenement
+═══════════════════════════════════════════════════════════════ #}
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Événements | Artvista{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════ */
+:root {
+    --gold: #c5a54e;
+    --gold-light: #d4b55d;
+    --gold-glow: rgba(197,165,78,.35);
+    --dark: #0d0d1a;
+    --card-bg: #141427;
+    --surface: rgba(255,255,255,.04);
+    --border: rgba(255,255,255,.08);
+    --text-primary: #fff;
+    --text-secondary: rgba(255,255,255,.6);
+    --text-muted: rgba(255,255,255,.38);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --transition: .3s cubic-bezier(.4,0,.2,1);
+    --shadow-card: 0 4px 24px rgba(0,0,0,.25);
+    --shadow-hover: 0 16px 48px rgba(0,0,0,.4);
+}
+
+/* ═══ Z-INDEX LAYER FIX ═══ */
+.space, .space.bg-title { position: relative; z-index: 1; }
+
+/* ═══ MODAL ESCAPE from ScrollSmoother transform context ═══ */
+body > .modal {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    display: none;
+    overflow-x: hidden; overflow-y: auto;
+    outline: 0;
+}
+body > .modal.show { display: flex !important; align-items: center; justify-content: center; }
+body > .modal .modal-dialog {
+    position: relative; pointer-events: auto !important;
+    margin: 1.75rem auto; max-width: 500px; width: 100%;
+}
+body > .modal .modal-content { pointer-events: auto !important; }
+
+/* ═══════════════════════════════════════════════════════
+   FLASH MESSAGES
+═══════════════════════════════════════════════════════ */
+.flash-msg {
+    border-radius: var(--radius-sm);
+    padding: .85rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: .65rem;
+    font-size: .9rem; font-weight: 500;
+    animation: fadeSlide .35s ease forwards;
+}
+.flash-success { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25); color: #4ade80; }
+.flash-error   { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.25); color: #f87171; }
+@keyframes fadeSlide { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ═══════════════════════════════════════════════════════
+   SEARCH BAR
+═══════════════════════════════════════════════════════ */
+.search-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .85rem 1rem;
+    margin-bottom: 1.75rem;
+    display: flex; gap: .6rem; align-items: center;
+}
+.search-bar .search-icon {
+    color: var(--text-muted); font-size: 1rem; flex-shrink: 0;
+}
+.search-bar input {
+    background: transparent; border: none; color: var(--text-primary);
+    flex: 1; min-width: 0; font-size: .9rem;
+    font-family: 'Jost', sans-serif; outline: none;
+}
+.search-bar input::placeholder { color: var(--text-muted); }
+.search-bar .search-btn {
+    background: var(--gold); color: var(--dark); border: none;
+    border-radius: var(--radius-sm); padding: .5rem 1.25rem;
+    font-weight: 600; font-size: .8rem; cursor: pointer;
+    transition: var(--transition); text-transform: uppercase;
+    letter-spacing: .04em; white-space: nowrap;
+    font-family: 'Jost', sans-serif;
+}
+.search-bar .search-btn:hover { box-shadow: 0 4px 16px var(--gold-glow); }
+.search-bar .search-clear {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-muted); border-radius: var(--radius-sm);
+    padding: .5rem .9rem; font-size: .8rem; cursor: pointer;
+    transition: var(--transition); text-decoration: none;
+    white-space: nowrap; font-family: 'Jost', sans-serif;
+}
+.search-bar .search-clear:hover { color: var(--text-primary); border-color: rgba(255,255,255,.2); }
+
+.search-result-info {
+    font-size: .825rem; color: var(--text-muted); margin-bottom: 1.25rem;
+}
+.search-result-info strong { color: var(--gold); }
+
+/* ═══════════════════════════════════════════════════════
+   SORT PILLS
+═══════════════════════════════════════════════════════ */
+.sort-bar {
+    display: flex; flex-wrap: wrap; gap: .4rem; align-items: center;
+    margin-bottom: 2rem;
+}
+.sort-bar .sort-label {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--text-muted); margin-right: .15rem;
+}
+.sort-pill {
+    display: inline-flex; align-items: center; gap: .25rem;
+    padding: .3rem .75rem; border-radius: 20px;
+    font-size: .75rem; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-muted); transition: var(--transition);
+    font-family: 'Jost', sans-serif;
+}
+.sort-pill:hover { color: var(--gold); border-color: rgba(197,165,78,.25); background: rgba(197,165,78,.06); }
+.sort-pill.active { color: var(--gold); border-color: rgba(197,165,78,.35); background: rgba(197,165,78,.1); }
+.sort-pill .arrow { font-size: .6rem; }
+
+/* ═══════════════════════════════════════════════════════
+   EVENT CARDS
+═══════════════════════════════════════════════════════ */
+.evt-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.75rem;
+}
+.evt-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    display: flex; flex-direction: column;
+}
+.evt-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(197,165,78,.15);
+}
+
+/* ── Thumbnail ── */
+.evt-thumb {
+    position: relative; overflow: hidden;
+    aspect-ratio: 16 / 10;
+}
+.evt-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform .5s ease;
+}
+.evt-card:hover .evt-thumb img { transform: scale(1.06); }
+.evt-thumb .overlay-type {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: .6rem 1rem;
+    background: linear-gradient(transparent, rgba(0,0,0,.7));
+    font-size: .75rem; font-weight: 600; letter-spacing: .05em;
+    color: rgba(255,255,255,.85); text-transform: uppercase;
+}
+.badge-pay {
+    position: absolute; top: .75rem; right: .75rem;
+    padding: .25rem .6rem; border-radius: 6px;
+    font-size: .65rem; font-weight: 700; letter-spacing: .03em;
+    backdrop-filter: blur(6px);
+}
+.badge-pay.paid { background: rgba(34,197,94,.82); color: #fff; }
+.badge-pay.free { background: rgba(239,68,68,.82); color: #fff; }
+
+/* ── Body ── */
+.evt-body {
+    padding: 1.1rem 1.15rem 1.25rem;
+    display: flex; flex-direction: column; flex: 1;
+}
+.evt-date-row {
+    display: flex; gap: .6rem; margin-bottom: .5rem;
+    font-size: .75rem; color: var(--gold); font-weight: 500;
+}
+.evt-title {
+    font-size: 1.05rem; font-weight: 600; line-height: 1.35;
+    margin: 0 0 .55rem;
+}
+.evt-title a { color: var(--text-primary); text-decoration: none; transition: color var(--transition); }
+.evt-title a:hover { color: var(--gold); }
+
+.evt-meta {
+    display: flex; flex-wrap: wrap; gap: .35rem .9rem;
+    margin-bottom: .65rem;
+}
+.evt-meta span {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .78rem; color: var(--text-secondary);
+}
+.evt-meta span i { color: var(--gold); font-size: .7rem; }
+
+.evt-desc {
+    font-size: .82rem; color: var(--text-muted);
+    line-height: 1.55; margin-bottom: .85rem;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ── Action buttons (icon-only) ── */
+.evt-actions {
+    display: flex; gap: .45rem; margin-top: auto;
+}
+.act-btn {
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary);
+    font-size: .85rem; cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none; position: relative; flex-shrink: 0;
+}
+.act-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(197,165,78,.08); }
+
+.act-btn.act-primary {
+    background: var(--gold); color: var(--dark);
+    border-color: var(--gold); font-size: .9rem;
+}
+.act-btn.act-primary:hover {
+    background: var(--gold-light); box-shadow: 0 4px 14px var(--gold-glow);
+    transform: translateY(-1px);
+}
+
+.act-btn.act-edit {
+    border-color: rgba(124,154,223,.3); color: #7c9adf;
+}
+.act-btn.act-edit:hover {
+    background: rgba(124,154,223,.1); border-color: #7c9adf;
+}
+
+/* Tooltip on hover */
+.act-btn[title]::after {
+    content: attr(title); position: absolute;
+    bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%) scale(.92);
+    padding: .28rem .55rem; border-radius: 5px;
+    background: rgba(20,20,39,.95); color: #ddd;
+    font-size: .65rem; font-weight: 500;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity .2s, transform .2s;
+    border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+}
+.act-btn:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
+
+/* ── Empty state ── */
+.empty-state {
+    text-align: center; padding: 4.5rem 2rem; color: var(--text-muted);
+}
+.empty-state i { font-size: 3.5rem; margin-bottom: 1.25rem; color: rgba(197,165,78,.2); display: block; }
+.empty-state h4 { color: var(--text-secondary); margin-bottom: .4rem; font-size: 1.15rem; }
+.empty-state p  { font-size: .88rem; }
+
+/* ═══════════════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════════════ */
+body.modal-open { overflow: hidden !important; }
+.modal          { z-index: 9999 !important; }
+.modal-backdrop { z-index: 9998 !important; background: rgba(0,0,0,.72) !important; backdrop-filter: blur(5px); }
+.modal.show     { display: block !important; }
+.modal-dialog   { z-index: 10000 !important; pointer-events: auto !important; }
+.modal-content  {
+    background: var(--card-bg) !important;
+    border: 1px solid rgba(197,165,78,.22) !important;
+    border-radius: var(--radius) !important;
+    box-shadow: 0 24px 64px rgba(0,0,0,.65) !important;
+    pointer-events: auto !important;
+}
+.modal-header {
+    border-bottom: 1px solid rgba(197,165,78,.15) !important;
+    padding: 1.15rem 1.35rem !important;
+    background: linear-gradient(135deg, rgba(197,165,78,.1), transparent) !important;
+}
+.modal-title { color: var(--gold) !important; font-weight: 600 !important; font-size: 1.05rem !important; }
+.modal-body  { padding: 1.35rem !important; background: var(--card-bg) !important; }
+.modal-footer {
+    border-top: 1px solid rgba(197,165,78,.12) !important;
+    padding: .85rem 1.35rem !important;
+    background: rgba(197,165,78,.04) !important;
+}
+
+/* Modal form controls */
+.modal-content .form-label {
+    color: var(--text-secondary) !important; font-weight: 500;
+    margin-bottom: .4rem; font-size: .85rem;
+}
+.modal-content .form-control,
+.modal-content .form-select {
+    background: rgba(255,255,255,.06) !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    color: #fff !important; border-radius: var(--radius-sm);
+    padding: .55rem .9rem; font-family: 'Jost', sans-serif;
+    font-size: .9rem; transition: var(--transition);
+}
+.modal-content .form-control:focus,
+.modal-content .form-select:focus {
+    background: rgba(255,255,255,.09) !important;
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 3px rgba(197,165,78,.15) !important;
+    color: #fff !important; outline: none;
+}
+.modal-content .form-select option { background: var(--card-bg) !important; color: #fff !important; }
+.modal-content .form-control::placeholder { color: var(--text-muted) !important; }
+
+/* Close btn */
+.modal-content .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: .6;
+}
+.modal-content .btn-close:hover { opacity: 1; }
+
+/* Modal footer buttons */
+.modal-footer .btn-cancel {
+    background: transparent; border: 1px solid rgba(255,255,255,.18);
+    color: var(--text-secondary); border-radius: var(--radius-sm);
+    padding: .5rem 1.2rem; font-weight: 500; transition: var(--transition);
+    font-size: .85rem; cursor: pointer; font-family: 'Jost', sans-serif;
+}
+.modal-footer .btn-cancel:hover { background: rgba(255,255,255,.06); color: #fff; border-color: rgba(255,255,255,.3); }
+.modal-footer .btn-submit {
+    background: var(--gold); color: var(--dark); border: none;
+    border-radius: var(--radius-sm); padding: .5rem 1.4rem;
+    font-weight: 600; transition: var(--transition);
+    font-size: .85rem; cursor: pointer; font-family: 'Jost', sans-serif;
+}
+.modal-footer .btn-submit:hover { background: var(--gold-light); box-shadow: 0 4px 14px var(--gold-glow); }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — TABLET LANDSCAPE (≤ 1199px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 1199.98px) {
+    .evt-grid { gap: 1.25rem; }
+    .evt-thumb { aspect-ratio: 16 / 9; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — TABLET PORTRAIT (≤ 991px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 991.98px) {
+    .evt-grid { grid-template-columns: repeat(2, 1fr); gap: 1.15rem; }
+    .sort-bar { gap: .35rem; }
+    .sort-pill { font-size: .7rem; padding: .25rem .6rem; }
+    .evt-meta { flex-direction: column; gap: .2rem; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE LANDSCAPE (≤ 767px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+    .evt-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+
+    .search-bar { flex-wrap: wrap; }
+    .search-bar input { min-width: 0; width: 100%; order: 1; flex: 1 1 100%; }
+    .search-bar .search-icon { order: 0; }
+    .search-bar .search-btn  { order: 2; flex: 1; }
+    .search-bar .search-clear { order: 3; flex: 0; }
+
+    .sort-bar {
+        overflow-x: auto; flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; -ms-overflow-style: none;
+        padding-bottom: .35rem;
+    }
+    .sort-bar::-webkit-scrollbar { display: none; }
+    .sort-bar .sort-label, .sort-pill { white-space: nowrap; flex-shrink: 0; }
+
+    .flash-msg { font-size: .82rem; padding: .65rem .9rem; }
+    .sec-title { font-size: 1.4rem !important; }
+
+    .evt-body { padding: .9rem 1rem 1.1rem; }
+    .evt-title { font-size: .95rem; }
+    .evt-desc  { font-size: .78rem; -webkit-line-clamp: 2; }
+
+    .modal-dialog  { margin: .75rem; max-width: calc(100% - 1.5rem); }
+    .modal-header  { padding: .9rem 1rem !important; }
+    .modal-body    { padding: 1rem !important; }
+    .modal-footer  { padding: .7rem 1rem !important; }
+    .modal-title   { font-size: .95rem !important; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — PHONES (≤ 575px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 575.98px) {
+    .evt-grid { grid-template-columns: 1fr; gap: .9rem; }
+    .evt-card { max-width: 480px; margin: 0 auto; width: 100%; }
+    .evt-thumb { aspect-ratio: 16 / 9; }
+
+    .search-bar { padding: .7rem .8rem; gap: .5rem; }
+    .search-bar input { font-size: .85rem; }
+    .search-bar .search-btn  { padding: .45rem 1rem; font-size: .75rem; }
+    .search-bar .search-clear { padding: .45rem .7rem; font-size: .75rem; }
+
+    .sort-pill { font-size: .65rem; padding: .22rem .55rem; }
+    .sort-bar .sort-label { font-size: .6rem; }
+
+    .evt-body { padding: .85rem .9rem 1rem; }
+    .evt-date-row { font-size: .7rem; }
+    .evt-title { font-size: .92rem; }
+    .evt-meta span { font-size: .72rem; }
+    .evt-desc  { font-size: .76rem; }
+    .badge-pay { font-size: .6rem; padding: .2rem .5rem; top: .55rem; right: .55rem; }
+    .overlay-type { font-size: .68rem !important; padding: .5rem .8rem !important; }
+
+    .act-btn { width: 34px; height: 34px; font-size: .8rem; }
+
+    .flash-msg { font-size: .78rem; padding: .55rem .7rem; }
+    .sec-title { font-size: 1.2rem !important; }
+
+    .empty-state { padding: 3rem 1.5rem; }
+    .empty-state i { font-size: 2.5rem; }
+    .empty-state h4 { font-size: 1rem; }
+
+    .modal-dialog  { margin: .5rem; max-width: calc(100% - 1rem); }
+    .modal-header  { padding: .8rem !important; }
+    .modal-body    { padding: .85rem !important; }
+    .modal-title   { font-size: .88rem !important; }
+    .modal-footer  { flex-direction: column; padding: .65rem .8rem !important; }
+    .modal-footer .btn-cancel,
+    .modal-footer .btn-submit { width: 100%; text-align: center; }
+    .modal-content .form-control,
+    .modal-content .form-select { font-size: .85rem; padding: .5rem .75rem; }
+    .modal-content .form-label { font-size: .8rem; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — TINY PHONES (≤ 399px)
+═══════════════════════════════════════════════════════ */
+@media (max-width: 399.98px) {
+    .evt-card { max-width: 100%; }
+    .evt-body { padding: .75rem .8rem .85rem; }
+    .evt-title { font-size: .85rem; }
+    .evt-meta span { font-size: .68rem; }
+    .act-btn { width: 32px; height: 32px; font-size: .75rem; border-radius: 6px; }
+    .sec-title { font-size: 1.05rem !important; }
+}
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcumb-wrapper text-center" data-bg-src="{{ asset('assets/img/bg/aa.png') }}">
+    <div class="container">
+        <div class="breadcumb-content">
+            <h1 class="breadcumb-title">Événements</h1>
+        </div>
+        <ul class="breadcumb-menu">
+            <li><a href="{{ path('app_home') }}">ACCUEIL</a></li>
+            <li class="active">ÉVÉNEMENTS</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="space bg-title">
+    <div class="container">
+
+        {# ── Flash Messages ── #}
+        {% for message in app.flashes('success') %}
+            <div class="flash-msg flash-success"><i class="fas fa-check-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="flash-msg flash-error"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
+        {% endfor %}
+
+        {# ── Header ── #}
+        <div class="title-area mb-2">
+            <h2 class="sec-title text-white">Tous les Événements</h2>
+        </div>
+
+        {# ── Search ── #}
+        <form method="get" action="{{ path('app_evenement_index') }}" class="search-bar">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom, lieu, type…">
+            <input type="hidden" name="sort" value="{{ sort }}">
+            <input type="hidden" name="order" value="{{ order }}">
+            <button type="submit" class="search-btn"><i class="fas fa-search me-1"></i>Rechercher</button>
+            {% if q is not empty %}
+                <a href="{{ path('app_evenement_index') }}" class="search-clear"><i class="fas fa-times"></i></a>
+            {% endif %}
+        </form>
+
+        {% if q is not empty %}
+            <div class="search-result-info">
+                <i class="fas fa-filter me-1"></i> Résultats pour "<strong>{{ q }}</strong>" — <strong>{{ evenements|length }}</strong> trouvé(s)
+            </div>
+        {% endif %}
+
+        {# ── Sort pills ── #}
+        {% set nextOrder = order == 'ASC' ? 'DESC' : 'ASC' %}
+        <div class="sort-bar">
+            <span class="sort-label"><i class="fas fa-sort me-1"></i>Trier :</span>
+            {% set sortOptions = {
+                'date': 'Date',
+                'nom': 'Nom',
+                'typeEvenement': 'Type',
+                'nbrParticipant': 'Places',
+                'lieu': 'Lieu'
+            } %}
+            {% for key, label in sortOptions %}
+                <a href="{{ path('app_evenement_index', {q: q, sort: key, order: sort == key ? nextOrder : (key == 'date' ? 'DESC' : 'ASC')}) }}"
+                   class="sort-pill {{ sort == key ? 'active' : '' }}">
+                    {{ label }}
+                    {% if sort == key %}
+                        <i class="fas fa-arrow-{{ order == 'ASC' ? 'up' : 'down' }} arrow"></i>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+
+        {# ── Cards ── #}
+        {% if evenements is empty %}
+            <div class="empty-state">
+                <i class="fas fa-calendar-xmark"></i>
+                <h4>Aucun événement trouvé</h4>
+                <p>{% if q is not empty %}Essayez avec d'autres mots-clés.{% else %}Pas encore d'événements disponibles.{% endif %}</p>
+            </div>
+        {% else %}
+            {% set fallbackImages = [
+                'assets/img/exhibition/1-1.png',
+                'assets/img/exhibition/1-2.png',
+                'assets/img/exhibition/1-3.png',
+                'assets/img/exhibition/1-4.png',
+                'assets/img/exhibition/1-5.png',
+                'assets/img/exhibition/1-6.png'
+            ] %}
+
+            <div class="evt-grid">
+                {% for evt in evenements %}
+                <div class="evt-card">
+                    <div class="evt-thumb">
+                        {% if evt.image %}
+                            <img src="{{ asset('uploads/evenements/' ~ evt.image) }}" alt="{{ evt.nom }}">
+                        {% else %}
+                            <img src="{{ asset(fallbackImages[loop.index0 % 6]) }}" alt="{{ evt.nom }}">
+                        {% endif %}
+                        <div class="overlay-type">{{ evt.typeEvenement }}</div>
+                        {% if evt.paiement %}
+                            <span class="badge-pay paid"><i class="fas fa-ticket-alt me-1"></i>Payant</span>
+                        {% else %}
+                            <span class="badge-pay free"><i class="fas fa-gift me-1"></i>Gratuit</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="evt-body">
+                        <div class="evt-date-row">
+                            <span><i class="far fa-calendar-alt me-1"></i>{{ evt.date|date('d M Y') }}</span>
+                            <span><i class="far fa-clock me-1"></i>{{ evt.heure|date('H\\hi') }}</span>
+                        </div>
+
+                        <h3 class="evt-title">
+                            <a href="{{ path('app_evenement_show', {id: evt.id}) }}">{{ evt.nom }}</a>
+                        </h3>
+
+                        <div class="evt-meta">
+                            <span><i class="fas fa-map-marker-alt"></i>{{ evt.lieu }}</span>
+                            <span><i class="fas fa-users"></i>{{ evt.nbrParticipant }} places</span>
+                        </div>
+
+                        {% if evt.description %}
+                            <p class="evt-desc">{{ evt.description }}</p>
+                        {% endif %}
+
+                        <div class="evt-actions">
+                            <a class="act-btn" href="{{ path('app_evenement_show', {id: evt.id}) }}" title="Détails">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="act-btn act-primary btn-open-participate" title="Participer"
+                                    data-event-id="{{ evt.id }}"
+                                    data-event-nom="{{ evt.nom }}"
+                                    data-event-date="{{ evt.date|date('Y-m-d') }}"
+                                    data-event-paiement="{{ evt.paiement ? '1' : '0' }}">
+                                <i class="fas fa-hand-pointer"></i>
+                            </button>
+                            {% if participationsByEvent[evt.id] is defined and participationsByEvent[evt.id] is not empty %}
+                                {% for p in participationsByEvent[evt.id] %}
+                                    <button type="button" class="act-btn act-edit btn-open-edit" title="Modifier #{{ p.id }}"
+                                            data-participation-id="{{ p.id }}"
+                                            data-event-id="{{ evt.id }}"
+                                            data-event-nom="{{ evt.nom }}"
+                                            data-event-date="{{ evt.date|date('Y-m-d') }}"
+                                            data-event-paiement="{{ evt.paiement ? '1' : '0' }}"
+                                            data-date="{{ p.dateParticipation|date('Y-m-d') }}"
+                                            data-nbr="{{ p.nbrParticipation }}"
+                                            data-statut="{{ p.statut }}"
+                                            data-mode="{{ p.modePaiement }}">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════
+   MODAL — Create Participation
+═══════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="participateModal" tabindex="-1" aria-labelledby="participateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="participateModalLabel">
+                    <i class="fas fa-hand-pointer me-2"></i><span id="pm-event-name"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form method="post" action="{{ path('app_evenement_participate') }}" id="participateForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id_evenement" id="pm-event-id">
+                    <div class="mb-3">
+                        <label for="pm-date" class="form-label">Date de participation <span style="color:#f87171">*</span></label>
+                        <input type="date" class="form-control" id="pm-date" name="date_participation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pm-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
+                        <input type="number" class="form-control" id="pm-nbr" name="nbr_participation" min="1" value="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pm-statut" class="form-label">Statut <span style="color:#f87171">*</span></label>
+                        <select class="form-select" id="pm-statut" name="statut" required>
+                            <option value="">— Choisir —</option>
+                            <option value="En attente">En attente</option>
+                            <option value="Confirmée">Confirmée</option>
+                            <option value="Annulée">Annulée</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="pm-paiement-group" style="display:none">
+                        <label for="pm-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
+                        <select class="form-select" id="pm-mode" name="mode_paiement">
+                            <option value="">— Choisir —</option>
+                            <option value="Carte">Carte</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Annuler</button>
+                    <button type="submit" class="btn-submit"><i class="fas fa-check me-1"></i>Valider</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════
+   MODAL — Edit Participation
+═══════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="editParticipationModal" tabindex="-1" aria-labelledby="editParticipationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editParticipationModalLabel">
+                    <i class="fas fa-pen me-2"></i><span id="em-event-name"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form method="post" action="" id="editParticipationForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id_evenement" id="em-event-id">
+                    <div class="mb-3">
+                        <label for="em-date" class="form-label">Date de participation <span style="color:#f87171">*</span></label>
+                        <input type="date" class="form-control" id="em-date" name="date_participation" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="em-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
+                        <input type="number" class="form-control" id="em-nbr" name="nbr_participation" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="em-statut" class="form-label">Statut <span style="color:#f87171">*</span></label>
+                        <select class="form-select" id="em-statut" name="statut" required>
+                            <option value="">— Choisir —</option>
+                            <option value="En attente">En attente</option>
+                            <option value="Confirmée">Confirmée</option>
+                            <option value="Annulée">Annulée</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="em-paiement-group" style="display:none">
+                        <label for="em-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
+                        <select class="form-select" id="em-mode" name="mode_paiement">
+                            <option value="">— Choisir —</option>
+                            <option value="Carte">Carte</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Annuler</button>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save me-1"></i>Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* ══════════════════════════════════════════════════════
+       MOVE MODALS OUT OF #smooth-content
+       GSAP ScrollSmoother applies transform to #smooth-content,
+       which creates a stacking context that traps position:fixed
+       elements. Moving modals to <body> root fixes centering
+       and pointer-events.
+    ══════════════════════════════════════════════════════ */
+    var pmEl = document.getElementById('participateModal');
+    var emEl = document.getElementById('editParticipationModal');
+    if (pmEl) document.body.appendChild(pmEl);
+    if (emEl) document.body.appendChild(emEl);
+
+    /* Pause ScrollSmoother while any modal is open */
+    var smoother = (typeof ScrollSmoother !== 'undefined') ? ScrollSmoother.get() : null;
+    document.querySelectorAll('.modal').forEach(function (m) {
+        m.addEventListener('shown.bs.modal', function () {
+            if (smoother) smoother.paused(true);
+        });
+        m.addEventListener('hidden.bs.modal', function () {
+            if (smoother) smoother.paused(false);
+        });
+    });
+
+    var pmModal = new bootstrap.Modal(pmEl);
+    var emModal = new bootstrap.Modal(emEl);
+    var today   = new Date().toISOString().split('T')[0];
+
+    /* ── CREATE modal ── */
+    document.querySelectorAll('.btn-open-participate').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var d = this.dataset;
+            document.getElementById('pm-event-id').value         = d.eventId;
+            document.getElementById('pm-event-name').textContent = d.eventNom;
+
+            var dateInput  = document.getElementById('pm-date');
+            dateInput.min  = today;
+            dateInput.max  = d.eventDate;
+            dateInput.value = '';
+
+            document.getElementById('pm-nbr').value   = 1;
+            document.getElementById('pm-statut').value = 'En attente';
+            document.getElementById('pm-mode').value   = '';
+
+            var pg   = document.getElementById('pm-paiement-group');
+            var paid = d.eventPaiement === '1';
+            pg.style.display = paid ? 'block' : 'none';
+            document.getElementById('pm-mode').required = paid;
+
+            pmModal.show();
+        });
+    });
+
+    /* ── EDIT modal ── */
+    document.querySelectorAll('.btn-open-edit').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var d    = this.dataset;
+            var form = document.getElementById('editParticipationForm');
+            form.action = '/evenement/participation/' + d.participationId + '/modifier';
+
+            document.getElementById('em-event-id').value         = d.eventId;
+            document.getElementById('em-event-name').textContent = d.eventNom;
+
+            var dateInput   = document.getElementById('em-date');
+            dateInput.min   = today;
+            dateInput.max   = d.eventDate;
+            dateInput.value = d.date || '';
+
+            document.getElementById('em-nbr').value   = d.nbr || 1;
+            document.getElementById('em-statut').value = d.statut || '';
+            document.getElementById('em-mode').value   = d.mode || '';
+
+            var pg   = document.getElementById('em-paiement-group');
+            var paid = d.eventPaiement === '1';
+            pg.style.display = paid ? 'block' : 'none';
+            document.getElementById('em-mode').required = paid;
+
+            emModal.show();
+        });
+    });
+
+    /* ── Auto-dismiss flash messages ── */
+    document.querySelectorAll('.flash-msg').forEach(function (el) {
+        setTimeout(function () {
+            el.style.transition = 'opacity .4s, transform .4s';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-8px)';
+            setTimeout(function () { el.remove(); }, 400);
+        }, 4000);
+    });
+});
+</script>
+{% endblock %}

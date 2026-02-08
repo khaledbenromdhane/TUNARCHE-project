@@ -124,7 +124,7 @@
 
     <div class="container pb-5">
         <div class="form-card">
-            <form method="post" action="{{ path('app_evenement_new') }}" novalidate>
+            <form method="post" action="{{ path('app_evenement_new') }}" enctype="multipart/form-data" novalidate>
 
                 <div class="row g-3">
                     {# ── Nom ── #}
@@ -254,6 +254,21 @@
                                 <span class="slider"></span>
                             </label>
                         </div>
+                    </div>
+
+                    {# ── Image Upload ── #}
+                    <div class="col-12">
+                        <label class="form-label" for="image">
+                            <i class="fas fa-image"></i> Image de l'événement
+                        </label>
+                        <input type="file" name="image" id="image" accept="image/*"
+                               class="form-control {{ errors.image is defined ? 'is-invalid' : '' }}">
+                        <small style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">Formats acceptés : JPG, PNG, GIF, WEBP. Taille max : 5 Mo.</small>
+                        {% if errors.image is defined %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-triangle"></i> {{ errors.image }}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 

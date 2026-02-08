@@ -49,6 +49,9 @@ class Evenement
     #[ORM\Column(type: Types::TIME_MUTABLE)]
     private ?\DateTimeInterface $heure = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
     // ─── Getters & Setters ─────────────────────────────────
 
     public function getId(): ?int
@@ -141,6 +144,17 @@ class Evenement
     public function setHeure(?\DateTimeInterface $heure): static
     {
         $this->heure = $heure;
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
         return $this;
     }
 }

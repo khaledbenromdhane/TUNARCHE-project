@@ -138,6 +138,26 @@ class EvenementService
         // ── Paiement (boolean – optional, defaults to false) ──
         // No validation needed, it's a checkbox (true/false)
 
+        // ── Image (optional file upload) ──────────────────
+        if (!empty($data['image_file'])) {
+            $file = $data['image_file'];
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $allowedExts  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $maxSize      = 5 * 1024 * 1024; // 5 MB
+
+            if ($file instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
+                if (!in_array($file->getMimeType(), $allowedMimes, true)) {
+                    $errors['image'] = 'Format d\'image non autorisé. Formats acceptés : JPG, PNG, GIF, WEBP.';
+                } elseif (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExts, true)) {
+                    $errors['image'] = 'Extension de fichier non autorisée.';
+                } elseif ($file->getSize() > $maxSize) {
+                    $errors['image'] = 'L\'image ne doit pas dépasser 5 Mo.';
+                }
+            } else {
+                $errors['image'] = 'Fichier image invalide.';
+            }
+        }
+
         return $errors;
     }
 
