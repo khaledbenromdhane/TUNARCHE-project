@@ -1,0 +1,244 @@
+{# ═══════════════════════════════════════════════════════════════
+   Participation – List Page
+   Route: /participation
+═══════════════════════════════════════════════════════════════ #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Participations{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37; --gold-dark: #b8860b;
+            --purple: #a855f7; --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 30, 0.95);
+            --border: rgba(212, 175, 55, 0.15);
+        }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: #e0e0e0; min-height: 100vh; }
+        .page-header {
+            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(138,43,226,0.08));
+            border-bottom: 1px solid var(--border); padding: 2rem 0; margin-bottom: 2rem;
+        }
+        .page-header h1 { color: #fff; font-weight: 700; }
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #0a0a0f; border: none; font-weight: 600;
+            padding: 0.625rem 1.25rem; border-radius: 8px; transition: all 0.3s;
+        }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,175,55,0.4); color: #0a0a0f; }
+        .card-dark { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .table-dark-custom { color: #e0e0e0; }
+        .table-dark-custom thead th {
+            background: rgba(212,175,55,0.08); color: var(--gold);
+            font-weight: 600; font-size: 0.8125rem; text-transform: uppercase;
+            letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding: 1rem;
+        }
+        .table-dark-custom tbody td {
+            padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle;
+        }
+        .table-dark-custom tbody tr:hover { background: rgba(212,175,55,0.04); }
+        .badge-status {
+            padding: 0.375rem 0.75rem; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        .badge-confirmed { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .badge-pending { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+        .badge-cancelled { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .badge-carte { background: rgba(99,102,241,0.15); color: #6366f1; border: 1px solid rgba(99,102,241,0.3); }
+        .badge-cash { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+        .btn-action {
+            width: 34px; height: 34px; border-radius: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.6); transition: all 0.2s; font-size: 0.875rem;
+        }
+        .btn-action:hover { transform: translateY(-1px); }
+        .btn-action.edit:hover { background: rgba(212,175,55,0.2); color: var(--gold); border-color: rgba(212,175,55,0.4); }
+        .btn-action.view:hover { background: rgba(168,85,247,0.2); color: var(--purple); border-color: rgba(168,85,247,0.4); }
+        .btn-action.delete:hover { background: rgba(239,68,68,0.2); color: #ef4444; border-color: rgba(239,68,68,0.4); }
+        .flash-msg { border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; animation: fadeIn 0.3s ease; }
+        .flash-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+        .flash-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: rgba(255,255,255,0.4); }
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; color: rgba(212,175,55,0.3); }
+        .search-bar {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;
+        }
+        .search-bar input[type="text"] {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: #e0e0e0; border-radius: 8px; padding: 0.5rem 1rem;
+            flex: 1; min-width: 200px; font-size: 0.875rem;
+        }
+        .search-bar input[type="text"]::placeholder { color: rgba(255,255,255,0.35); }
+        .search-bar input[type="text"]:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(212,175,55,0.15); }
+        .btn-search {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #0a0a0f; border: none; font-weight: 600; padding: 0.5rem 1.25rem;
+            border-radius: 8px; font-size: 0.875rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-search:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,175,55,0.3); }
+        .btn-reset {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6); padding: 0.5rem 1rem; border-radius: 8px;
+            font-size: 0.875rem; cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .btn-reset:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .sortable-th a {
+            color: var(--gold); text-decoration: none; display: inline-flex;
+            align-items: center; gap: 0.35rem;
+        }
+        .sortable-th a:hover { color: #fff; }
+        .sort-icon { font-size: 0.7rem; opacity: 0.5; }
+        .sort-icon.active { opacity: 1; color: var(--purple); }
+        .search-info {
+            font-size: 0.8125rem; color: rgba(255,255,255,0.4); margin-bottom: 1rem;
+        }
+        .search-info strong { color: var(--gold); }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="mb-1"><i class="fas fa-ticket-alt me-2" style="color: var(--gold);"></i>Participations</h1>
+                    <p class="mb-0 text-muted">Gérez toutes les réservations aux événements</p>
+                </div>
+                <a href="{{ path('app_participation_new') }}" class="btn btn-gold">
+                    <i class="fas fa-plus me-1"></i> Ajouter une Participation
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        {% for message in app.flashes('success') %}
+            <div class="flash-msg flash-success"><i class="fas fa-check-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="flash-msg flash-error"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
+        {% endfor %}
+
+        {# ── Search Bar ── #}
+        <form method="get" action="{{ path('app_participation_index') }}" class="search-bar">
+            <i class="fas fa-search" style="color: rgba(255,255,255,0.3);"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par événement, statut, mode de paiement…">
+            <input type="hidden" name="sort" value="{{ sort }}">
+            <input type="hidden" name="order" value="{{ order }}">
+            <button type="submit" class="btn-search"><i class="fas fa-search me-1"></i> Rechercher</button>
+            {% if q is not empty %}
+                <a href="{{ path('app_participation_index') }}" class="btn-reset"><i class="fas fa-times me-1"></i> Effacer</a>
+            {% endif %}
+        </form>
+
+        {% if q is not empty %}
+            <div class="search-info">
+                <i class="fas fa-filter me-1"></i> Résultats pour "<strong>{{ q }}</strong>" — <strong>{{ participations|length }}</strong> participation(s) trouvée(s)
+            </div>
+        {% endif %}
+
+        {% set nextOrder = order == 'ASC' ? 'DESC' : 'ASC' %}
+
+        <div class="card-dark">
+            {% if participations is empty %}
+                <div class="empty-state">
+                    <i class="fas fa-ticket-alt d-block"></i>
+                    <h5>Aucune participation trouvée</h5>
+                    <p>Commencez par ajouter votre première participation.</p>
+                    <a href="{{ path('app_participation_new') }}" class="btn btn-gold btn-sm mt-2">
+                        <i class="fas fa-plus me-1"></i> Créer une participation
+                    </a>
+                </div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-dark-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th class="sortable-th">
+                                    <a href="{{ path('app_participation_index', {q: q, sort: 'evenement', order: sort == 'evenement' ? nextOrder : 'ASC'}) }}">
+                                        Événement <i class="fas fa-sort{{ sort == 'evenement' ? (order == 'ASC' ? '-up' : '-down') : '' }} sort-icon {{ sort == 'evenement' ? 'active' : '' }}"></i>
+                                    </a>
+                                </th>
+                                <th class="sortable-th">
+                                    <a href="{{ path('app_participation_index', {q: q, sort: 'dateParticipation', order: sort == 'dateParticipation' ? nextOrder : 'DESC'}) }}">
+                                        Date <i class="fas fa-sort{{ sort == 'dateParticipation' ? (order == 'ASC' ? '-up' : '-down') : '' }} sort-icon {{ sort == 'dateParticipation' ? 'active' : '' }}"></i>
+                                    </a>
+                                </th>
+                                <th class="sortable-th">
+                                    <a href="{{ path('app_participation_index', {q: q, sort: 'nbrParticipation', order: sort == 'nbrParticipation' ? nextOrder : 'DESC'}) }}">
+                                        Places <i class="fas fa-sort{{ sort == 'nbrParticipation' ? (order == 'ASC' ? '-up' : '-down') : '' }} sort-icon {{ sort == 'nbrParticipation' ? 'active' : '' }}"></i>
+                                    </a>
+                                </th>
+                                <th class="sortable-th">
+                                    <a href="{{ path('app_participation_index', {q: q, sort: 'statut', order: sort == 'statut' ? nextOrder : 'ASC'}) }}">
+                                        Statut <i class="fas fa-sort{{ sort == 'statut' ? (order == 'ASC' ? '-up' : '-down') : '' }} sort-icon {{ sort == 'statut' ? 'active' : '' }}"></i>
+                                    </a>
+                                </th>
+                                <th class="sortable-th">
+                                    <a href="{{ path('app_participation_index', {q: q, sort: 'modePaiement', order: sort == 'modePaiement' ? nextOrder : 'ASC'}) }}">
+                                        Paiement <i class="fas fa-sort{{ sort == 'modePaiement' ? (order == 'ASC' ? '-up' : '-down') : '' }} sort-icon {{ sort == 'modePaiement' ? 'active' : '' }}"></i>
+                                    </a>
+                                </th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in participations %}
+                                <tr>
+                                    <td style="color: rgba(255,255,255,0.4); font-weight: 600;">#{{ p.id }}</td>
+                                    <td style="font-weight: 600; color: #fff;">
+                                        <i class="fas fa-calendar-alt me-1 text-muted"></i>
+                                        {{ p.evenement ? p.evenement.nom : 'N/A' }}
+                                    </td>
+                                    <td><i class="fas fa-calendar-day me-1 text-muted"></i>{{ p.dateParticipation|date('d/m/Y') }}</td>
+                                    <td><i class="fas fa-users me-1 text-muted"></i>{{ p.nbrParticipation }}</td>
+                                    <td>
+                                        {% if p.statut == 'Confirmée' %}
+                                            <span class="badge-status badge-confirmed"><i class="fas fa-check-circle me-1"></i>{{ p.statut }}</span>
+                                        {% elseif p.statut == 'En attente' %}
+                                            <span class="badge-status badge-pending"><i class="fas fa-clock me-1"></i>{{ p.statut }}</span>
+                                        {% else %}
+                                            <span class="badge-status badge-cancelled"><i class="fas fa-times-circle me-1"></i>{{ p.statut }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if p.modePaiement %}
+                                            <span class="badge-status {{ p.modePaiement == 'Carte' ? 'badge-carte' : 'badge-cash' }}">
+                                                <i class="fas {{ p.modePaiement == 'Carte' ? 'fa-credit-card' : 'fa-money-bill-wave' }} me-1"></i>{{ p.modePaiement }}
+                                            </span>
+                                        {% else %}
+                                            <span style="color: rgba(255,255,255,0.3);">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ path('app_participation_show', {id: p.id}) }}" class="btn-action view" title="Voir"><i class="fas fa-eye"></i></a>
+                                            <a href="{{ path('app_participation_edit', {id: p.id}) }}" class="btn-action edit" title="Modifier"><i class="fas fa-edit"></i></a>
+                                            <form action="{{ path('app_participation_delete', {id: p.id}) }}" method="post" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette participation ?');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_participation_' ~ p.id) }}">
+                                                <button type="submit" class="btn-action delete" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

@@ -2,7 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\Evenement;
+use App\Entity\Participation;
+use App\Repository\EvenementRepository;
+use App\Repository\ParticipationRepository;
+use App\Service\EvenementService;
+use App\Service\ParticipationService;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -33,19 +41,283 @@ class AdminController extends AbstractController
     /**
      * Événements – Full event management page (list, add, edit, delete).
      */
-    #[Route('/evenement', name: 'evenements')]
-    public function evenements(): Response
+    #[Route('/evenement', name: 'evenements', methods: ['GET'])]
+    public function evenements(Request $request, EvenementService $evenementService, EvenementRepository $evenementRepo): Response
     {
-        return $this->render('admin/evenements.html.twig');
+        $q        = trim($request->query->get('q', ''));
+        $type     = $request->query->get('type', '');
+        $paiement = $request->query->get('paiement', '');
+        $sort     = $request->query->get('sort', 'date');
+        $order    = $request->query->get('order', 'DESC');
+
+        return $this->render('admin/evenements.html.twig', [
+            'evenements'      => $evenementRepo->searchAndSort($q, $type, $paiement, $sort, $order),
+            'totalCount'      => $evenementService->countAll(),
+            'upcomingCount'   => $evenementService->countUpcoming(),
+            'totalAttendees'  => $evenementService->sumParticipants(),
+            'paidCount'       => $evenementService->countPaid(),
+            'q'               => $q,
+            'type'            => $type,
+            'paiement'        => $paiement,
+            'sort'            => $sort,
+            'order'           => $order,
+        ]);
+    }
+
+    /**
+     * Store – Create a new event (form POST from admin modal).
+     */
+    #[Route('/evenement/store', name: 'evenement_store', methods: ['POST'])]
+    public function evenementStore(Request $request, ManagerRegistry $m, EvenementService $service): Response
+    {
+        $data = [
+            'nom'              => $request->request->get('nom', ''),
+            'type_evenement'   => $request->request->get('type_evenement', ''),
+            'nbr_participant'  => $request->request->get('nbr_participant', ''),
+            'date'             => $request->request->get('date', ''),
+            'heure'            => $request->request->get('heure', ''),
+            'lieu'             => $request->request->get('lieu', ''),
+            'description'      => $request->request->get('description', ''),
+            'paiement'         => $request->request->has('paiement'),
+        ];
+
+        $errors = $service->validate($data);
+
+        if (!empty($errors)) {
+            $firstError = reset($errors);
+            $this->addFlash('error', $firstError);
+            return $this->redirectToRoute('app_admin_evenements');
+        }
+
+        $em = $m->getManager();
+        $evenement = new Evenement();
+        $this->hydrateEvent($evenement, $data);
+        $em->persist($evenement);
+        $em->flush();
+
+        $this->addFlash('success', 'Événement créé avec succès !');
+        return $this->redirectToRoute('app_admin_evenements');
+    }
+
+    /**
+     * Update – Modify an existing event (form POST from admin modal).
+     */
+    #[Route('/evenement/{id}/update', name: 'evenement_update', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function evenementUpdate($id, Request $request, EvenementRepository $repo, ManagerRegistry $m, EvenementService $service): Response
+    {
+        $evenement = $repo->find($id);
+
+        if (!$evenement) {
+            $this->addFlash('error', 'Événement introuvable.');
+            return $this->redirectToRoute('app_admin_evenements');
+        }
+
+        $data = [
+            'nom'              => $request->request->get('nom', ''),
+            'type_evenement'   => $request->request->get('type_evenement', ''),
+            'nbr_participant'  => $request->request->get('nbr_participant', ''),
+            'date'             => $request->request->get('date', ''),
+            'heure'            => $request->request->get('heure', ''),
+            'lieu'             => $request->request->get('lieu', ''),
+            'description'      => $request->request->get('description', ''),
+            'paiement'         => $request->request->has('paiement'),
+        ];
+
+        $errors = $service->validate($data);
+
+        if (!empty($errors)) {
+            $firstError = reset($errors);
+            $this->addFlash('error', $firstError);
+            return $this->redirectToRoute('app_admin_evenements');
+        }
+
+        $em = $m->getManager();
+        $this->hydrateEvent($evenement, $data);
+        $em->persist($evenement);
+        $em->flush();
+
+        $this->addFlash('success', 'Événement modifié avec succès !');
+        return $this->redirectToRoute('app_admin_evenements');
+    }
+
+    /**
+     * Delete – Remove an event (form POST from admin delete confirmation).
+     */
+    #[Route('/evenement/{id}/delete', name: 'evenement_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function evenementDelete($id, EvenementRepository $repo, ManagerRegistry $m): Response
+    {
+        $evenement = $repo->find($id);
+
+        if (!$evenement) {
+            $this->addFlash('error', 'Événement introuvable.');
+            return $this->redirectToRoute('app_admin_evenements');
+        }
+
+        $em = $m->getManager();
+        $em->remove($evenement);
+        $em->flush();
+
+        $this->addFlash('success', 'Événement supprimé avec succès !');
+        return $this->redirectToRoute('app_admin_evenements');
+    }
+
+    /**
+     * Populate an Evenement entity from validated form data.
+     */
+    private function hydrateEvent(Evenement $evenement, array $data): void
+    {
+        $evenement->setNom(trim($data['nom']));
+        $evenement->setTypeEvenement($data['type_evenement']);
+        $evenement->setNbrParticipant((int)$data['nbr_participant']);
+        $evenement->setLieu(trim($data['lieu']));
+        $evenement->setDescription(trim($data['description']));
+        $evenement->setPaiement(!empty($data['paiement']));
+
+        $dateObj = \DateTime::createFromFormat('Y-m-d', $data['date']);
+        $evenement->setDate($dateObj);
+
+        $heureObj = \DateTime::createFromFormat('H:i', $data['heure']);
+        $evenement->setHeure($heureObj);
     }
 
     /**
      * Participations – Full participation management page (list, add, edit, delete).
      */
-    #[Route('/participation', name: 'participations')]
-    public function participations(): Response
+    #[Route('/participation', name: 'participations', methods: ['GET'])]
+    public function participations(Request $request, ParticipationService $service, ParticipationRepository $repo, EvenementRepository $evenementRepo): Response
     {
-        return $this->render('admin/participations.html.twig');
+        $q        = trim($request->query->get('q', ''));
+        $statut   = $request->query->get('statut', '');
+        $paiement = $request->query->get('paiement', '');
+        $sort     = $request->query->get('sort', 'dateParticipation');
+        $order    = $request->query->get('order', 'DESC');
+
+        return $this->render('admin/participations.html.twig', [
+            'participations'  => $repo->searchAndSort($q, $statut, $paiement, $sort, $order),
+            'evenements'      => $evenementRepo->findBy([], ['date' => 'ASC']),
+            'totalCount'      => $service->countAll(),
+            'confirmedCount'  => $service->countConfirmed(),
+            'pendingCount'    => $service->countPending(),
+            'cancelledCount'  => $service->countCancelled(),
+            'totalPlaces'     => $service->sumAllPlaces(),
+            'q'               => $q,
+            'statut'          => $statut,
+            'paiement'        => $paiement,
+            'sort'            => $sort,
+            'order'           => $order,
+        ]);
+    }
+
+    /**
+     * Store – Create a new participation (form POST from admin modal).
+     */
+    #[Route('/participation/store', name: 'participation_store', methods: ['POST'])]
+    public function participationStore(Request $request, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo): Response
+    {
+        $data = [
+            'id_evenement'       => $request->request->get('id_evenement', ''),
+            'date_participation' => $request->request->get('date_participation', ''),
+            'nbr_participation'  => $request->request->get('nbr_participation', ''),
+            'statut'             => $request->request->get('statut', ''),
+            'mode_paiement'      => $request->request->get('mode_paiement', ''),
+        ];
+
+        $errors = $service->validate($data);
+
+        if (!empty($errors)) {
+            $firstError = reset($errors);
+            $this->addFlash('error', $firstError);
+            return $this->redirectToRoute('app_admin_participations');
+        }
+
+        $em = $m->getManager();
+        $participation = new Participation();
+        $this->hydrateParticipation($participation, $data, $evenementRepo);
+        $em->persist($participation);
+        $em->flush();
+
+        $this->addFlash('success', 'Participation créée avec succès !');
+        return $this->redirectToRoute('app_admin_participations');
+    }
+
+    /**
+     * Update – Modify an existing participation (form POST from admin modal).
+     */
+    #[Route('/participation/{id}/update', name: 'participation_update', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function participationUpdate($id, Request $request, ParticipationRepository $repo, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo): Response
+    {
+        $participation = $repo->find($id);
+
+        if (!$participation) {
+            $this->addFlash('error', 'Participation introuvable.');
+            return $this->redirectToRoute('app_admin_participations');
+        }
+
+        $data = [
+            'id_evenement'       => $request->request->get('id_evenement', ''),
+            'date_participation' => $request->request->get('date_participation', ''),
+            'nbr_participation'  => $request->request->get('nbr_participation', ''),
+            'statut'             => $request->request->get('statut', ''),
+            'mode_paiement'      => $request->request->get('mode_paiement', ''),
+        ];
+
+        $errors = $service->validate($data, $participation->getId());
+
+        if (!empty($errors)) {
+            $firstError = reset($errors);
+            $this->addFlash('error', $firstError);
+            return $this->redirectToRoute('app_admin_participations');
+        }
+
+        $em = $m->getManager();
+        $this->hydrateParticipation($participation, $data, $evenementRepo);
+        $em->persist($participation);
+        $em->flush();
+
+        $this->addFlash('success', 'Participation modifiée avec succès !');
+        return $this->redirectToRoute('app_admin_participations');
+    }
+
+    /**
+     * Delete – Remove a participation (form POST from admin delete confirmation).
+     */
+    #[Route('/participation/{id}/delete', name: 'participation_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function participationDelete($id, ParticipationRepository $repo, ManagerRegistry $m): Response
+    {
+        $participation = $repo->find($id);
+
+        if (!$participation) {
+            $this->addFlash('error', 'Participation introuvable.');
+            return $this->redirectToRoute('app_admin_participations');
+        }
+
+        $em = $m->getManager();
+        $em->remove($participation);
+        $em->flush();
+
+        $this->addFlash('success', 'Participation supprimée avec succès !');
+        return $this->redirectToRoute('app_admin_participations');
+    }
+
+    /**
+     * Populate a Participation entity from validated form data.
+     */
+    private function hydrateParticipation(Participation $participation, array $data, EvenementRepository $evenementRepo): void
+    {
+        $evenement = $evenementRepo->find((int)$data['id_evenement']);
+        $participation->setEvenement($evenement);
+
+        $dateObj = \DateTime::createFromFormat('Y-m-d', $data['date_participation']);
+        $participation->setDateParticipation($dateObj);
+
+        $participation->setNbrParticipation((int)$data['nbr_participation']);
+        $participation->setStatut($data['statut']);
+
+        if ($evenement && $evenement->isPaiement() && !empty($data['mode_paiement'])) {
+            $participation->setModePaiement($data['mode_paiement']);
+        } else {
+            $participation->setModePaiement(null);
+        }
     }
 
     /**
