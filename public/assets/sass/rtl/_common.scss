@@ -1,0 +1,30 @@
+.social-links a {
+    margin: 0 0 0 10px;
+}
+.sub-title:after {
+    margin-right: 10px;
+    margin-left: 0;
+}
+.link-btn i {
+    margin-right: 5px;
+    margin-left: 0;
+    &.fa-arrow-right:before {
+        content: "\f060";
+    }
+}
+.mobile-menu-wrapper {
+    text-align: -webkit-left;
+}
+
+.marquee-wrap .marquee__group .m-item {
+    animation-name: marquee2;
+}
+
+@keyframes marquee2 {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+}

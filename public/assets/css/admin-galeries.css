@@ -1,0 +1,723 @@
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN GALERIES PAGE STYLES
+   Tun'Arche – Luxury dark + gold / purple theme
+   Matching Participation Design
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── GALERIE STAT CARDS ─────────────────────────────────────── */
+.gal-stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gal-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--purple));
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+
+.gal-stat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(201, 168, 76, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(201, 168, 76, 0.1);
+}
+
+.gal-stat-card:hover::before {
+    opacity: 1;
+}
+
+.gal-stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.gal-stat-icon.gold {
+    background: rgba(201, 168, 76, 0.12);
+    color: var(--gold);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+.gal-stat-icon.purple {
+    background: rgba(124, 92, 191, 0.12);
+    color: var(--purple);
+    border: 1px solid rgba(124, 92, 191, 0.2);
+}
+
+.gal-stat-icon.teal {
+    background: rgba(46, 196, 182, 0.12);
+    color: var(--teal);
+    border: 1px solid rgba(46, 196, 182, 0.2);
+}
+
+.gal-stat-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.gal-stat-value {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.gal-stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.gal-stat-trend {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.gal-stat-trend.up {
+    background: rgba(46, 196, 182, 0.1);
+    color: var(--teal);
+}
+
+.gal-stat-trend.down {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+}
+
+
+/* ─── TABLE CARD ─────────────────────────────────────────────── */
+.gal-table-card {
+    border-radius: 16px;
+}
+
+.gal-count-badge {
+    background: linear-gradient(135deg, var(--gold), #d4a843);
+    color: #000;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+}
+
+.gal-table-filters {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gal-search-wrap {
+    position: relative;
+}
+
+.gal-search-wrap i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.gal-search-wrap .admin-form-control {
+    padding-left: 38px;
+    min-width: 220px;
+}
+
+
+/* ─── TABLE CELLS ────────────────────────────────────────────── */
+.gal-id {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--gold);
+    font-size: 0.82rem;
+    letter-spacing: 0.4px;
+}
+
+.gal-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gal-icon-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    border: 2px solid rgba(201, 168, 76, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.gal-icon-avatar.contemporary {
+    background: rgba(201, 168, 76, 0.12);
+    color: var(--gold);
+}
+
+.gal-icon-avatar.classical {
+    background: rgba(124, 92, 191, 0.12);
+    color: var(--purple);
+}
+
+.gal-icon-avatar.modern {
+    background: rgba(46, 196, 182, 0.12);
+    color: var(--teal);
+}
+
+.gal-icon-avatar.sculpture {
+    background: rgba(255, 107, 107, 0.12);
+    color: #ff6b6b;
+}
+
+.gal-icon-avatar.photography {
+    background: rgba(108, 92, 231, 0.12);
+    color: #6c5ce7;
+}
+
+.gal-icon-avatar.abstract {
+    background: rgba(253, 121, 168, 0.12);
+    color: #fd79a8;
+}
+
+.gal-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.88rem;
+    line-height: 1.3;
+}
+
+.gal-artwork-count,
+.gal-staff-count {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+
+/* ─── CATEGORY BADGES ────────────────────────────────────────── */
+.category-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.4px;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.category-badge.cat-contemporary {
+    background: rgba(201, 168, 76, 0.12);
+    color: var(--gold);
+    border: 1px solid rgba(201, 168, 76, 0.25);
+}
+
+.category-badge.cat-classical {
+    background: rgba(124, 92, 191, 0.12);
+    color: var(--purple);
+    border: 1px solid rgba(124, 92, 191, 0.25);
+}
+
+.category-badge.cat-modern {
+    background: rgba(46, 196, 182, 0.12);
+    color: var(--teal);
+    border: 1px solid rgba(46, 196, 182, 0.25);
+}
+
+.category-badge.cat-sculpture {
+    background: rgba(255, 107, 107, 0.12);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.25);
+}
+
+.category-badge.cat-photography {
+    background: rgba(108, 92, 231, 0.12);
+    color: #6c5ce7;
+    border: 1px solid rgba(108, 92, 231, 0.25);
+}
+
+.category-badge.cat-abstract {
+    background: rgba(253, 121, 168, 0.12);
+    color: #fd79a8;
+    border: 1px solid rgba(253, 121, 168, 0.25);
+}
+
+
+/* ─── ARTIST TAGS ────────────────────────────────────────────── */
+.gal-artists-list {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.artist-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 12px;
+    background: rgba(201, 168, 76, 0.1);
+    color: var(--gold);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    white-space: nowrap;
+}
+
+.artist-more {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 50%;
+    background: rgba(124, 92, 191, 0.1);
+    color: var(--purple);
+    border: 1px solid rgba(124, 92, 191, 0.2);
+}
+
+
+/* ─── GALERIE MODAL STYLES ───────────────────────────────────── */
+.modal-backdrop {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+}
+
+.gal-modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(201, 168, 76, 0.1);
+    overflow: hidden;
+}
+
+.gal-modal-header {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.06), rgba(124, 92, 191, 0.06));
+    border-bottom: 1px solid var(--border-color);
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+}
+
+.gal-header-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--gold), var(--purple));
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.modal-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.btn-close-modal {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-size: 0.9rem;
+}
+
+.btn-close-modal:hover {
+    background: rgba(255, 107, 107, 0.12);
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.3);
+}
+
+.gal-modal-body {
+    padding: 28px;
+}
+
+.gal-modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 20px 28px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.form-label-custom {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+}
+
+
+/* ─── DELETE ALERT ───────────────────────────────────────────── */
+.delete-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.delete-alert-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.delete-alert-box {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(40px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    animation: deleteAlertPulse 0.4s ease;
+}
+
+@keyframes deleteAlertPulse {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.delete-alert-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
+    border: 2px solid rgba(255, 107, 107, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #ff6b6b;
+    animation: iconPulse 1.5s infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.delete-alert-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.3px;
+}
+
+.delete-alert-message {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.delete-alert-message strong {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.delete-alert-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+
+/* ─── TOAST NOTIFICATIONS ────────────────────────────────────── */
+.custom-toast {
+    background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    animation: toastSlideIn 0.35s ease;
+    position: relative;
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.custom-toast .toast-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.875rem 1.125rem;
+    font-weight: 600;
+}
+
+.custom-toast .toast-body {
+    color: var(--text-secondary);
+    padding: 1rem 1.125rem;
+    font-size: 0.9rem;
+}
+
+.toast-icon {
+    font-size: 1.125rem;
+}
+
+.toast-success .toast-icon {
+    color: var(--teal);
+}
+
+.toast-error .toast-icon {
+    color: #ff6b6b;
+}
+
+.toast-warning .toast-icon {
+    color: var(--gold);
+}
+
+.toast-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--purple));
+    transform-origin: left;
+    animation: toastProgress 3s linear forwards;
+}
+
+@keyframes toastProgress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
+
+/* ─── GALERIE DETAIL ROW (Expandable) ────────────────────────── */
+.galerie-detail-row {
+    background: rgba(201, 168, 76, 0.05);
+}
+
+.galerie-detail-row td {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.galerie-detail-content {
+    padding: 1.75rem;
+    animation: galerieDetailExpand 0.35s ease;
+}
+
+@keyframes galerieDetailExpand {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+        transform: translateY(0);
+    }
+}
+
+.galerie-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+}
+
+.galerie-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.galerie-detail-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.galerie-detail-value {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+
+/* ─── ROW REMOVAL ANIMATION ──────────────────────────────────── */
+.galerie-row-removing {
+    animation: galerieRowRemove 0.4s ease forwards;
+}
+
+@keyframes galerieRowRemove {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50px);
+        height: 0;
+        padding: 0;
+    }
+}
+
+
+/* ─── RESPONSIVE BREAKPOINTS ─────────────────────────────────── */
+@media (max-width: 992px) {
+    .gal-table-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gal-search-wrap .admin-form-control {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .gal-stat-card {
+        padding: 18px 20px;
+    }
+
+    .gal-stat-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 1.05rem;
+    }
+
+    .gal-stat-value {
+        font-size: 1.45rem;
+    }
+
+    .gal-modal-body {
+        padding: 20px;
+    }
+
+    .gal-modal-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .gal-modal-footer .btn {
+        width: 100%;
+    }
+
+    .delete-alert-box {
+        padding: 2rem;
+    }
+
+    .delete-alert-actions {
+        flex-direction: column;
+    }
+
+    .delete-alert-actions .btn {
+        width: 100%;
+    }
+
+    .gal-artists-list {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 576px) {
+    .gal-name-cell {
+        gap: 8px;
+    }
+
+    .gal-icon-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .artist-tag,
+    .artist-more {
+        font-size: 0.65rem;
+        padding: 2px 7px;
+    }
+
+    .category-badge {
+        font-size: 0.68rem;
+        padding: 4px 11px;
+    }
+}

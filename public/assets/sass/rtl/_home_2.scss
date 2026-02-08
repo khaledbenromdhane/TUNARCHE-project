@@ -1,0 +1,85 @@
+.hero-2 .hero-thumb2-3 {
+    left: 0;
+    right: auto;
+}
+.hero-2 .hero-style-wrap {
+    margin: 120px 120px 120px -100px;
+}
+.hero-style2 {
+    padding: 80px 75px 100px 130px;
+}
+@include xxl {
+    .hero-2 .hero-style-wrap {
+        margin: 60px 60px 60px -100px;
+    }
+    .hero-style2 {
+        padding: 45px 35px 65px 90px;
+    }
+}
+@include xl {
+    .hero-style2 {
+        padding: 35px 25px 55px 110px;
+    }
+}
+@include lg {
+    .hero-2 .hero-style-wrap {
+        margin: 60px;
+    }
+    .hero-style2 {
+        padding: 30px 25px 55px 50px;
+    }
+}
+@include md {
+    .hero-2 .hero-style-wrap {
+        margin: 45px;
+    }
+    .hero-style2 {
+        padding: 35px 60px 60px;
+    }
+}
+@include sm {
+    .hero-style2 {
+        padding: 25px 40px 40px;
+    }
+}
+@include xs {
+    .hero-2 .hero-style-wrap {
+        margin: 45px 15px;
+    }
+    .hero-style2 {
+        padding: 15px 30px 30px;
+    }
+}
+@include vxs {
+    .hero-style2 {
+        padding: 15px 20px 30px;
+    }
+}
+
+
+.about-content-wrap2 {
+    border-left: 1px solid $theme-color;
+    border-right: 0;
+    margin: 20px 0px 20px 20px;
+    padding-left: 100px;
+    padding-right: 120px;
+}
+@include lg {
+    .about-content-wrap2 {
+        padding-right: 60px;
+        padding-left: 60px;
+    }
+}
+@include md {
+    .about-content-wrap2 {
+        margin: 0 20px;
+        border-right: 1px solid $theme-color;
+        border-top: 0;
+    }
+}
+@include xs {
+    .about-content-wrap2 {
+        padding-right: 30px;
+        padding-left: 30px;
+    }
+}

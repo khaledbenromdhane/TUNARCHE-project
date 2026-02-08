@@ -1,0 +1,87 @@
+/*subscribe-area-1*********************/
+.subscribe-area-1 {
+    padding: 70px 0;
+}
+.subscribe-wrap1 {
+    display: flex;
+    gap: 54px;
+    align-items: center;
+    .subscribe-wrap-title {
+        font-size: 40px;
+        font-weight: 500;
+        margin-bottom: -0.2em;
+        margin-top: -0.2em;
+    }
+    @include ml {
+        gap: 40px;
+        .subscribe-wrap-title {
+            font-size: 36px;
+        }
+    }
+    @include xs {
+        gap: 30px;
+        flex-wrap: wrap;
+        .subscribe-wrap-title {
+            font-size: 30px;
+        }
+    }
+}
+.subscribe-form {
+    &.newsletter-form {
+        width: 540px;
+        .form-group {
+            margin-bottom: 20px;
+            input {
+                padding: 0 210px 0 30px;
+                height: 70px;
+                background: transparent;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+            .custom-checkbox {
+                label {
+                    color: $white-color;
+                    font-size: 14px;
+                    margin-bottom: 0;
+                    &:before {
+                        border: 1px solid $white-color;
+                        background: transparent;
+                        border-radius: 3px;
+                    }
+                }
+            }
+        }
+        .btn {
+            right: 5px;
+            top: 5px;
+            padding: 20.5px 30px;
+            font-size: 16px;
+            font-weight: 500;
+            background: $white-color;
+            border-radius: 5px;
+            color: $title-color;
+            &:active,
+            &:focus,
+            &:hover {
+                color: $white-color;
+            }
+        }
+    }
+}
+@include md {
+    .subscribe-area-1 .newsletter-form {
+        width: 100%;
+    }
+}
+@include sm {
+    .subscribe-area-1 .newsletter-form .btn {
+        position: relative;
+        width: 100%;
+        margin-bottom: 20px;
+        top: 0;
+        right: 0;
+    }
+    .subscribe-area-1 .newsletter-form .form-group input {
+        padding: 0 30px;
+    }
+}
