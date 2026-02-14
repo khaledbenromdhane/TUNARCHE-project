@@ -325,8 +325,177 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    /* ─── SEARCH & FILTER: now handled server-side (PHP) ───── */
-    /* The form in the template submits GET params to the controller */
+    /* ─── SEARCH & FILTER: AJAX Dynamic Search ──────────────── */
+    const adminSearchInput    = document.getElementById('adminPartSearchInput');
+    const adminStatutFilter   = document.getElementById('adminPartStatutFilter');
+    const adminPaiementFilter = document.getElementById('adminPartPaiementFilter');
+    const adminSearchBtn      = document.getElementById('adminPartSearchBtn');
+    const adminResetBtn       = document.getElementById('adminPartResetBtn');
+    const adminSortInput      = document.getElementById('adminPartSort');
+    const adminOrderInput     = document.getElementById('adminPartOrder');
+    const partCountBadge      = document.getElementById('partCountBadge');
+    const exportBtn           = document.getElementById('exportParticipationsBtn');
+    let searchTimer;
+
+    function doAdminPartSearch() {
+        const q        = adminSearchInput ? adminSearchInput.value.trim() : '';
+        const statut   = adminStatutFilter ? adminStatutFilter.value : '';
+        const paiement = adminPaiementFilter ? adminPaiementFilter.value : '';
+        const sort     = adminSortInput ? adminSortInput.value : 'dateParticipation';
+        const order    = adminOrderInput ? adminOrderInput.value : 'DESC';
+
+        const params = new URLSearchParams({ q, statut, paiement, sort, order });
+
+        fetch('/admin/participation/search?' + params.toString())
+            .then(r => r.json())
+            .then(data => {
+                renderPartRows(data.results);
+                if (partCountBadge) partCountBadge.textContent = data.count;
+                if (adminResetBtn) {
+                    adminResetBtn.style.display = (q || statut || paiement) ? 'inline-block' : 'none';
+                }
+                
+                // Update URL with all current parameters
+                const currentUrl = new URL(window.location);
+                if (q) currentUrl.searchParams.set('q', q);
+                else currentUrl.searchParams.delete('q');
+                if (statut) currentUrl.searchParams.set('statut', statut);
+                else currentUrl.searchParams.delete('statut');
+                if (paiement) currentUrl.searchParams.set('paiement', paiement);
+                else currentUrl.searchParams.delete('paiement');
+                currentUrl.searchParams.set('sort', sort);
+                currentUrl.searchParams.set('order', order);
+                window.history.pushState({}, '', currentUrl);
+            });
+    }
+
+    function renderPartRows(participations) {
+        if (!tableBody) return;
+
+        if (participations.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-5"><i class="fas fa-ticket-alt d-block mb-2" style="font-size:2rem;color:rgba(212,175,55,0.3);"></i><span style="color:rgba(255,255,255,0.4);">Aucune participation trouvée.</span></td></tr>';
+            return;
+        }
+
+        let html = '';
+        participations.forEach(p => {
+            let statusBadge;
+            if (p.statut === 'Confirmée') {
+                statusBadge = '<span class="status-badge status-accepted"><i class="fas fa-check-circle me-1"></i>Confirmée</span>';
+            } else if (p.statut === 'En attente') {
+                statusBadge = '<span class="status-badge status-pending"><i class="fas fa-clock me-1"></i>En attente</span>';
+            } else {
+                statusBadge = '<span class="status-badge status-refused"><i class="fas fa-times-circle me-1"></i>Annulée</span>';
+            }
+
+            let payBadge;
+            if (p.modePaiement === 'Carte') {
+                payBadge = '<span class="paiement-mode-badge pm-card"><i class="fas fa-credit-card me-1"></i>Carte</span>';
+            } else if (p.modePaiement === 'Cash') {
+                payBadge = '<span class="paiement-mode-badge pm-cash"><i class="fas fa-money-bill-wave me-1"></i>Cash</span>';
+            } else {
+                payBadge = '<span class="paiement-mode-badge pm-free"><i class="fas fa-gift me-1"></i>Gratuit</span>';
+            }
+
+            html += `<tr data-participation-id="${p.id}"
+                data-status="${escapeHtml(p.statut)}"
+                data-paiement="${escapeHtml(p.modePaiement || 'free')}"
+                data-id-evenement="${p.idEvenement || ''}"
+                data-date="${p.dateParticipation || ''}"
+                data-nbr="${p.nbrParticipation}"
+                data-mode-paiement="${escapeHtml(p.modePaiement || '')}"
+                data-event-name="${escapeHtml(p.eventName)}"
+                data-event-paid="${p.eventPaid ? '1' : '0'}">
+                <td><input type="checkbox" class="form-check-input part-check"></td>
+                <td class="part-id">#PART-${String(p.id).padStart(3, '0')}</td>
+                <td><span class="part-event-name"><i class="fas fa-calendar-alt me-1 text-muted"></i>${escapeHtml(p.eventName)}</span></td>
+                <td><span class="part-date"><i class="fas fa-calendar-day me-1 text-muted"></i>${escapeHtml(p.dateFmt || '')}</span></td>
+                <td>${statusBadge}</td>
+                <td><span class="part-number">${p.nbrParticipation}</span></td>
+                <td>${payBadge}</td>
+                <td><div class="table-actions">
+                    <button type="button" class="table-action-btn view-part-btn" title="View" data-participation-id="${p.id}"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="table-action-btn edit-part-btn" title="Edit" data-participation-id="${p.id}"><i class="fas fa-pen-to-square"></i></button>
+                    <button type="button" class="table-action-btn delete delete-part-btn" title="Delete" data-participation-id="${p.id}" data-participation-name="#PART-${String(p.id).padStart(3, '0')}" data-delete-url="/admin/participation/${p.id}/delete"><i class="fas fa-trash-can"></i></button>
+                </div></td>
+            </tr>`;
+        });
+
+        tableBody.innerHTML = html;
+    }
+
+    // Debounced live search
+    if (adminSearchInput) {
+        adminSearchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(doAdminPartSearch, 350);
+        });
+    }
+
+    // Instant search on filter changes
+    if (adminStatutFilter) adminStatutFilter.addEventListener('change', doAdminPartSearch);
+    if (adminPaiementFilter) adminPaiementFilter.addEventListener('change', doAdminPartSearch);
+    if (adminSearchBtn) adminSearchBtn.addEventListener('click', doAdminPartSearch);
+
+    // Reset filters
+    if (adminResetBtn) {
+        adminResetBtn.addEventListener('click', () => {
+            if (adminSearchInput) adminSearchInput.value = '';
+            if (adminStatutFilter) adminStatutFilter.value = '';
+            if (adminPaiementFilter) adminPaiementFilter.value = '';
+            doAdminPartSearch();
+        });
+    }
+
+    // Export CSV
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            window.location.href = '/admin/participation/export';
+        });
+    }
+
+    /* ─── AJAX COLUMN SORTING ────────────────────────────────── */
+    document.querySelectorAll('#participationsTable thead th[data-sort-key]').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const key = th.getAttribute('data-sort-key');
+            const currentSort = adminSortInput ? adminSortInput.value : 'dateParticipation';
+            const currentOrder = adminOrderInput ? adminOrderInput.value : 'DESC';
+
+            let newOrder;
+            if (currentSort === key) {
+                newOrder = currentOrder === 'ASC' ? 'DESC' : 'ASC';
+            } else {
+                newOrder = (key === 'evenement' || key === 'statut') ? 'ASC' : 'DESC';
+            }
+
+            if (adminSortInput) adminSortInput.value = key;
+            if (adminOrderInput) adminOrderInput.value = newOrder;
+
+            // Update sort icons in all headers
+            document.querySelectorAll('#participationsTable thead th[data-sort-key]').forEach(h => {
+                const icon = h.querySelector('.sort-icon');
+                const hKey = h.getAttribute('data-sort-key');
+                if (icon) {
+                    if (hKey === key) {
+                        icon.className = 'fas fa-sort-' + (newOrder === 'ASC' ? 'up' : 'down') + ' sort-icon';
+                        icon.style.cssText = 'font-size:0.7rem;color:#a855f7;';
+                    } else {
+                        icon.className = 'fas fa-sort sort-icon';
+                        icon.style.cssText = 'font-size:0.7rem;opacity:0.4;';
+                    }
+                }
+            });
+
+            doAdminPartSearch();
+            
+            // Update URL with sort parameters
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('sort', key);
+            currentUrl.searchParams.set('order', newOrder);
+            window.history.pushState({}, '', currentUrl);
+        });
+    });
 
 
     /* ─── SELECT ALL CHECKBOX ────────────────────────────────── */

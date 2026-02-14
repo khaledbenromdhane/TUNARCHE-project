@@ -481,26 +481,19 @@ body.modal-open { overflow: hidden !important; }
         </div>
 
         {# ── Search ── #}
-        <form method="get" action="{{ path('app_evenement_index') }}" class="search-bar">
+        <div class="search-bar" id="frontSearchBar">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom, lieu, type…">
-            <input type="hidden" name="sort" value="{{ sort }}">
-            <input type="hidden" name="order" value="{{ order }}">
-            <button type="submit" class="search-btn"><i class="fas fa-search me-1"></i>Rechercher</button>
-            {% if q is not empty %}
-                <a href="{{ path('app_evenement_index') }}" class="search-clear"><i class="fas fa-times"></i></a>
-            {% endif %}
-        </form>
+            <input type="text" id="frontSearchInput" value="{{ q }}" placeholder="Rechercher par nom d'événement…">
+            <button type="button" class="search-btn" id="frontSearchBtn"><i class="fas fa-search me-1"></i>Rechercher</button>
+            <button type="button" class="search-clear" id="frontSearchClear" style="{{ q is empty ? 'display:none' : '' }}"><i class="fas fa-times"></i></button>
+        </div>
 
-        {% if q is not empty %}
-            <div class="search-result-info">
-                <i class="fas fa-filter me-1"></i> Résultats pour "<strong>{{ q }}</strong>" — <strong>{{ evenements|length }}</strong> trouvé(s)
-            </div>
-        {% endif %}
+        <div class="search-result-info" id="frontSearchInfo" style="{{ q is empty ? 'display:none' : '' }}">
+            <i class="fas fa-filter me-1"></i> Résultats pour "<strong id="frontSearchTerm">{{ q }}</strong>" — <strong id="frontSearchCount">{{ evenements|length }}</strong> trouvé(s)
+        </div>
 
         {# ── Sort pills ── #}
-        {% set nextOrder = order == 'ASC' ? 'DESC' : 'ASC' %}
-        <div class="sort-bar">
+        <div class="sort-bar" id="frontSortBar" data-current-sort="{{ sort }}" data-current-order="{{ order }}">
             <span class="sort-label"><i class="fas fa-sort me-1"></i>Trier :</span>
             {% set sortOptions = {
                 'date': 'Date',
@@ -510,8 +503,7 @@ body.modal-open { overflow: hidden !important; }
                 'lieu': 'Lieu'
             } %}
             {% for key, label in sortOptions %}
-                <a href="{{ path('app_evenement_index', {q: q, sort: key, order: sort == key ? nextOrder : (key == 'date' ? 'DESC' : 'ASC')}) }}"
-                   class="sort-pill {{ sort == key ? 'active' : '' }}">
+                <a href="#" class="sort-pill {{ sort == key ? 'active' : '' }}" data-sort-key="{{ key }}">
                     {{ label }}
                     {% if sort == key %}
                         <i class="fas fa-arrow-{{ order == 'ASC' ? 'up' : 'down' }} arrow"></i>
@@ -521,23 +513,16 @@ body.modal-open { overflow: hidden !important; }
         </div>
 
         {# ── Cards ── #}
-        {% if evenements is empty %}
-            <div class="empty-state">
-                <i class="fas fa-calendar-xmark"></i>
-                <h4>Aucun événement trouvé</h4>
-                <p>{% if q is not empty %}Essayez avec d'autres mots-clés.{% else %}Pas encore d'événements disponibles.{% endif %}</p>
-            </div>
-        {% else %}
-            {% set fallbackImages = [
-                'assets/img/exhibition/1-1.png',
-                'assets/img/exhibition/1-2.png',
-                'assets/img/exhibition/1-3.png',
-                'assets/img/exhibition/1-4.png',
-                'assets/img/exhibition/1-5.png',
-                'assets/img/exhibition/1-6.png'
-            ] %}
+        {% set fallbackImages = [
+            'assets/img/exhibition/1-1.png',
+            'assets/img/exhibition/1-2.png',
+            'assets/img/exhibition/1-3.png',
+            'assets/img/exhibition/1-4.png',
+            'assets/img/exhibition/1-5.png',
+            'assets/img/exhibition/1-6.png'
+        ] %}
 
-            <div class="evt-grid">
+        <div class="evt-grid" id="evtGrid">
                 {% for evt in evenements %}
                 <div class="evt-card">
                     <div class="evt-thumb">
@@ -574,9 +559,16 @@ body.modal-open { overflow: hidden !important; }
                         {% endif %}
 
                         <div class="evt-actions">
-                            <a class="act-btn" href="{{ path('app_evenement_show', {id: evt.id}) }}" title="Détails">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                            <button type="button" class="act-btn btn-open-qrcode" title="QR Code"
+                                    data-event-id="{{ evt.id }}"
+                                    data-event-nom="{{ evt.nom }}"
+                                    data-event-date="{{ evt.date|date('d M Y') }}"
+                                    data-event-heure="{{ evt.heure|date('H\\hi') }}"
+                                    data-event-lieu="{{ evt.lieu }}"
+                                    data-event-type="{{ evt.typeEvenement }}"
+                                    data-event-paiement="{{ evt.paiement ? 'Payant' : 'Gratuit' }}">
+                                <i class="fas fa-qrcode"></i>
+                            </button>
                             <button type="button" class="act-btn act-primary btn-open-participate" title="Participer"
                                     data-event-id="{{ evt.id }}"
                                     data-event-nom="{{ evt.nom }}"
@@ -586,6 +578,20 @@ body.modal-open { overflow: hidden !important; }
                             </button>
                             {% if participationsByEvent[evt.id] is defined and participationsByEvent[evt.id] is not empty %}
                                 {% for p in participationsByEvent[evt.id] %}
+                                    <button type="button" class="act-btn btn-open-part-qr" title="QR #{{ p.id }}"
+                                            data-participation-id="{{ p.id }}"
+                                            data-event-nom="{{ evt.nom }}"
+                                            data-event-type="{{ evt.typeEvenement }}"
+                                            data-event-date="{{ evt.date|date('d M Y') }}"
+                                            data-event-heure="{{ evt.heure|date('H\\hi') }}"
+                                            data-event-lieu="{{ evt.lieu }}"
+                                            data-event-paiement="{{ evt.paiement ? 'Payant' : 'Gratuit' }}"
+                                            data-part-date="{{ p.dateParticipation|date('d/m/Y') }}"
+                                            data-part-nbr="{{ p.nbrParticipation }}"
+                                            data-part-statut="{{ p.statut }}"
+                                            data-part-mode="{{ p.modePaiement ?? 'Gratuit' }}">
+                                        <i class="fas fa-qrcode"></i>
+                                    </button>
                                     <button type="button" class="act-btn act-edit btn-open-edit" title="Modifier #{{ p.id }}"
                                             data-participation-id="{{ p.id }}"
                                             data-event-id="{{ evt.id }}"
@@ -605,7 +611,6 @@ body.modal-open { overflow: hidden !important; }
                 </div>
                 {% endfor %}
             </div>
-        {% endif %}
 
     </div>
 </div>
@@ -626,21 +631,8 @@ body.modal-open { overflow: hidden !important; }
                 <div class="modal-body">
                     <input type="hidden" name="id_evenement" id="pm-event-id">
                     <div class="mb-3">
-                        <label for="pm-date" class="form-label">Date de participation <span style="color:#f87171">*</span></label>
-                        <input type="date" class="form-control" id="pm-date" name="date_participation" required>
-                    </div>
-                    <div class="mb-3">
                         <label for="pm-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
                         <input type="number" class="form-control" id="pm-nbr" name="nbr_participation" min="1" value="1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="pm-statut" class="form-label">Statut <span style="color:#f87171">*</span></label>
-                        <select class="form-select" id="pm-statut" name="statut" required>
-                            <option value="">— Choisir —</option>
-                            <option value="En attente">En attente</option>
-                            <option value="Confirmée">Confirmée</option>
-                            <option value="Annulée">Annulée</option>
-                        </select>
                     </div>
                     <div class="mb-3" id="pm-paiement-group" style="display:none">
                         <label for="pm-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
@@ -649,6 +641,9 @@ body.modal-open { overflow: hidden !important; }
                             <option value="Carte">Carte</option>
                             <option value="Cash">Cash</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted" style="color:var(--text-muted)!important"><i class="fas fa-info-circle me-1"></i>La date de participation sera automatiquement fixée à aujourd'hui. Le statut est géré par l'admin.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -676,21 +671,8 @@ body.modal-open { overflow: hidden !important; }
                 <div class="modal-body">
                     <input type="hidden" name="id_evenement" id="em-event-id">
                     <div class="mb-3">
-                        <label for="em-date" class="form-label">Date de participation <span style="color:#f87171">*</span></label>
-                        <input type="date" class="form-control" id="em-date" name="date_participation" required>
-                    </div>
-                    <div class="mb-3">
                         <label for="em-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
                         <input type="number" class="form-control" id="em-nbr" name="nbr_participation" min="1" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="em-statut" class="form-label">Statut <span style="color:#f87171">*</span></label>
-                        <select class="form-select" id="em-statut" name="statut" required>
-                            <option value="">— Choisir —</option>
-                            <option value="En attente">En attente</option>
-                            <option value="Confirmée">Confirmée</option>
-                            <option value="Annulée">Annulée</option>
-                        </select>
                     </div>
                     <div class="mb-3" id="em-paiement-group" style="display:none">
                         <label for="em-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
@@ -699,6 +681,9 @@ body.modal-open { overflow: hidden !important; }
                             <option value="Carte">Carte</option>
                             <option value="Cash">Cash</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted" style="color:var(--text-muted)!important"><i class="fas fa-info-circle me-1"></i>La date sera mise à jour automatiquement. Le statut ne peut être modifié que par l'admin.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -709,23 +694,46 @@ body.modal-open { overflow: hidden !important; }
         </div>
     </div>
 </div>
+
+{# ═══════════════════════════════════════════════════════════
+   MODAL — QR Code
+═══════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="qrcodeModal" tabindex="-1" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrcodeModalLabel">
+                    <i class="fas fa-qrcode me-2"></i><span id="qr-event-name"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qr-code-container" style="display:inline-block;padding:1rem;background:#fff;border-radius:var(--radius);"></div>
+                <div id="qr-details" style="margin-top:1rem;text-align:left;font-size:.85rem;color:var(--text-secondary);">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     /* ══════════════════════════════════════════════════════
        MOVE MODALS OUT OF #smooth-content
-       GSAP ScrollSmoother applies transform to #smooth-content,
-       which creates a stacking context that traps position:fixed
-       elements. Moving modals to <body> root fixes centering
-       and pointer-events.
     ══════════════════════════════════════════════════════ */
     var pmEl = document.getElementById('participateModal');
     var emEl = document.getElementById('editParticipationModal');
+    var qrEl = document.getElementById('qrcodeModal');
     if (pmEl) document.body.appendChild(pmEl);
     if (emEl) document.body.appendChild(emEl);
+    if (qrEl) document.body.appendChild(qrEl);
 
     /* Pause ScrollSmoother while any modal is open */
     var smoother = (typeof ScrollSmoother !== 'undefined') ? ScrollSmoother.get() : null;
@@ -740,60 +748,270 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var pmModal = new bootstrap.Modal(pmEl);
     var emModal = new bootstrap.Modal(emEl);
+    var qrModal = new bootstrap.Modal(qrEl);
     var today   = new Date().toISOString().split('T')[0];
 
-    /* ── CREATE modal ── */
-    document.querySelectorAll('.btn-open-participate').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var d = this.dataset;
-            document.getElementById('pm-event-id').value         = d.eventId;
-            document.getElementById('pm-event-name').textContent = d.eventNom;
+    /* ═══ DYNAMIC CLIENT-SIDE SEARCH (instant filter) ═══ */
+    var searchInput = document.getElementById('frontSearchInput');
+    var searchBtn   = document.getElementById('frontSearchBtn');
+    var searchClear = document.getElementById('frontSearchClear');
+    var searchInfo  = document.getElementById('frontSearchInfo');
+    var searchTerm  = document.getElementById('frontSearchTerm');
+    var searchCount = document.getElementById('frontSearchCount');
+    var evtGrid     = document.getElementById('evtGrid');
+    var allCards    = []; // Store all event cards for filtering
 
-            var dateInput  = document.getElementById('pm-date');
-            dateInput.min  = today;
-            dateInput.max  = d.eventDate;
-            dateInput.value = '';
+    // Store all cards on page load
+    if (evtGrid) {
+        allCards = Array.from(evtGrid.querySelectorAll('.evt-card'));
+    }
 
-            document.getElementById('pm-nbr').value   = 1;
-            document.getElementById('pm-statut').value = 'En attente';
-            document.getElementById('pm-mode').value   = '';
+    function doLiveSearch() {
+        var q = searchInput.value.trim().toLowerCase();
+        
+        if (!evtGrid || allCards.length === 0) return;
 
-            var pg   = document.getElementById('pm-paiement-group');
-            var paid = d.eventPaiement === '1';
-            pg.style.display = paid ? 'block' : 'none';
-            document.getElementById('pm-mode').required = paid;
+        var visibleCount = 0;
 
-            pmModal.show();
+        // Filter cards based on search query (NAME ONLY)
+        allCards.forEach(function(card) {
+            var eventName = card.querySelector('.evt-title a')?.textContent.toLowerCase() || '';
+            
+            // Check if event name matches the search query
+            var matches = !q || eventName.includes(q);
+            
+            if (matches) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update search info
+        if (q) {
+            searchInfo.style.display = 'block';
+            searchTerm.textContent = q;
+            searchCount.textContent = visibleCount;
+            searchClear.style.display = '';
+        } else {
+            searchInfo.style.display = 'none';
+            searchClear.style.display = 'none';
+        }
+
+        // Show "no results" message if needed
+        var existingEmpty = evtGrid.querySelector('.empty-state');
+        if (existingEmpty) existingEmpty.remove();
+
+        if (visibleCount === 0) {
+            var emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-state';
+            emptyDiv.style.gridColumn = '1/-1';
+            emptyDiv.innerHTML = '<i class="fas fa-calendar-xmark"></i>' +
+                '<h4>Aucun événement trouvé</h4>' +
+                '<p>Aucun événement ne correspond à votre recherche "' + escapeHtml(q) + '".</p>';
+            evtGrid.appendChild(emptyDiv);
+        }
+    }
+
+    // Live search on every keystroke (instant filter)
+    if (searchInput) {
+        searchInput.addEventListener('input', doLiveSearch);
+        
+        // Run initial search if there's a query in the input
+        if (searchInput.value.trim()) {
+            doLiveSearch();
+        }
+    }
+    
+    if (searchBtn) searchBtn.addEventListener('click', doLiveSearch);
+    
+    if (searchClear) {
+        searchClear.addEventListener('click', function () {
+            searchInput.value = '';
+            doLiveSearch();
+        });
+    }
+
+    /* ═══ SORT PILLS (reload page with sort params) ═══ */
+    var sortBar = document.getElementById('frontSortBar');
+    var currentSort  = sortBar ? sortBar.getAttribute('data-current-sort') : 'date';
+    var currentOrder = sortBar ? sortBar.getAttribute('data-current-order') : 'ASC';
+    
+    document.querySelectorAll('#frontSortBar .sort-pill').forEach(function (pill) {
+        pill.addEventListener('click', function (e) {
+            e.preventDefault();
+            var key = this.getAttribute('data-sort-key');
+            var newOrder = 'ASC';
+            
+            if (currentSort === key) {
+                newOrder = currentOrder === 'ASC' ? 'DESC' : 'ASC';
+            } else {
+                newOrder = key === 'date' ? 'ASC' : 'ASC';
+            }
+
+            // Build URL with sort parameters (keep search query if present)
+            var q = searchInput ? searchInput.value.trim() : '';
+            var url = '/evenement?sort=' + encodeURIComponent(key) + '&order=' + encodeURIComponent(newOrder);
+            if (q) {
+                url += '&q=' + encodeURIComponent(q);
+            }
+            
+            window.location.href = url;
         });
     });
 
-    /* ── EDIT modal ── */
-    document.querySelectorAll('.btn-open-edit').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var d    = this.dataset;
-            var form = document.getElementById('editParticipationForm');
-            form.action = '/evenement/participation/' + d.participationId + '/modifier';
+    /* ═══ UTILITY: Escape HTML ═══ */
+    function escapeHtml(str) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(str || ''));
+        return d.innerHTML;
+    }
 
-            document.getElementById('em-event-id').value         = d.eventId;
-            document.getElementById('em-event-name').textContent = d.eventNom;
+    /* ═══ BIND BUTTONS on cards (initial page load) ═══ */
+    function bindCardButtons() {
+        /* Create modal */
+        document.querySelectorAll('.btn-open-participate').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var d = this.dataset;
+                var eventDate = d.eventDate || '';
 
-            var dateInput   = document.getElementById('em-date');
-            dateInput.min   = today;
-            dateInput.max   = d.eventDate;
-            dateInput.value = d.date || '';
+                // Check: today must be before event day
+                if (eventDate && today >= eventDate) {
+                    alert('Vous ne pouvez participer qu\'avant le jour de l\'événement.');
+                    return;
+                }
 
-            document.getElementById('em-nbr').value   = d.nbr || 1;
-            document.getElementById('em-statut').value = d.statut || '';
-            document.getElementById('em-mode').value   = d.mode || '';
+                document.getElementById('pm-event-id').value         = d.eventId;
+                document.getElementById('pm-event-name').textContent = d.eventNom;
+                document.getElementById('pm-nbr').value = 1;
+                document.getElementById('pm-mode').value = '';
 
-            var pg   = document.getElementById('em-paiement-group');
-            var paid = d.eventPaiement === '1';
-            pg.style.display = paid ? 'block' : 'none';
-            document.getElementById('em-mode').required = paid;
+                var pg   = document.getElementById('pm-paiement-group');
+                var paid = d.eventPaiement === '1';
+                pg.style.display = paid ? 'block' : 'none';
+                document.getElementById('pm-mode').required = paid;
 
-            emModal.show();
+                pmModal.show();
+            });
         });
-    });
+
+        /* Edit modal */
+        document.querySelectorAll('.btn-open-edit').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var d    = this.dataset;
+                var form = document.getElementById('editParticipationForm');
+                form.action = '/evenement/participation/' + d.participationId + '/modifier';
+
+                var eventDate = d.eventDate || '';
+                if (eventDate && today >= eventDate) {
+                    alert('Vous ne pouvez modifier la participation qu\'avant le jour de l\'événement.');
+                    return;
+                }
+
+                document.getElementById('em-event-id').value         = d.eventId;
+                document.getElementById('em-event-name').textContent = d.eventNom;
+                document.getElementById('em-nbr').value = d.nbr || 1;
+                document.getElementById('em-mode').value = d.mode || '';
+
+                var pg   = document.getElementById('em-paiement-group');
+                var paid = d.eventPaiement === '1';
+                pg.style.display = paid ? 'block' : 'none';
+                document.getElementById('em-mode').required = paid;
+
+                emModal.show();
+            });
+        });
+
+        /* QR Code modal (event only) */
+        document.querySelectorAll('.btn-open-qrcode').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var d = this.dataset;
+                document.getElementById('qr-event-name').textContent = d.eventNom;
+
+                var qrContainer = document.getElementById('qr-code-container');
+                qrContainer.innerHTML = '';
+
+                var qrText = 'Événement: ' + d.eventNom
+                    + '\nType: ' + d.eventType
+                    + '\nDate: ' + d.eventDate
+                    + '\nHeure: ' + d.eventHeure
+                    + '\nLieu: ' + d.eventLieu
+                    + '\nPaiement: ' + d.eventPaiement;
+
+                new QRCode(qrContainer, {
+                    text: qrText,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#0d0d1a',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                document.getElementById('qr-details').innerHTML =
+                    '<p><strong style="color:var(--gold)"><i class="fas fa-tag me-1"></i>Type:</strong> ' + escapeHtml(d.eventType) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="far fa-calendar-alt me-1"></i>Date:</strong> ' + escapeHtml(d.eventDate) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="far fa-clock me-1"></i>Heure:</strong> ' + escapeHtml(d.eventHeure) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-map-marker-alt me-1"></i>Lieu:</strong> ' + escapeHtml(d.eventLieu) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-credit-card me-1"></i>Paiement:</strong> ' + escapeHtml(d.eventPaiement) + '</p>';
+
+                qrModal.show();
+            });
+        });
+
+        /* QR Code modal (participation-specific — includes event + participation details) */
+        document.querySelectorAll('.btn-open-part-qr').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var d = this.dataset;
+                document.getElementById('qr-event-name').textContent = 'Participation #' + d.participationId;
+
+                var qrContainer = document.getElementById('qr-code-container');
+                qrContainer.innerHTML = '';
+
+                var qrText = '=== PARTICIPATION ==='
+                    + '\nID: #' + d.participationId
+                    + '\nDate inscription: ' + d.partDate
+                    + '\nPlaces: ' + d.partNbr
+                    + '\nStatut: ' + d.partStatut
+                    + '\nPaiement: ' + d.partMode
+                    + '\n\n=== ÉVÉNEMENT ==='
+                    + '\nNom: ' + d.eventNom
+                    + '\nType: ' + d.eventType
+                    + '\nDate: ' + d.eventDate
+                    + '\nHeure: ' + d.eventHeure
+                    + '\nLieu: ' + d.eventLieu;
+
+                new QRCode(qrContainer, {
+                    text: qrText,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#0d0d1a',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+
+                document.getElementById('qr-details').innerHTML =
+                    '<h6 style="color:var(--gold);margin-bottom:.5rem;font-size:.9rem;"><i class="fas fa-ticket-alt me-1"></i>Participation</h6>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-hashtag me-1"></i>ID:</strong> #' + escapeHtml(d.participationId) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-calendar-day me-1"></i>Date:</strong> ' + escapeHtml(d.partDate) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-users me-1"></i>Places:</strong> ' + escapeHtml(d.partNbr) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-check-circle me-1"></i>Statut:</strong> ' + escapeHtml(d.partStatut) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-credit-card me-1"></i>Paiement:</strong> ' + escapeHtml(d.partMode) + '</p>'
+                    + '<hr style="border-color:var(--border);margin:.6rem 0;">'
+                    + '<h6 style="color:var(--gold);margin-bottom:.5rem;font-size:.9rem;"><i class="fas fa-calendar-alt me-1"></i>Événement</h6>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-bookmark me-1"></i>Nom:</strong> ' + escapeHtml(d.eventNom) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-tag me-1"></i>Type:</strong> ' + escapeHtml(d.eventType) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="far fa-calendar-alt me-1"></i>Date:</strong> ' + escapeHtml(d.eventDate) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="far fa-clock me-1"></i>Heure:</strong> ' + escapeHtml(d.eventHeure) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-map-marker-alt me-1"></i>Lieu:</strong> ' + escapeHtml(d.eventLieu) + '</p>';
+
+                qrModal.show();
+            });
+        });
+    }
+
+    /* Bind buttons on initial page load */
+    bindCardButtons();
 
     /* ── Auto-dismiss flash messages ── */
     document.querySelectorAll('.flash-msg').forEach(function (el) {

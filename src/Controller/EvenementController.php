@@ -10,6 +10,7 @@ use App\Service\EvenementService;
 use App\Service\ParticipationService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -30,7 +31,7 @@ class EvenementController extends AbstractController
     {
         $q     = trim($request->query->get('q', ''));
         $sort  = $request->query->get('sort', 'date');
-        $order = $request->query->get('order', 'DESC');
+        $order = $request->query->get('order', 'ASC');
 
         $evenements = $repo->searchAndSort($q, '', '', $sort, $order);
 
@@ -54,13 +55,25 @@ class EvenementController extends AbstractController
     #[Route('/participer', name: 'participate', methods: ['POST'])]
     public function participate(Request $request, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo): Response
     {
+        $today = (new \DateTime('today'))->format('Y-m-d');
+
         $data = [
             'id_evenement'       => $request->request->get('id_evenement', ''),
-            'date_participation' => $request->request->get('date_participation', ''),
+            'date_participation' => $today,
             'nbr_participation'  => $request->request->get('nbr_participation', ''),
-            'statut'             => $request->request->get('statut', ''),
+            'statut'             => 'En attente',
             'mode_paiement'      => $request->request->get('mode_paiement', ''),
         ];
+
+        // Check that today is strictly before the event date
+        $evenement = $evenementRepo->find((int)$data['id_evenement']);
+        if ($evenement && $evenement->getDate()) {
+            $eventDate = $evenement->getDate()->format('Y-m-d');
+            if ($today >= $eventDate) {
+                $this->addFlash('error', 'Vous ne pouvez participer qu\'avant le jour de l\'événement.');
+                return $this->redirectToRoute('app_evenement_index');
+            }
+        }
 
         $errors = $service->validate($data);
 
@@ -74,11 +87,10 @@ class EvenementController extends AbstractController
         $em = $m->getManager();
         $participation = new Participation();
 
-        $evenement = $evenementRepo->find((int)$data['id_evenement']);
         $participation->setEvenement($evenement);
-        $participation->setDateParticipation(\DateTime::createFromFormat('Y-m-d', $data['date_participation']));
+        $participation->setDateParticipation(\DateTime::createFromFormat('Y-m-d', $today));
         $participation->setNbrParticipation((int)$data['nbr_participation']);
-        $participation->setStatut($data['statut']);
+        $participation->setStatut('En attente');
 
         if ($evenement && $evenement->isPaiement() && !empty($data['mode_paiement'])) {
             $participation->setModePaiement($data['mode_paiement']);
@@ -105,13 +117,28 @@ class EvenementController extends AbstractController
             return $this->redirectToRoute('app_evenement_index');
         }
 
+        $today = (new \DateTime('today'))->format('Y-m-d');
+
+        // Keep the existing statut — front office cannot change it
+        $currentStatut = $participation->getStatut();
+
         $data = [
             'id_evenement'       => $request->request->get('id_evenement', ''),
-            'date_participation' => $request->request->get('date_participation', ''),
+            'date_participation' => $today,
             'nbr_participation'  => $request->request->get('nbr_participation', ''),
-            'statut'             => $request->request->get('statut', ''),
+            'statut'             => $currentStatut,
             'mode_paiement'      => $request->request->get('mode_paiement', ''),
         ];
+
+        // Check that today is strictly before the event date
+        $evenement = $evenementRepo->find((int)$data['id_evenement']);
+        if ($evenement && $evenement->getDate()) {
+            $eventDate = $evenement->getDate()->format('Y-m-d');
+            if ($today >= $eventDate) {
+                $this->addFlash('error', 'Vous ne pouvez modifier la participation qu\'avant le jour de l\'événement.');
+                return $this->redirectToRoute('app_evenement_index');
+            }
+        }
 
         $errors = $service->validate($data, $participation->getId());
 
@@ -124,11 +151,10 @@ class EvenementController extends AbstractController
 
         $em = $m->getManager();
 
-        $evenement = $evenementRepo->find((int)$data['id_evenement']);
         $participation->setEvenement($evenement);
-        $participation->setDateParticipation(\DateTime::createFromFormat('Y-m-d', $data['date_participation']));
+        $participation->setDateParticipation(\DateTime::createFromFormat('Y-m-d', $today));
         $participation->setNbrParticipation((int)$data['nbr_participation']);
-        $participation->setStatut($data['statut']);
+        $participation->setStatut($currentStatut);
 
         if ($evenement && $evenement->isPaiement() && !empty($data['mode_paiement'])) {
             $participation->setModePaiement($data['mode_paiement']);
@@ -143,35 +169,48 @@ class EvenementController extends AbstractController
         return $this->redirectToRoute('app_evenement_index');
     }
 
-    // ─── CREATE (form-based, persisted to database) ────────
+    // ─── AJAX SEARCH (front-office dynamic search) ─────────
 
-    #[Route('/ajouter', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, ManagerRegistry $m, EvenementService $service): Response
+    #[Route('/search', name: 'search', methods: ['GET'])]
+    public function search(Request $request, EvenementRepository $repo, ParticipationRepository $participationRepo): JsonResponse
     {
-        $errors = [];
-        $data   = [];
+        $q     = trim($request->query->get('q', ''));
+        $sort  = $request->query->get('sort', 'date');
+        $order = $request->query->get('order', 'ASC');
 
-        if ($request->isMethod('POST')) {
-            $data   = $this->extractFormData($request);
-            $errors = $service->validate($data);
+        $evenements = $repo->searchAndSort($q, '', '', $sort, $order);
 
-            if (empty($errors)) {
-                $em = $m->getManager();
-                $evenement = new Evenement();
-                $this->hydrate($evenement, $data);
-                $em->persist($evenement);
-                $em->flush();
-
-                $this->addFlash('success', 'Événement créé avec succès !');
-                return $this->redirectToRoute('app_evenement_index');
+        $data = [];
+        foreach ($evenements as $evt) {
+            $participations = $participationRepo->findByEvenement($evt->getId());
+            $partData = [];
+            foreach ($participations as $p) {
+                $partData[] = [
+                    'id'               => $p->getId(),
+                    'dateParticipation' => $p->getDateParticipation()?->format('Y-m-d'),
+                    'nbrParticipation'  => $p->getNbrParticipation(),
+                    'statut'           => $p->getStatut(),
+                    'modePaiement'     => $p->getModePaiement(),
+                ];
             }
+
+            $data[] = [
+                'id'              => $evt->getId(),
+                'nom'             => $evt->getNom(),
+                'typeEvenement'   => $evt->getTypeEvenement(),
+                'nbrParticipant'  => $evt->getNbrParticipant(),
+                'date'            => $evt->getDate()?->format('Y-m-d'),
+                'dateFmt'         => $evt->getDate()?->format('d M Y'),
+                'heure'           => $evt->getHeure()?->format('H\\hi'),
+                'lieu'            => $evt->getLieu(),
+                'description'     => $evt->getDescription(),
+                'paiement'        => $evt->isPaiement(),
+                'image'           => $evt->getImage(),
+                'participations'  => $partData,
+            ];
         }
 
-        return $this->render('evenement/new.html.twig', [
-            'errors' => $errors,
-            'data'   => $data,
-            'types'  => Evenement::TYPES,
-        ]);
+        return $this->json(['results' => $data, 'count' => count($data)]);
     }
 
     // ─── SHOW (front-end page) ─────────────────────────────

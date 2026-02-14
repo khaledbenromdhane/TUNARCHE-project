@@ -445,8 +445,174 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    /* ─── SEARCH & FILTER: now handled server-side (PHP) ───── */
-    /* The form in the template submits GET params to the controller */
+    /* ─── SEARCH & FILTER: AJAX Dynamic Search ──────────────── */
+    const adminSearchInput   = document.getElementById('adminEvtSearchInput');
+    const adminTypeFilter    = document.getElementById('adminEvtTypeFilter');
+    const adminPaiementFilter = document.getElementById('adminEvtPaiementFilter');
+    const adminSearchBtn     = document.getElementById('adminEvtSearchBtn');
+    const adminResetBtn      = document.getElementById('adminEvtResetBtn');
+    const adminSortInput     = document.getElementById('adminEvtSort');
+    const adminOrderInput    = document.getElementById('adminEvtOrder');
+    const evtCountBadge      = document.getElementById('evtCountBadge');
+    const exportEventsBtn    = document.getElementById('exportEventsBtn');
+    let searchTimer;
+
+    function doAdminEvtSearch() {
+        const q        = adminSearchInput ? adminSearchInput.value.trim() : '';
+        const type     = adminTypeFilter ? adminTypeFilter.value : '';
+        const paiement = adminPaiementFilter ? adminPaiementFilter.value : '';
+        const sort     = adminSortInput ? adminSortInput.value : 'date';
+        const order    = adminOrderInput ? adminOrderInput.value : 'DESC';
+
+        const params = new URLSearchParams({ q, type, paiement, sort, order });
+
+        fetch('/admin/evenement/search?' + params.toString())
+            .then(r => r.json())
+            .then(data => {
+                renderEvtRows(data.results);
+                if (evtCountBadge) evtCountBadge.textContent = data.count;
+                if (adminResetBtn) {
+                    adminResetBtn.style.display = (q || type || paiement) ? 'inline-block' : 'none';
+                }
+                
+                // Update URL with all current parameters
+                const currentUrl = new URL(window.location);
+                if (q) currentUrl.searchParams.set('q', q);
+                else currentUrl.searchParams.delete('q');
+                if (type) currentUrl.searchParams.set('type', type);
+                else currentUrl.searchParams.delete('type');
+                if (paiement) currentUrl.searchParams.set('paiement', paiement);
+                else currentUrl.searchParams.delete('paiement');
+                currentUrl.searchParams.set('sort', sort);
+                currentUrl.searchParams.set('order', order);
+                window.history.pushState({}, '', currentUrl);
+            });
+    }
+
+    function renderEvtRows(events) {
+        if (!tableBody) return;
+
+        if (events.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="10" class="text-center py-5"><i class="fas fa-calendar-xmark d-block mb-2" style="font-size:2rem;color:rgba(212,175,55,0.3);"></i><span style="color:rgba(255,255,255,0.4);">Aucun événement trouvé.</span></td></tr>';
+            return;
+        }
+
+        let html = '';
+        events.forEach(evt => {
+            const paid = evt.paiement;
+            const paidClass = paid ? 'true' : 'false';
+            const paidBadge = paid
+                ? '<span class="paiement-badge paid"><i class="fas fa-check-circle me-1"></i>Paid</span>'
+                : '<span class="paiement-badge free"><i class="fas fa-gift me-1"></i>Free</span>';
+            const typeSlug = (evt.typeEvenement || '').toLowerCase().replace(/ /g, '-').replace(/'/g, '');
+            const imgHtml = evt.image
+                ? `<img src="/uploads/evenements/${escapeHtml(evt.image)}" alt="${escapeHtml(evt.nom)}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.1);">`
+                : '<div class="evt-icon-mini gold"><i class="fas fa-calendar-star"></i></div>';
+            const desc = evt.description || '';
+            const descHint = desc.length > 40 ? desc.substring(0, 40) + '…' : desc;
+
+            html += `<tr data-event-id="${evt.id}"
+                data-type="${escapeHtml(evt.typeEvenement)}"
+                data-paiement="${paidClass}"
+                data-nom="${escapeHtml(evt.nom)}"
+                data-date="${evt.date || ''}"
+                data-heure="${evt.heure || ''}"
+                data-lieu="${escapeHtml(evt.lieu)}"
+                data-description="${escapeHtml(desc)}"
+                data-nbr-participant="${evt.nbrParticipant}"
+                data-image="${evt.image || ''}">
+                <td><input type="checkbox" class="form-check-input evt-check"></td>
+                <td class="evt-id">#EVT-${String(evt.id).padStart(3, '0')}</td>
+                <td><div class="evt-name-cell">${imgHtml}<div><span class="evt-name">${escapeHtml(evt.nom)}</span><span class="evt-desc-hint">${escapeHtml(descHint)}</span></div></div></td>
+                <td><span class="type-badge type-${typeSlug}">${escapeHtml(evt.typeEvenement)}</span></td>
+                <td><span class="participant-count"><i class="fas fa-users me-1"></i>${evt.nbrParticipant}</span></td>
+                <td><span class="evt-date"><i class="fas fa-calendar-day me-1 text-muted"></i>${escapeHtml(evt.dateFmt || '')}</span></td>
+                <td><span class="evt-time"><i class="fas fa-clock me-1 text-muted"></i>${escapeHtml(evt.heure || '')}</span></td>
+                <td><span class="evt-lieu"><i class="fas fa-map-marker-alt me-1 text-muted"></i>${escapeHtml(evt.lieu)}</span></td>
+                <td>${paidBadge}</td>
+                <td><div class="table-actions">
+                    <button type="button" class="table-action-btn view-evt-btn" title="View" data-event-id="${evt.id}"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="table-action-btn edit-evt-btn" title="Edit" data-event-id="${evt.id}"><i class="fas fa-pen-to-square"></i></button>
+                    <button type="button" class="table-action-btn delete delete-evt-btn" title="Delete" data-event-id="${evt.id}" data-event-name="${escapeHtml(evt.nom)}" data-delete-url="/admin/evenement/${evt.id}/delete"><i class="fas fa-trash-can"></i></button>
+                </div></td>
+            </tr>`;
+        });
+
+        tableBody.innerHTML = html;
+    }
+
+    // Debounced live search on input
+    if (adminSearchInput) {
+        adminSearchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(doAdminEvtSearch, 350);
+        });
+    }
+
+    // Instant search on filter changes
+    if (adminTypeFilter) adminTypeFilter.addEventListener('change', doAdminEvtSearch);
+    if (adminPaiementFilter) adminPaiementFilter.addEventListener('change', doAdminEvtSearch);
+    if (adminSearchBtn) adminSearchBtn.addEventListener('click', doAdminEvtSearch);
+
+    // Reset filters
+    if (adminResetBtn) {
+        adminResetBtn.addEventListener('click', () => {
+            if (adminSearchInput) adminSearchInput.value = '';
+            if (adminTypeFilter) adminTypeFilter.value = '';
+            if (adminPaiementFilter) adminPaiementFilter.value = '';
+            doAdminEvtSearch();
+        });
+    }
+
+    // Export events CSV
+    if (exportEventsBtn) {
+        exportEventsBtn.addEventListener('click', () => {
+            window.location.href = '/admin/evenement/export';
+        });
+    }
+
+    /* ─── AJAX COLUMN SORTING ────────────────────────────────── */
+    document.querySelectorAll('#eventsTable thead th[data-sort-key]').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const key = th.getAttribute('data-sort-key');
+            const currentSort = adminSortInput ? adminSortInput.value : 'date';
+            const currentOrder = adminOrderInput ? adminOrderInput.value : 'DESC';
+
+            let newOrder;
+            if (currentSort === key) {
+                newOrder = currentOrder === 'ASC' ? 'DESC' : 'ASC';
+            } else {
+                newOrder = (key === 'nom' || key === 'typeEvenement' || key === 'lieu') ? 'ASC' : 'DESC';
+            }
+
+            if (adminSortInput) adminSortInput.value = key;
+            if (adminOrderInput) adminOrderInput.value = newOrder;
+
+            // Update sort icons in all headers
+            document.querySelectorAll('#eventsTable thead th[data-sort-key]').forEach(h => {
+                const icon = h.querySelector('.sort-icon');
+                const hKey = h.getAttribute('data-sort-key');
+                if (icon) {
+                    if (hKey === key) {
+                        icon.className = 'fas fa-sort-' + (newOrder === 'ASC' ? 'up' : 'down') + ' sort-icon';
+                        icon.style.cssText = 'font-size:0.7rem;color:#a855f7;';
+                    } else {
+                        icon.className = 'fas fa-sort sort-icon';
+                        icon.style.cssText = 'font-size:0.7rem;opacity:0.4;';
+                    }
+                }
+            });
+
+            doAdminEvtSearch();
+            
+            // Update URL with sort parameters
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('sort', key);
+            currentUrl.searchParams.set('order', newOrder);
+            window.history.pushState({}, '', currentUrl);
+        });
+    });
 
 
     /* ─── SELECT ALL CHECKBOX ────────────────────────────────── */
