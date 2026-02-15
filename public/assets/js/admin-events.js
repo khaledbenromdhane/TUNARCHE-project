@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fDesc         = document.getElementById('inputEvtDesc');
     const fPaiement     = document.getElementById('inputEvtPaiement');
     const paiementText  = document.getElementById('paiementStatusText');
+    const fPrix         = document.getElementById('inputEvtPrix');
+    const prixGroup     = document.getElementById('prixFieldGroup');
 
     // Delete alert
     const deleteOverlay   = document.getElementById('deleteEvtAlertOverlay');
@@ -79,9 +81,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ─── PAIEMENT TOGGLE TEXT ───────────────────────────────── */
+    function togglePrixField() {
+        if (fPaiement && prixGroup) {
+            if (fPaiement.checked) {
+                prixGroup.style.display = 'block';
+                if (fPrix) fPrix.required = true;
+            } else {
+                prixGroup.style.display = 'none';
+                if (fPrix) { fPrix.required = false; fPrix.value = ''; }
+            }
+        }
+    }
     if (fPaiement) {
         fPaiement.addEventListener('change', () => {
             paiementText.textContent = fPaiement.checked ? 'Paid' : 'Free';
+            togglePrixField();
         });
     }
 
@@ -105,6 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (imgPreview) imgPreview.style.display = 'none';
             const imgInput = document.getElementById('inputEvtImage');
             if (imgInput) imgInput.value = '';
+
+            // Reset prix field
+            if (fPrix) fPrix.value = '';
+            togglePrixField();
         });
     }
 
@@ -139,6 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const isPaid = row.getAttribute('data-paiement') === 'true';
             fPaiement.checked = isPaid;
             paiementText.textContent = isPaid ? 'Paid' : 'Free';
+
+            // Populate prix and toggle visibility
+            if (fPrix) fPrix.value = row.getAttribute('data-prix') || '';
+            togglePrixField();
 
             // Handle image preview
             const imageVal = row.getAttribute('data-image') || '';

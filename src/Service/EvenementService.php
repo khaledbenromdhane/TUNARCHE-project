@@ -141,6 +141,19 @@ class EvenementService
         // ── Paiement (boolean – optional, defaults to false) ──
         // No validation needed, it's a checkbox (true/false)
 
+        // ── Prix (required if paiement is true) ──────────────
+        if (!empty($data['paiement'])) {
+            if (!isset($data['prix']) || $data['prix'] === '') {
+                $errors['prix'] = 'Le prix est obligatoire pour un événement payant.';
+            } elseif (!is_numeric($data['prix'])) {
+                $errors['prix'] = 'Le prix doit être un nombre valide.';
+            } elseif ((float)$data['prix'] < 0.01) {
+                $errors['prix'] = 'Le prix doit être supérieur à 0.';
+            } elseif ((float)$data['prix'] > 99999) {
+                $errors['prix'] = 'Le prix ne peut pas dépasser 99 999 €.';
+            }
+        }
+
         // ── Image (optional file upload) ──────────────────
         if (!empty($data['image_file'])) {
             $file = $data['image_file'];

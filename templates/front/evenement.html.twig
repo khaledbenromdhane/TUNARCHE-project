@@ -533,7 +533,7 @@ body.modal-open { overflow: hidden !important; }
                         {% endif %}
                         <div class="overlay-type">{{ evt.typeEvenement }}</div>
                         {% if evt.paiement %}
-                            <span class="badge-pay paid"><i class="fas fa-ticket-alt me-1"></i>Payant</span>
+                            <span class="badge-pay paid"><i class="fas fa-ticket-alt me-1"></i>{{ evt.prix ? evt.prix|number_format(2, ',', ' ') ~ ' €' : 'Payant' }}</span>
                         {% else %}
                             <span class="badge-pay free"><i class="fas fa-gift me-1"></i>Gratuit</span>
                         {% endif %}
@@ -563,7 +563,8 @@ body.modal-open { overflow: hidden !important; }
                                     data-event-id="{{ evt.id }}"
                                     data-event-nom="{{ evt.nom }}"
                                     data-event-date="{{ evt.date|date('Y-m-d') }}"
-                                    data-event-paiement="{{ evt.paiement ? '1' : '0' }}">
+                                    data-event-paiement="{{ evt.paiement ? '1' : '0' }}"
+                                    data-event-prix="{{ evt.prix ?? '' }}">
                                 <i class="fas fa-hand-pointer"></i>
                             </button>
                             {% if participationsByEvent[evt.id] is defined and participationsByEvent[evt.id] is not empty %}
@@ -623,25 +624,18 @@ body.modal-open { overflow: hidden !important; }
                     <input type="hidden" name="id_evenement" id="pm-event-id">
                     <div class="mb-3">
                         <label for="pm-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
-                        <input type="number" class="form-control{% if participateErrors['nbr_participation'] is defined %} is-invalid{% endif %}" id="pm-nbr" name="nbr_participation" min="1" value="{{ participateData['nbr_participation'] ?? 1 }}" required>
-                        {% if participateErrors['nbr_participation'] is defined %}
-                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
-                                <i class="fas fa-exclamation-circle me-1"></i>{{ participateErrors['nbr_participation'] }}
-                            </div>
-                        {% endif %}
+                        <input type="number" class="form-control" id="pm-nbr" name="nbr_participation" min="1" value="1" required>
                     </div>
                     <div class="mb-3" id="pm-paiement-group" style="display:none">
                         <label for="pm-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
-                        <select class="form-select{% if participateErrors['mode_paiement'] is defined %} is-invalid{% endif %}" id="pm-mode" name="mode_paiement">
+                        <select class="form-select" id="pm-mode" name="mode_paiement">
                             <option value="">— Choisir —</option>
-                            <option value="Carte"{% if (participateData['mode_paiement'] ?? '') == 'Carte' %} selected{% endif %}>Carte</option>
-                            <option value="Cash"{% if (participateData['mode_paiement'] ?? '') == 'Cash' %} selected{% endif %}>Cash</option>
+                            <option value="Carte">Carte</option>
+                            <option value="Cash">Cash</option>
                         </select>
-                        {% if participateErrors['mode_paiement'] is defined %}
-                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
-                                <i class="fas fa-exclamation-circle me-1"></i>{{ participateErrors['mode_paiement'] }}
-                            </div>
-                        {% endif %}
+                        <div id="pm-stripe-info" style="display:none;margin-top:0.5rem;padding:0.5rem 0.75rem;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:6px;font-size:0.82rem;color:#818cf8;">
+                            <i class="fab fa-stripe me-1" style="font-size:1.1em;"></i>Vous serez redirigé vers <strong>Stripe</strong> pour effectuer le paiement sécurisé par carte. — <span style="color:#a5b4fc">10,00 € / place</span>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <small class="text-muted" style="color:var(--text-muted)!important"><i class="fas fa-info-circle me-1"></i>La date de participation sera automatiquement fixée à aujourd'hui. Le statut est géré par l'admin.</small>
@@ -649,7 +643,7 @@ body.modal-open { overflow: hidden !important; }
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i>Annuler</button>
-                    <button type="submit" class="btn-submit"><i class="fas fa-check me-1"></i>Valider</button>
+                    <button type="submit" class="btn-submit" id="pm-submit-btn"><i class="fas fa-check me-1"></i><span id="pm-submit-text">Valider</span></button>
                 </div>
             </form>
         </div>
@@ -673,25 +667,15 @@ body.modal-open { overflow: hidden !important; }
                     <input type="hidden" name="id_evenement" id="em-event-id">
                     <div class="mb-3">
                         <label for="em-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
-                        <input type="number" class="form-control{% if editErrors['nbr_participation'] is defined %} is-invalid{% endif %}" id="em-nbr" name="nbr_participation" min="1" value="{{ editData['nbr_participation'] ?? '' }}" required>
-                        {% if editErrors['nbr_participation'] is defined %}
-                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
-                                <i class="fas fa-exclamation-circle me-1"></i>{{ editErrors['nbr_participation'] }}
-                            </div>
-                        {% endif %}
+                        <input type="number" class="form-control" id="em-nbr" name="nbr_participation" min="1" required>
                     </div>
                     <div class="mb-3" id="em-paiement-group" style="display:none">
                         <label for="em-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
-                        <select class="form-select{% if editErrors['mode_paiement'] is defined %} is-invalid{% endif %}" id="em-mode" name="mode_paiement">
+                        <select class="form-select" id="em-mode" name="mode_paiement">
                             <option value="">— Choisir —</option>
-                            <option value="Carte"{% if (editData['mode_paiement'] ?? '') == 'Carte' %} selected{% endif %}>Carte</option>
-                            <option value="Cash"{% if (editData['mode_paiement'] ?? '') == 'Cash' %} selected{% endif %}>Cash</option>
+                            <option value="Carte">Carte</option>
+                            <option value="Cash">Cash</option>
                         </select>
-                        {% if editErrors['mode_paiement'] is defined %}
-                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
-                                <i class="fas fa-exclamation-circle me-1"></i>{{ editErrors['mode_paiement'] }}
-                            </div>
-                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <small class="text-muted" style="color:var(--text-muted)!important"><i class="fas fa-info-circle me-1"></i>La date sera mise à jour automatiquement. Le statut ne peut être modifié que par l'admin.</small>
@@ -761,47 +745,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var emModal = new bootstrap.Modal(emEl);
     var qrModal = new bootstrap.Modal(qrEl);
     var today   = new Date().toISOString().split('T')[0];
-
-    /* ═══ AUTO-REOPEN MODAL IF VALIDATION ERRORS ═══ */
-    {% if participateErrors is not empty %}
-        // Reopen participate modal with error data
-        var eventId = '{{ participateData['id_evenement'] ?? '' }}';
-        // Find the event card to get event details
-        var eventCard = document.querySelector('[data-event-id="' + eventId + '"]');
-        if (eventCard) {
-            var d = eventCard.dataset;
-            document.getElementById('pm-event-id').value = d.eventId;
-            document.getElementById('pm-event-name').textContent = d.eventNom;
-            
-            var pg = document.getElementById('pm-paiement-group');
-            var paid = d.eventPaiement === '1';
-            pg.style.display = paid ? 'block' : 'none';
-            document.getElementById('pm-mode').required = paid;
-        }
-        pmModal.show();
-    {% endif %}
-
-    {% if editErrors is not empty %}
-        // Reopen edit modal with error data
-        var editPartId = '{{ editParticipationId ?? '' }}';
-        var eventId = '{{ editData['id_evenement'] ?? '' }}';
-        // Find the edit button for this participation
-        var editBtn = document.querySelector('[data-participation-id="' + editPartId + '"].btn-open-edit');
-        if (editBtn) {
-            var d = editBtn.dataset;
-            var form = document.getElementById('editParticipationForm');
-            form.action = '/evenement/participation/' + editPartId + '/modifier';
-            
-            document.getElementById('em-event-id').value = d.eventId;
-            document.getElementById('em-event-name').textContent = d.eventNom;
-            
-            var pg = document.getElementById('em-paiement-group');
-            var paid = d.eventPaiement === '1';
-            pg.style.display = paid ? 'block' : 'none';
-            document.getElementById('em-mode').required = paid;
-        }
-        emModal.show();
-    {% endif %}
 
     /* ═══ DYNAMIC CLIENT-SIDE SEARCH (instant filter) ═══ */
     var searchInput = document.getElementById('frontSearchInput');
@@ -920,6 +863,48 @@ document.addEventListener('DOMContentLoaded', function () {
         return d.innerHTML;
     }
 
+    /* ═══ UTILITY: Strip accented characters for QR code compatibility ═══ */
+    function stripAccents(str) {
+        if (!str) return '';
+        var accents    = 'ÀÁÂÃÄÅàáâãäåÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÙÚÛÜùúûüÇçÑñÝýÿ';
+        var asciiChars = 'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOOooooooUUUUuuuuCcNnYyy';
+        var result = '';
+        for (var i = 0; i < str.length; i++) {
+            var idx = accents.indexOf(str[i]);
+            result += idx !== -1 ? asciiChars[idx] : str[i];
+        }
+        return result;
+    }
+
+    /* ═══ STRIPE: Toggle info banner + button text ═══ */
+    var currentEventPrix = 0; // Will be set when modal opens
+    function updateStripeInfo() {
+        var modeSelect = document.getElementById('pm-mode');
+        var stripeInfo = document.getElementById('pm-stripe-info');
+        var submitIcon = document.querySelector('#pm-submit-btn i');
+        var submitText = document.getElementById('pm-submit-text');
+
+        if (modeSelect && modeSelect.value === 'Carte') {
+            if (stripeInfo) {
+                var priceText = currentEventPrix ? parseFloat(currentEventPrix).toFixed(2).replace('.', ',') : '0,00';
+                stripeInfo.innerHTML = '<i class="fab fa-stripe me-1" style="font-size:1.1em;"></i>Vous serez redirig\u00e9 vers <strong>Stripe</strong> pour effectuer le paiement s\u00e9curis\u00e9 par carte. \u2014 <span style="color:#a5b4fc">' + priceText + ' \u20ac / place</span>';
+                stripeInfo.style.display = 'block';
+            }
+            if (submitIcon) submitIcon.className = 'fab fa-stripe me-1';
+            if (submitText) submitText.textContent = 'Payer avec Stripe';
+        } else {
+            if (stripeInfo) stripeInfo.style.display = 'none';
+            if (submitIcon) submitIcon.className = 'fas fa-check me-1';
+            if (submitText) submitText.textContent = 'Valider';
+        }
+    }
+
+    // Listen for payment mode changes
+    var pmModeSelect = document.getElementById('pm-mode');
+    if (pmModeSelect) {
+        pmModeSelect.addEventListener('change', updateStripeInfo);
+    }
+
     /* ═══ BIND BUTTONS on cards (initial page load) ═══ */
     function bindCardButtons() {
         /* Create modal */
@@ -939,10 +924,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('pm-nbr').value = 1;
                 document.getElementById('pm-mode').value = '';
 
+                // Store current event price for Stripe info display
+                currentEventPrix = d.eventPrix || 0;
+
+                // Clear previous AJAX errors
+                clearFormErrors(document.getElementById('participateForm'));
+
                 var pg   = document.getElementById('pm-paiement-group');
                 var paid = d.eventPaiement === '1';
                 pg.style.display = paid ? 'block' : 'none';
                 document.getElementById('pm-mode').required = paid;
+
+                // Reset Stripe info
+                updateStripeInfo();
 
                 pmModal.show();
             });
@@ -966,6 +960,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('em-nbr').value = d.nbr || 1;
                 document.getElementById('em-mode').value = d.mode || '';
 
+                // Clear previous AJAX errors
+                clearFormErrors(document.getElementById('editParticipationForm'));
+
                 var pg   = document.getElementById('em-paiement-group');
                 var paid = d.eventPaiement === '1';
                 pg.style.display = paid ? 'block' : 'none';
@@ -984,35 +981,52 @@ document.addEventListener('DOMContentLoaded', function () {
                 var qrContainer = document.getElementById('qr-code-container');
                 qrContainer.innerHTML = '';
 
-                var qrText = '================================'
-                    + '\n   CONFIRMATION DE PARTICIPATION'
-                    + '\n================================'
-                    + '\n'
-                    + '\nParticipation #' + d.participationId
-                    + '\n--------------------------------'
-                    + '\nDate inscription : ' + d.partDate
-                    + '\nPlaces reservees : ' + d.partNbr
-                    + '\nStatut           : ' + d.partStatut
-                    + '\nMode paiement    : ' + d.partMode
-                    + '\n'
-                    + '\nEvenement: ' + d.eventNom
-                    + '\n--------------------------------'
-                    + '\nType    : ' + d.eventType
-                    + '\nDate    : ' + d.eventDate
-                    + '\nHeure   : ' + d.eventHeure
-                    + '\nLieu    : ' + d.eventLieu
-                    + '\nCapacite: ' + d.eventNbr + ' places'
-                    + '\nPaiement: ' + d.eventPaiement
-                    + '\n================================';
+                // Build QR text with ASCII-safe characters (accents break QRCode.js)
+                var sNom   = stripAccents(d.eventNom   || '');
+                var sType  = stripAccents(d.eventType  || '');
+                var sLieu  = stripAccents(d.eventLieu  || '');
+                var sStatut = stripAccents(d.partStatut || '');
+                var sMode  = stripAccents(d.partMode   || '');
 
-                new QRCode(qrContainer, {
-                    text: qrText,
-                    width: 220,
-                    height: 220,
-                    colorDark: '#0d0d1a',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.M
-                });
+                var qrText = 'CONFIRMATION DE PARTICIPATION'
+                    + '\nParticipation #' + d.participationId
+                    + '\nDate: ' + (d.partDate || '')
+                    + '\nPlaces: ' + (d.partNbr || '')
+                    + '\nStatut: ' + sStatut
+                    + '\nPaiement: ' + sMode
+                    + '\nEvenement: ' + sNom
+                    + '\nType: ' + sType
+                    + '\nDate evt: ' + (d.eventDate || '')
+                    + '\nHeure: ' + (d.eventHeure || '')
+                    + '\nLieu: ' + sLieu
+                    + '\nCapacite: ' + (d.eventNbr || '') + ' places'
+                    + '\nPayant: ' + (d.eventPaiement || '');
+
+                try {
+                    new QRCode(qrContainer, {
+                        text: qrText,
+                        width: 220,
+                        height: 220,
+                        colorDark: '#0d0d1a',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.L
+                    });
+                } catch (e) {
+                    // Fallback: try with minimal text
+                    qrContainer.innerHTML = '';
+                    try {
+                        new QRCode(qrContainer, {
+                            text: 'Participation #' + d.participationId + ' | ' + sNom,
+                            width: 220,
+                            height: 220,
+                            colorDark: '#0d0d1a',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.L
+                        });
+                    } catch (e2) {
+                        qrContainer.innerHTML = '<p style="color:#f87171;"><i class="fas fa-exclamation-triangle me-1"></i>QR code indisponible</p>';
+                    }
+                }
 
                 document.getElementById('qr-details').innerHTML =
                     '<h6 style="color:var(--gold);margin-bottom:.5rem;font-size:.95rem;border-bottom:1px solid var(--border);padding-bottom:.4rem;"><i class="fas fa-ticket-alt me-1"></i>Ma Participation</h6>'
@@ -1037,6 +1051,121 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* Bind buttons on initial page load */
     bindCardButtons();
+
+    /* ═══ AJAX FORM SUBMISSION (no page refresh on errors) ═══ */
+
+    function clearFormErrors(formEl) {
+        formEl.querySelectorAll('.is-invalid').forEach(function (el) {
+            el.classList.remove('is-invalid');
+        });
+        formEl.querySelectorAll('.ajax-error').forEach(function (el) {
+            el.remove();
+        });
+    }
+
+    function showFieldError(formEl, fieldKey, message) {
+        var inputMap = {
+            'nbr_participation': formEl.querySelector('[name="nbr_participation"]'),
+            'mode_paiement': formEl.querySelector('[name="mode_paiement"]'),
+            'id_evenement': formEl.querySelector('[name="id_evenement"]'),
+            'date': formEl.querySelector('[name="nbr_participation"]'),
+            'date_participation': formEl.querySelector('[name="nbr_participation"]'),
+            'general': formEl.querySelector('[name="nbr_participation"]'),
+            'stripe': formEl.querySelector('[name="nbr_participation"]'),
+            'statut': formEl.querySelector('[name="nbr_participation"]')
+        };
+        var input = inputMap[fieldKey] || formEl.querySelector('[name="nbr_participation"]');
+        if (input) {
+            input.classList.add('is-invalid');
+            var errDiv = document.createElement('div');
+            errDiv.className = 'ajax-error invalid-feedback d-block';
+            errDiv.style.cssText = 'color:#f87171;font-size:0.875rem;margin-top:0.25rem;';
+            errDiv.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>' + escapeHtml(message);
+            input.parentNode.appendChild(errDiv);
+        }
+    }
+
+    // ── Participate form (AJAX) ──
+    var participateForm = document.getElementById('participateForm');
+    if (participateForm) {
+        participateForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearFormErrors(participateForm);
+
+            var formData = new FormData(participateForm);
+            var submitBtn = document.getElementById('pm-submit-btn');
+            var originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Traitement...';
+
+            fetch(participateForm.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    // Redirect (Stripe or success)
+                    window.location.href = data.redirect;
+                } else {
+                    // Show errors under inputs
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHtml;
+                    if (data.errors) {
+                        Object.keys(data.errors).forEach(function (key) {
+                            showFieldError(participateForm, key, data.errors[key]);
+                        });
+                    }
+                }
+            })
+            .catch(function () {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+                showFieldError(participateForm, 'general', 'Une erreur est survenue. Veuillez réessayer.');
+            });
+        });
+    }
+
+    // ── Edit participation form (AJAX) ──
+    var editForm = document.getElementById('editParticipationForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearFormErrors(editForm);
+
+            var formData = new FormData(editForm);
+            var submitBtn = editForm.querySelector('.btn-submit');
+            var originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Traitement...';
+
+            fetch(editForm.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHtml;
+                    if (data.errors) {
+                        Object.keys(data.errors).forEach(function (key) {
+                            showFieldError(editForm, key, data.errors[key]);
+                        });
+                    }
+                }
+            })
+            .catch(function () {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+                showFieldError(editForm, 'general', 'Une erreur est survenue. Veuillez réessayer.');
+            });
+        });
+    }
 
     /* ── Auto-dismiss flash messages ── */
     document.querySelectorAll('.flash-msg').forEach(function (el) {

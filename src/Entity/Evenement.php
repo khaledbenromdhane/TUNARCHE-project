@@ -52,6 +52,9 @@ class Evenement
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
 
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $prix = null;
+
     // ─── Getters & Setters ─────────────────────────────────
 
     public function getId(): ?int
@@ -155,6 +158,17 @@ class Evenement
     public function setImage(?string $image): static
     {
         $this->image = $image;
+        return $this;
+    }
+
+    public function getPrix(): ?float
+    {
+        return $this->prix;
+    }
+
+    public function setPrix(?float $prix): static
+    {
+        $this->prix = $prix;
         return $this;
     }
 }

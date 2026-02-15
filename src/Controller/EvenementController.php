@@ -8,6 +8,7 @@ use App\Repository\EvenementRepository;
 use App\Repository\ParticipationRepository;
 use App\Service\EvenementService;
 use App\Service\ParticipationService;
+use App\Service\StripeService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -73,8 +74,9 @@ class EvenementController extends AbstractController
     // ─── FRONT PARTICIPATION CREATE ────────────────────────
 
     #[Route('/participer', name: 'participate', methods: ['POST'])]
-    public function participate(Request $request, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo): Response
+    public function participate(Request $request, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo, StripeService $stripe): Response
     {
+        $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
         $today = (new \DateTime('today'))->format('Y-m-d');
 
         $data = [
@@ -90,6 +92,9 @@ class EvenementController extends AbstractController
         if ($evenement && $evenement->getDate()) {
             $eventDate = $evenement->getDate()->format('Y-m-d');
             if ($today > $eventDate) {
+                if ($isAjax) {
+                    return $this->json(['success' => false, 'errors' => ['date' => 'Vous ne pouvez plus participer à cet événement car sa date est dépassée.']]);
+                }
                 $this->addFlash('error', 'Vous ne pouvez plus participer à cet événement car sa date est dépassée.');
                 return $this->redirectToRoute('app_evenement_index');
             }
@@ -98,6 +103,9 @@ class EvenementController extends AbstractController
         $errors = $service->validate($data);
 
         if (!empty($errors)) {
+            if ($isAjax) {
+                return $this->json(['success' => false, 'errors' => $errors]);
+            }
             // Store errors and data in session to display under inputs
             $session = $request->getSession();
             $session->set('participate_errors', $errors);
@@ -105,6 +113,31 @@ class EvenementController extends AbstractController
             return $this->redirectToRoute('app_evenement_index');
         }
 
+        // ── STRIPE: If paid event + Carte → redirect to Stripe Checkout ──
+        if ($evenement && $evenement->isPaiement() && $data['mode_paiement'] === 'Carte') {
+            $session = $request->getSession();
+            // Store participation data in session for after-payment creation
+            $session->set('stripe_participation_data', $data);
+
+            try {
+                $checkoutSession = $stripe->createCheckoutSession(
+                    $evenement,
+                    (int)$data['nbr_participation']
+                );
+                if ($isAjax) {
+                    return $this->json(['success' => true, 'redirect' => $checkoutSession->url]);
+                }
+                return $this->redirect($checkoutSession->url);
+            } catch (\Exception $e) {
+                if ($isAjax) {
+                    return $this->json(['success' => false, 'errors' => ['general' => 'Erreur de paiement Stripe : ' . $e->getMessage()]]);
+                }
+                $this->addFlash('error', 'Erreur de paiement Stripe : ' . $e->getMessage());
+                return $this->redirectToRoute('app_evenement_index');
+            }
+        }
+
+        // ── Cash or free event: create participation immediately ──
         $em = $m->getManager();
         $participation = new Participation();
 
@@ -122,7 +155,77 @@ class EvenementController extends AbstractController
         $em->persist($participation);
         $em->flush();
 
+        if ($isAjax) {
+            return $this->json(['success' => true, 'redirect' => $this->generateUrl('app_evenement_index')]);
+        }
         $this->addFlash('success', 'Participation créée avec succès !');
+        return $this->redirectToRoute('app_evenement_index');
+    }
+
+    // ─── STRIPE SUCCESS CALLBACK ───────────────────────────
+
+    #[Route('/stripe/success', name: 'stripe_success', methods: ['GET'])]
+    public function stripeSuccess(Request $request, ManagerRegistry $m, StripeService $stripe, EvenementRepository $evenementRepo): Response
+    {
+        $sessionId = $request->query->get('session_id');
+        if (!$sessionId) {
+            $this->addFlash('error', 'Session de paiement introuvable.');
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        try {
+            $checkoutSession = $stripe->retrieveSession($sessionId);
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Impossible de vérifier le paiement.');
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        if ($checkoutSession->payment_status !== 'paid') {
+            $this->addFlash('error', 'Le paiement n\'a pas été finalisé.');
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        // Retrieve participation data from session
+        $session = $request->getSession();
+        $data = $session->get('stripe_participation_data');
+        $session->remove('stripe_participation_data');
+
+        if (!$data) {
+            $this->addFlash('error', 'Données de participation expirées. Veuillez réessayer.');
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $evenement = $evenementRepo->find((int)$data['id_evenement']);
+        if (!$evenement) {
+            $this->addFlash('error', 'Événement introuvable.');
+            return $this->redirectToRoute('app_evenement_index');
+        }
+
+        $em = $m->getManager();
+        $participation = new Participation();
+
+        $participation->setEvenement($evenement);
+        $participation->setDateParticipation(\DateTime::createFromFormat('Y-m-d', $data['date_participation']));
+        $participation->setNbrParticipation((int)$data['nbr_participation']);
+        $participation->setStatut('Confirmée');
+        $participation->setModePaiement('Carte');
+
+        $em->persist($participation);
+        $em->flush();
+
+        $this->addFlash('success', 'Paiement effectué avec succès ! Votre participation est confirmée.');
+        return $this->redirectToRoute('app_evenement_index');
+    }
+
+    // ─── STRIPE CANCEL CALLBACK ────────────────────────────
+
+    #[Route('/stripe/cancel', name: 'stripe_cancel', methods: ['GET'])]
+    public function stripeCancel(Request $request): Response
+    {
+        // Clean up session data
+        $request->getSession()->remove('stripe_participation_data');
+
+        $this->addFlash('error', 'Le paiement a été annulé. Votre participation n\'a pas été enregistrée.');
         return $this->redirectToRoute('app_evenement_index');
     }
 
@@ -131,9 +234,13 @@ class EvenementController extends AbstractController
     #[Route('/participation/{id}/modifier', name: 'participation_update', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function participationUpdate(int $id, Request $request, ParticipationRepository $participationRepo, ManagerRegistry $m, ParticipationService $service, EvenementRepository $evenementRepo): Response
     {
+        $isAjax = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
         $participation = $participationRepo->find($id);
 
         if (!$participation) {
+            if ($isAjax) {
+                return $this->json(['success' => false, 'errors' => ['general' => 'Participation introuvable.']]);
+            }
             $this->addFlash('error', 'Participation introuvable.');
             return $this->redirectToRoute('app_evenement_index');
         }
@@ -156,6 +263,9 @@ class EvenementController extends AbstractController
         if ($evenement && $evenement->getDate()) {
             $eventDate = $evenement->getDate()->format('Y-m-d');
             if ($today > $eventDate) {
+                if ($isAjax) {
+                    return $this->json(['success' => false, 'errors' => ['date' => 'Vous ne pouvez plus modifier cette participation car la date de l\'événement est dépassée.']]);
+                }
                 $this->addFlash('error', 'Vous ne pouvez plus modifier cette participation car la date de l\'événement est dépassée.');
                 return $this->redirectToRoute('app_evenement_index');
             }
@@ -164,7 +274,9 @@ class EvenementController extends AbstractController
         $errors = $service->validate($data, $participation->getId());
 
         if (!empty($errors)) {
-            // Store errors and data in session to display under inputs
+            if ($isAjax) {
+                return $this->json(['success' => false, 'errors' => $errors]);
+            }
             $session = $request->getSession();
             $session->set('edit_participation_errors', $errors);
             $session->set('edit_participation_data', $data);
@@ -188,6 +300,9 @@ class EvenementController extends AbstractController
         $em->persist($participation);
         $em->flush();
 
+        if ($isAjax) {
+            return $this->json(['success' => true, 'redirect' => $this->generateUrl('app_evenement_index')]);
+        }
         $this->addFlash('success', 'Participation modifiée avec succès !');
         return $this->redirectToRoute('app_evenement_index');
     }

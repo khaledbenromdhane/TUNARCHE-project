@@ -83,6 +83,7 @@ class AdminController extends AbstractController
             'lieu'             => $request->request->get('lieu', ''),
             'description'      => $request->request->get('description', ''),
             'paiement'         => $request->request->has('paiement'),
+            'prix'             => $request->request->get('prix', ''),
         ];
 
         $imageFile = $request->files->get('image');
@@ -130,6 +131,7 @@ class AdminController extends AbstractController
             'lieu'             => $request->request->get('lieu', ''),
             'description'      => $request->request->get('description', ''),
             'paiement'         => $request->request->has('paiement'),
+            'prix'             => $request->request->get('prix', ''),
         ];
 
         $imageFile = $request->files->get('image');
@@ -186,6 +188,13 @@ class AdminController extends AbstractController
         $evenement->setLieu(trim($data['lieu']));
         $evenement->setDescription(trim($data['description']));
         $evenement->setPaiement(!empty($data['paiement']));
+
+        // Set price only for paid events
+        if (!empty($data['paiement']) && $data['prix'] !== '') {
+            $evenement->setPrix((float)$data['prix']);
+        } else {
+            $evenement->setPrix(null);
+        }
 
         $dateObj = \DateTime::createFromFormat('Y-m-d', $data['date']);
         $evenement->setDate($dateObj);
