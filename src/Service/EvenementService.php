@@ -61,8 +61,9 @@ class EvenementService
     /**
      * Validate event form data.
      * Returns an array of field => error message. Empty array = valid.
+     * @param bool $skipDateValidation Skip date validation (for updates in back office)
      */
-    public function validate(array $data): array
+    public function validate(array $data, bool $skipDateValidation = false): array
     {
         $errors = [];
 
@@ -96,14 +97,16 @@ class EvenementService
         }
 
         // ── Date ─────────────────────────────────────
-        if (empty($data['date'] ?? '')) {
-            $errors['date'] = 'La date de l\'événement est obligatoire.';
-        } else {
-            $dateObj = \DateTime::createFromFormat('Y-m-d', $data['date']);
-            if (!$dateObj || $dateObj->format('Y-m-d') !== $data['date']) {
-                $errors['date'] = 'La date n\'est pas valide (format attendu : AAAA-MM-JJ).';
-            } elseif ($dateObj < new \DateTime('today')) {
-                $errors['date'] = 'La date de l\'événement doit être aujourd\'hui ou dans le futur.';
+        if (!$skipDateValidation) {
+            if (empty($data['date'] ?? '')) {
+                $errors['date'] = 'La date de l\'événement est obligatoire.';
+            } else {
+                $dateObj = \DateTime::createFromFormat('Y-m-d', $data['date']);
+                if (!$dateObj || $dateObj->format('Y-m-d') !== $data['date']) {
+                    $errors['date'] = 'La date n\'est pas valide (format attendu : AAAA-MM-JJ).';
+                } elseif ($dateObj < new \DateTime('today')) {
+                    $errors['date'] = 'La date de l\'événement doit être aujourd\'hui ou dans le futur.';
+                }
             }
         }
 
@@ -143,7 +146,7 @@ class EvenementService
             $file = $data['image_file'];
             $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             $allowedExts  = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            $maxSize      = 5 * 1024 * 1024; // 5 MB
+            $maxSize      = 780 * 1024; // 780 KB
 
             if ($file instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
                 if (!in_array($file->getMimeType(), $allowedMimes, true)) {
@@ -151,7 +154,7 @@ class EvenementService
                 } elseif (!in_array(strtolower($file->getClientOriginalExtension()), $allowedExts, true)) {
                     $errors['image'] = 'Extension de fichier non autorisée.';
                 } elseif ($file->getSize() > $maxSize) {
-                    $errors['image'] = 'L\'image ne doit pas dépasser 5 Mo.';
+                    $errors['image'] = 'L\'image ne doit pas dépasser 780 Ko.';
                 }
             } else {
                 $errors['image'] = 'Fichier image invalide.';

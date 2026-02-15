@@ -129,7 +129,7 @@ class EvenementRepository extends ServiceEntityRepository
                ->setParameter('type', $type);
         }
 
-        if ($paiement !== '') {
+        if ($paiement !== '') { 
             $qb->andWhere('e.paiement = :paid')
                ->setParameter('paid', $paiement === '1');
         }

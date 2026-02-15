@@ -137,7 +137,7 @@ class AdminController extends AbstractController
             $data['image_file'] = $imageFile;
         }
 
-        $errors = $service->validate($data);
+        $errors = $service->validate($data, true);
 
         if (!empty($errors)) {
             $firstError = reset($errors);
@@ -294,7 +294,7 @@ class AdminController extends AbstractController
             'mode_paiement'      => $request->request->get('mode_paiement', ''),
         ];
 
-        $errors = $service->validate($data, $participation->getId());
+        $errors = $service->validate($data, $participation->getId(), true);
 
         if (!empty($errors)) {
             $firstError = reset($errors);

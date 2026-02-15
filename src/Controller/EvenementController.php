@@ -41,12 +41,32 @@ class EvenementController extends AbstractController
             $participationsByEvent[$evt->getId()] = $participationRepo->findByEvenement($evt->getId());
         }
 
+        // Fetch validation errors from session
+        $session = $request->getSession();
+        $participateErrors = $session->get('participate_errors', []);
+        $participateData = $session->get('participate_data', []);
+        $editErrors = $session->get('edit_participation_errors', []);
+        $editData = $session->get('edit_participation_data', []);
+        $editParticipationId = $session->get('edit_participation_id', null);
+        
+        // Clear errors from session after fetching
+        $session->remove('participate_errors');
+        $session->remove('participate_data');
+        $session->remove('edit_participation_errors');
+        $session->remove('edit_participation_data');
+        $session->remove('edit_participation_id');
+
         return $this->render('front/evenement.html.twig', [
             'evenements'            => $evenements,
             'participationsByEvent' => $participationsByEvent,
             'q'                     => $q,
             'sort'                  => $sort,
             'order'                 => $order,
+            'participateErrors'     => $participateErrors,
+            'participateData'       => $participateData,
+            'editErrors'            => $editErrors,
+            'editData'              => $editData,
+            'editParticipationId'   => $editParticipationId,
         ]);
     }
 
@@ -65,12 +85,12 @@ class EvenementController extends AbstractController
             'mode_paiement'      => $request->request->get('mode_paiement', ''),
         ];
 
-        // Check that today is strictly before the event date
+        // Check that today is on or before the event date
         $evenement = $evenementRepo->find((int)$data['id_evenement']);
         if ($evenement && $evenement->getDate()) {
             $eventDate = $evenement->getDate()->format('Y-m-d');
-            if ($today >= $eventDate) {
-                $this->addFlash('error', 'Vous ne pouvez participer qu\'avant le jour de l\'événement.');
+            if ($today > $eventDate) {
+                $this->addFlash('error', 'Vous ne pouvez plus participer à cet événement car sa date est dépassée.');
                 return $this->redirectToRoute('app_evenement_index');
             }
         }
@@ -78,9 +98,10 @@ class EvenementController extends AbstractController
         $errors = $service->validate($data);
 
         if (!empty($errors)) {
-            foreach ($errors as $field => $msg) {
-                $this->addFlash('error', $msg);
-            }
+            // Store errors and data in session to display under inputs
+            $session = $request->getSession();
+            $session->set('participate_errors', $errors);
+            $session->set('participate_data', $data);
             return $this->redirectToRoute('app_evenement_index');
         }
 
@@ -130,12 +151,12 @@ class EvenementController extends AbstractController
             'mode_paiement'      => $request->request->get('mode_paiement', ''),
         ];
 
-        // Check that today is strictly before the event date
+        // Check that today is on or before the event date
         $evenement = $evenementRepo->find((int)$data['id_evenement']);
         if ($evenement && $evenement->getDate()) {
             $eventDate = $evenement->getDate()->format('Y-m-d');
-            if ($today >= $eventDate) {
-                $this->addFlash('error', 'Vous ne pouvez modifier la participation qu\'avant le jour de l\'événement.');
+            if ($today > $eventDate) {
+                $this->addFlash('error', 'Vous ne pouvez plus modifier cette participation car la date de l\'événement est dépassée.');
                 return $this->redirectToRoute('app_evenement_index');
             }
         }
@@ -143,9 +164,11 @@ class EvenementController extends AbstractController
         $errors = $service->validate($data, $participation->getId());
 
         if (!empty($errors)) {
-            foreach ($errors as $field => $msg) {
-                $this->addFlash('error', $msg);
-            }
+            // Store errors and data in session to display under inputs
+            $session = $request->getSession();
+            $session->set('edit_participation_errors', $errors);
+            $session->set('edit_participation_data', $data);
+            $session->set('edit_participation_id', $id);
             return $this->redirectToRoute('app_evenement_index');
         }
 

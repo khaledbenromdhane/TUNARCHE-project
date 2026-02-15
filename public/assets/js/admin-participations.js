@@ -86,20 +86,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (fPaiement) { fPaiement.value = ''; fPaiement.classList.remove('is-invalid', 'is-valid'); }
             }
 
-            // Update date min/max constraints
+            // Update date min/max constraints (only for add mode)
             if (fDate) {
-                const today = new Date().toISOString().split('T')[0];
-                fDate.setAttribute('min', today);
-                const eventDate = selectedOption ? selectedOption.getAttribute('data-date') : '';
-                if (eventDate) {
-                    fDate.setAttribute('max', eventDate);
+                const isEditMode = participationForm.action.includes('/update');
+                if (!isEditMode) {
+                    const today = new Date().toISOString().split('T')[0];
+                    fDate.setAttribute('min', today);
+                    const eventDate = selectedOption ? selectedOption.getAttribute('data-date') : '';
+                    if (eventDate) {
+                        fDate.setAttribute('max', eventDate);
+                    } else {
+                        fDate.removeAttribute('max');
+                    }
+                    // Clear date if it's now out of range
+                    if (fDate.value && (fDate.value < today || (eventDate && fDate.value > eventDate))) {
+                        fDate.value = '';
+                        fDate.classList.remove('is-valid');
+                    }
                 } else {
+                    fDate.removeAttribute('min');
                     fDate.removeAttribute('max');
-                }
-                // Clear date if it's now out of range
-                if (fDate.value && (fDate.value < today || (eventDate && fDate.value > eventDate))) {
-                    fDate.value = '';
-                    fDate.classList.remove('is-valid');
                 }
             }
         });
@@ -180,11 +186,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 hasError = true;
             }
 
-            // Date required + must be between today and event date
+            // Date required (skip past-date check in edit mode)
+            const isEditMode = participationForm.action.includes('/update');
             if (!fDate.value.trim()) {
                 fDate.classList.add('is-invalid');
                 hasError = true;
-            } else {
+            } else if (!isEditMode) {
                 const today = new Date().toISOString().split('T')[0];
                 if (fDate.value < today) {
                     fDate.classList.add('is-invalid');

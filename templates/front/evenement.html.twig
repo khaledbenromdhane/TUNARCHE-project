@@ -559,16 +559,6 @@ body.modal-open { overflow: hidden !important; }
                         {% endif %}
 
                         <div class="evt-actions">
-                            <button type="button" class="act-btn btn-open-qrcode" title="QR Code"
-                                    data-event-id="{{ evt.id }}"
-                                    data-event-nom="{{ evt.nom }}"
-                                    data-event-date="{{ evt.date|date('d M Y') }}"
-                                    data-event-heure="{{ evt.heure|date('H\\hi') }}"
-                                    data-event-lieu="{{ evt.lieu }}"
-                                    data-event-type="{{ evt.typeEvenement }}"
-                                    data-event-paiement="{{ evt.paiement ? 'Payant' : 'Gratuit' }}">
-                                <i class="fas fa-qrcode"></i>
-                            </button>
                             <button type="button" class="act-btn act-primary btn-open-participate" title="Participer"
                                     data-event-id="{{ evt.id }}"
                                     data-event-nom="{{ evt.nom }}"
@@ -578,7 +568,7 @@ body.modal-open { overflow: hidden !important; }
                             </button>
                             {% if participationsByEvent[evt.id] is defined and participationsByEvent[evt.id] is not empty %}
                                 {% for p in participationsByEvent[evt.id] %}
-                                    <button type="button" class="act-btn btn-open-part-qr" title="QR #{{ p.id }}"
+                                    <button type="button" class="act-btn btn-open-part-qr" title="Ma participation #{{ p.id }}"
                                             data-participation-id="{{ p.id }}"
                                             data-event-nom="{{ evt.nom }}"
                                             data-event-type="{{ evt.typeEvenement }}"
@@ -586,6 +576,7 @@ body.modal-open { overflow: hidden !important; }
                                             data-event-heure="{{ evt.heure|date('H\\hi') }}"
                                             data-event-lieu="{{ evt.lieu }}"
                                             data-event-paiement="{{ evt.paiement ? 'Payant' : 'Gratuit' }}"
+                                            data-event-nbr="{{ evt.nbrParticipant }}"
                                             data-part-date="{{ p.dateParticipation|date('d/m/Y') }}"
                                             data-part-nbr="{{ p.nbrParticipation }}"
                                             data-part-statut="{{ p.statut }}"
@@ -632,15 +623,25 @@ body.modal-open { overflow: hidden !important; }
                     <input type="hidden" name="id_evenement" id="pm-event-id">
                     <div class="mb-3">
                         <label for="pm-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
-                        <input type="number" class="form-control" id="pm-nbr" name="nbr_participation" min="1" value="1" required>
+                        <input type="number" class="form-control{% if participateErrors['nbr_participation'] is defined %} is-invalid{% endif %}" id="pm-nbr" name="nbr_participation" min="1" value="{{ participateData['nbr_participation'] ?? 1 }}" required>
+                        {% if participateErrors['nbr_participation'] is defined %}
+                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ participateErrors['nbr_participation'] }}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="mb-3" id="pm-paiement-group" style="display:none">
                         <label for="pm-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
-                        <select class="form-select" id="pm-mode" name="mode_paiement">
+                        <select class="form-select{% if participateErrors['mode_paiement'] is defined %} is-invalid{% endif %}" id="pm-mode" name="mode_paiement">
                             <option value="">— Choisir —</option>
-                            <option value="Carte">Carte</option>
-                            <option value="Cash">Cash</option>
+                            <option value="Carte"{% if (participateData['mode_paiement'] ?? '') == 'Carte' %} selected{% endif %}>Carte</option>
+                            <option value="Cash"{% if (participateData['mode_paiement'] ?? '') == 'Cash' %} selected{% endif %}>Cash</option>
                         </select>
+                        {% if participateErrors['mode_paiement'] is defined %}
+                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ participateErrors['mode_paiement'] }}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <small class="text-muted" style="color:var(--text-muted)!important"><i class="fas fa-info-circle me-1"></i>La date de participation sera automatiquement fixée à aujourd'hui. Le statut est géré par l'admin.</small>
@@ -672,15 +673,25 @@ body.modal-open { overflow: hidden !important; }
                     <input type="hidden" name="id_evenement" id="em-event-id">
                     <div class="mb-3">
                         <label for="em-nbr" class="form-label">Nombre de places <span style="color:#f87171">*</span></label>
-                        <input type="number" class="form-control" id="em-nbr" name="nbr_participation" min="1" required>
+                        <input type="number" class="form-control{% if editErrors['nbr_participation'] is defined %} is-invalid{% endif %}" id="em-nbr" name="nbr_participation" min="1" value="{{ editData['nbr_participation'] ?? '' }}" required>
+                        {% if editErrors['nbr_participation'] is defined %}
+                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ editErrors['nbr_participation'] }}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="mb-3" id="em-paiement-group" style="display:none">
                         <label for="em-mode" class="form-label">Mode de paiement <span style="color:#f87171">*</span></label>
-                        <select class="form-select" id="em-mode" name="mode_paiement">
+                        <select class="form-select{% if editErrors['mode_paiement'] is defined %} is-invalid{% endif %}" id="em-mode" name="mode_paiement">
                             <option value="">— Choisir —</option>
-                            <option value="Carte">Carte</option>
-                            <option value="Cash">Cash</option>
+                            <option value="Carte"{% if (editData['mode_paiement'] ?? '') == 'Carte' %} selected{% endif %}>Carte</option>
+                            <option value="Cash"{% if (editData['mode_paiement'] ?? '') == 'Cash' %} selected{% endif %}>Cash</option>
                         </select>
+                        {% if editErrors['mode_paiement'] is defined %}
+                            <div class="invalid-feedback d-block" style="color:#f87171;font-size:0.875rem;margin-top:0.25rem;">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ editErrors['mode_paiement'] }}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <small class="text-muted" style="color:var(--text-muted)!important"><i class="fas fa-info-circle me-1"></i>La date sera mise à jour automatiquement. Le statut ne peut être modifié que par l'admin.</small>
@@ -750,6 +761,47 @@ document.addEventListener('DOMContentLoaded', function () {
     var emModal = new bootstrap.Modal(emEl);
     var qrModal = new bootstrap.Modal(qrEl);
     var today   = new Date().toISOString().split('T')[0];
+
+    /* ═══ AUTO-REOPEN MODAL IF VALIDATION ERRORS ═══ */
+    {% if participateErrors is not empty %}
+        // Reopen participate modal with error data
+        var eventId = '{{ participateData['id_evenement'] ?? '' }}';
+        // Find the event card to get event details
+        var eventCard = document.querySelector('[data-event-id="' + eventId + '"]');
+        if (eventCard) {
+            var d = eventCard.dataset;
+            document.getElementById('pm-event-id').value = d.eventId;
+            document.getElementById('pm-event-name').textContent = d.eventNom;
+            
+            var pg = document.getElementById('pm-paiement-group');
+            var paid = d.eventPaiement === '1';
+            pg.style.display = paid ? 'block' : 'none';
+            document.getElementById('pm-mode').required = paid;
+        }
+        pmModal.show();
+    {% endif %}
+
+    {% if editErrors is not empty %}
+        // Reopen edit modal with error data
+        var editPartId = '{{ editParticipationId ?? '' }}';
+        var eventId = '{{ editData['id_evenement'] ?? '' }}';
+        // Find the edit button for this participation
+        var editBtn = document.querySelector('[data-participation-id="' + editPartId + '"].btn-open-edit');
+        if (editBtn) {
+            var d = editBtn.dataset;
+            var form = document.getElementById('editParticipationForm');
+            form.action = '/evenement/participation/' + editPartId + '/modifier';
+            
+            document.getElementById('em-event-id').value = d.eventId;
+            document.getElementById('em-event-name').textContent = d.eventNom;
+            
+            var pg = document.getElementById('em-paiement-group');
+            var paid = d.eventPaiement === '1';
+            pg.style.display = paid ? 'block' : 'none';
+            document.getElementById('em-mode').required = paid;
+        }
+        emModal.show();
+    {% endif %}
 
     /* ═══ DYNAMIC CLIENT-SIDE SEARCH (instant filter) ═══ */
     var searchInput = document.getElementById('frontSearchInput');
@@ -876,9 +928,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 var d = this.dataset;
                 var eventDate = d.eventDate || '';
 
-                // Check: today must be before event day
-                if (eventDate && today >= eventDate) {
-                    alert('Vous ne pouvez participer qu\'avant le jour de l\'événement.');
+                // Check: today must be on or before event day
+                if (eventDate && today > eventDate) {
+                    alert('Vous ne pouvez plus participer à cet événement car sa date est dépassée.');
                     return;
                 }
 
@@ -904,8 +956,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 form.action = '/evenement/participation/' + d.participationId + '/modifier';
 
                 var eventDate = d.eventDate || '';
-                if (eventDate && today >= eventDate) {
-                    alert('Vous ne pouvez modifier la participation qu\'avant le jour de l\'événement.');
+                if (eventDate && today > eventDate) {
+                    alert('Vous ne pouvez plus modifier cette participation car la date de l\'événement est dépassée.');
                     return;
                 }
 
@@ -923,87 +975,60 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        /* QR Code modal (event only) */
-        document.querySelectorAll('.btn-open-qrcode').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var d = this.dataset;
-                document.getElementById('qr-event-name').textContent = d.eventNom;
-
-                var qrContainer = document.getElementById('qr-code-container');
-                qrContainer.innerHTML = '';
-
-                var qrText = 'Événement: ' + d.eventNom
-                    + '\nType: ' + d.eventType
-                    + '\nDate: ' + d.eventDate
-                    + '\nHeure: ' + d.eventHeure
-                    + '\nLieu: ' + d.eventLieu
-                    + '\nPaiement: ' + d.eventPaiement;
-
-                new QRCode(qrContainer, {
-                    text: qrText,
-                    width: 200,
-                    height: 200,
-                    colorDark: '#0d0d1a',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-
-                document.getElementById('qr-details').innerHTML =
-                    '<p><strong style="color:var(--gold)"><i class="fas fa-tag me-1"></i>Type:</strong> ' + escapeHtml(d.eventType) + '</p>'
-                    + '<p><strong style="color:var(--gold)"><i class="far fa-calendar-alt me-1"></i>Date:</strong> ' + escapeHtml(d.eventDate) + '</p>'
-                    + '<p><strong style="color:var(--gold)"><i class="far fa-clock me-1"></i>Heure:</strong> ' + escapeHtml(d.eventHeure) + '</p>'
-                    + '<p><strong style="color:var(--gold)"><i class="fas fa-map-marker-alt me-1"></i>Lieu:</strong> ' + escapeHtml(d.eventLieu) + '</p>'
-                    + '<p><strong style="color:var(--gold)"><i class="fas fa-credit-card me-1"></i>Paiement:</strong> ' + escapeHtml(d.eventPaiement) + '</p>';
-
-                qrModal.show();
-            });
-        });
-
-        /* QR Code modal (participation-specific — includes event + participation details) */
+        /* QR Code modal (participation — shows participation + event details) */
         document.querySelectorAll('.btn-open-part-qr').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var d = this.dataset;
-                document.getElementById('qr-event-name').textContent = 'Participation #' + d.participationId;
+                document.getElementById('qr-event-name').textContent = d.eventNom + ' — Participation #' + d.participationId;
 
                 var qrContainer = document.getElementById('qr-code-container');
                 qrContainer.innerHTML = '';
 
-                var qrText = '=== PARTICIPATION ==='
-                    + '\nID: #' + d.participationId
-                    + '\nDate inscription: ' + d.partDate
-                    + '\nPlaces: ' + d.partNbr
-                    + '\nStatut: ' + d.partStatut
-                    + '\nPaiement: ' + d.partMode
-                    + '\n\n=== ÉVÉNEMENT ==='
-                    + '\nNom: ' + d.eventNom
-                    + '\nType: ' + d.eventType
-                    + '\nDate: ' + d.eventDate
-                    + '\nHeure: ' + d.eventHeure
-                    + '\nLieu: ' + d.eventLieu;
+                var qrText = '================================'
+                    + '\n   CONFIRMATION DE PARTICIPATION'
+                    + '\n================================'
+                    + '\n'
+                    + '\nParticipation #' + d.participationId
+                    + '\n--------------------------------'
+                    + '\nDate inscription : ' + d.partDate
+                    + '\nPlaces reservees : ' + d.partNbr
+                    + '\nStatut           : ' + d.partStatut
+                    + '\nMode paiement    : ' + d.partMode
+                    + '\n'
+                    + '\nEvenement: ' + d.eventNom
+                    + '\n--------------------------------'
+                    + '\nType    : ' + d.eventType
+                    + '\nDate    : ' + d.eventDate
+                    + '\nHeure   : ' + d.eventHeure
+                    + '\nLieu    : ' + d.eventLieu
+                    + '\nCapacite: ' + d.eventNbr + ' places'
+                    + '\nPaiement: ' + d.eventPaiement
+                    + '\n================================';
 
                 new QRCode(qrContainer, {
                     text: qrText,
-                    width: 200,
-                    height: 200,
+                    width: 220,
+                    height: 220,
                     colorDark: '#0d0d1a',
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.M
                 });
 
                 document.getElementById('qr-details').innerHTML =
-                    '<h6 style="color:var(--gold);margin-bottom:.5rem;font-size:.9rem;"><i class="fas fa-ticket-alt me-1"></i>Participation</h6>'
+                    '<h6 style="color:var(--gold);margin-bottom:.5rem;font-size:.95rem;border-bottom:1px solid var(--border);padding-bottom:.4rem;"><i class="fas fa-ticket-alt me-1"></i>Ma Participation</h6>'
                     + '<p><strong style="color:var(--gold)"><i class="fas fa-hashtag me-1"></i>ID:</strong> #' + escapeHtml(d.participationId) + '</p>'
-                    + '<p><strong style="color:var(--gold)"><i class="fas fa-calendar-day me-1"></i>Date:</strong> ' + escapeHtml(d.partDate) + '</p>'
-                    + '<p><strong style="color:var(--gold)"><i class="fas fa-users me-1"></i>Places:</strong> ' + escapeHtml(d.partNbr) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-calendar-day me-1"></i>Date d\'inscription:</strong> ' + escapeHtml(d.partDate) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-users me-1"></i>Places réservées:</strong> ' + escapeHtml(d.partNbr) + '</p>'
                     + '<p><strong style="color:var(--gold)"><i class="fas fa-check-circle me-1"></i>Statut:</strong> ' + escapeHtml(d.partStatut) + '</p>'
                     + '<p><strong style="color:var(--gold)"><i class="fas fa-credit-card me-1"></i>Paiement:</strong> ' + escapeHtml(d.partMode) + '</p>'
                     + '<hr style="border-color:var(--border);margin:.6rem 0;">'
-                    + '<h6 style="color:var(--gold);margin-bottom:.5rem;font-size:.9rem;"><i class="fas fa-calendar-alt me-1"></i>Événement</h6>'
+                    + '<h6 style="color:var(--gold);margin-bottom:.5rem;font-size:.95rem;border-bottom:1px solid var(--border);padding-bottom:.4rem;"><i class="fas fa-calendar-alt me-1"></i>Événement</h6>'
                     + '<p><strong style="color:var(--gold)"><i class="fas fa-bookmark me-1"></i>Nom:</strong> ' + escapeHtml(d.eventNom) + '</p>'
                     + '<p><strong style="color:var(--gold)"><i class="fas fa-tag me-1"></i>Type:</strong> ' + escapeHtml(d.eventType) + '</p>'
                     + '<p><strong style="color:var(--gold)"><i class="far fa-calendar-alt me-1"></i>Date:</strong> ' + escapeHtml(d.eventDate) + '</p>'
                     + '<p><strong style="color:var(--gold)"><i class="far fa-clock me-1"></i>Heure:</strong> ' + escapeHtml(d.eventHeure) + '</p>'
-                    + '<p><strong style="color:var(--gold)"><i class="fas fa-map-marker-alt me-1"></i>Lieu:</strong> ' + escapeHtml(d.eventLieu) + '</p>';
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-map-marker-alt me-1"></i>Lieu:</strong> ' + escapeHtml(d.eventLieu) + '</p>'
+                    + '<p><strong style="color:var(--gold)"><i class="fas fa-users me-1"></i>Capacité:</strong> ' + escapeHtml(d.eventNbr) + ' places</p>';
 
                 qrModal.show();
             });

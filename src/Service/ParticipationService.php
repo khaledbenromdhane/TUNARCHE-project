@@ -83,8 +83,9 @@ class ParticipationService
      *
      * @param array    $data                Form data
      * @param int|null $excludeParticipationId  ID to exclude from capacity check (for updates)
+     * @param bool     $skipDateValidation  Skip date validation (for updates in back office)
      */
-    public function validate(array $data, ?int $excludeParticipationId = null): array
+    public function validate(array $data, ?int $excludeParticipationId = null, bool $skipDateValidation = false): array
     {
         $errors = [];
 
@@ -99,23 +100,25 @@ class ParticipationService
         }
 
         // ── date_participation ───────────────────────
-        if (empty($data['date_participation'] ?? '')) {
-            $errors['date_participation'] = 'La date de participation est obligatoire.';
-        } else {
-            $dateObj = \DateTime::createFromFormat('Y-m-d', $data['date_participation']);
-            if (!$dateObj || $dateObj->format('Y-m-d') !== $data['date_participation']) {
-                $errors['date_participation'] = 'La date n\'est pas valide (format attendu : AAAA-MM-JJ).';
+        if (!$skipDateValidation) {
+            if (empty($data['date_participation'] ?? '')) {
+                $errors['date_participation'] = 'La date de participation est obligatoire.';
             } else {
-                // La date doit être entre aujourd'hui et la date de l'événement
-                $today = new \DateTime('today');
-                if ($dateObj < $today) {
-                    $errors['date_participation'] = 'La date de participation ne peut pas être dans le passé.';
-                } elseif (!empty($data['id_evenement']) && empty($errors['id_evenement'])) {
-                    $evenementForDate = $this->evenementRepository->find((int)$data['id_evenement']);
-                    if ($evenementForDate && $evenementForDate->getDate()) {
-                        $eventDate = \DateTime::createFromFormat('Y-m-d', $evenementForDate->getDate()->format('Y-m-d'));
-                        if ($dateObj > $eventDate) {
-                            $errors['date_participation'] = 'La date de participation ne peut pas dépasser la date de l\'événement (' . $evenementForDate->getDate()->format('d/m/Y') . ').';
+                $dateObj = \DateTime::createFromFormat('Y-m-d', $data['date_participation']);
+                if (!$dateObj || $dateObj->format('Y-m-d') !== $data['date_participation']) {
+                    $errors['date_participation'] = 'La date n\'est pas valide (format attendu : AAAA-MM-JJ).';
+                } else {
+                    // La date doit être entre aujourd'hui et la date de l'événement
+                    $today = new \DateTime('today');
+                    if ($dateObj < $today) {
+                        $errors['date_participation'] = 'La date de participation ne peut pas être dans le passé.';
+                    } elseif (!empty($data['id_evenement']) && empty($errors['id_evenement'])) {
+                        $evenementForDate = $this->evenementRepository->find((int)$data['id_evenement']);
+                        if ($evenementForDate && $evenementForDate->getDate()) {
+                            $eventDate = \DateTime::createFromFormat('Y-m-d', $evenementForDate->getDate()->format('Y-m-d'));
+                            if ($dateObj > $eventDate) {
+                                $errors['date_participation'] = 'La date de participation ne peut pas dépasser la date de l\'événement (' . $evenementForDate->getDate()->format('d/m/Y') . ').';
+                            }
                         }
                     }
                 }

@@ -207,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function validateForm() {
         let isValid = true;
+        const isEditMode = fId.value && fId.value.trim() !== '';
 
         // ── Nom ──
         const nom = fNom.value.trim();
@@ -256,21 +257,25 @@ document.addEventListener('DOMContentLoaded', () => {
             setFieldValid(fParticipants);
         }
 
-        // ── Date ──
+        // ── Date (skip past-date check in edit mode) ──
         const dateVal = fDate.value;
         if (!dateVal) {
             setFieldError(fDate, "La date de l'événement est obligatoire.");
             isValid = false;
         } else {
             const dateObj = new Date(dateVal + 'T00:00:00');
-            const today   = new Date();
-            today.setHours(0, 0, 0, 0);
             if (isNaN(dateObj.getTime())) {
                 setFieldError(fDate, "La date n'est pas valide (format attendu : AAAA-MM-JJ).");
                 isValid = false;
-            } else if (dateObj < today) {
-                setFieldError(fDate, "La date de l'événement doit être aujourd'hui ou dans le futur.");
-                isValid = false;
+            } else if (!isEditMode) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (dateObj < today) {
+                    setFieldError(fDate, "La date de l'événement doit être aujourd'hui ou dans le futur.");
+                    isValid = false;
+                } else {
+                    setFieldValid(fDate);
+                }
             } else {
                 setFieldValid(fDate);
             }
