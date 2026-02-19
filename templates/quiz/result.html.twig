@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5 text-center">
+    <div class="card shadow p-5">
+        <h1>Résultat du Quiz : {{ quiz.title }}</h1>
+        <hr>
+        <h2 class="display-4">Score : {{ score }} / {{ total }}</h2>
+
+        {% if isPassed %}
+            <div class="alert alert-success mt-4">
+                <h3>✅ Félicitations ! Vous avez réussi.</h3>
+            </div>
+        {% else %}
+            <div class="alert alert-danger mt-4">
+                <h3>❌ Dommage ! Vous n'avez pas atteint le score requis.</h3>
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{{ path('quiz_pass', {'id': quiz.id}) }}" class="btn btn-primary">Réessayer</a>
+            <a href="{{ path('app_formation_front') }}" class="btn btn-secondary">Retour aux formations</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

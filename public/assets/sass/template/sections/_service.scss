@@ -1,0 +1,166 @@
+/* Service Card ---------------------------------- */
+.service-card {
+    background: #F4F2F0;
+    border-radius: 50%;
+    padding: 0px 75px 80px;
+    margin-top: 60px;
+    text-align: center;
+    &_icon {
+        height: 190px;
+        width: 140px;
+        background: $white-color;
+        border: 1px solid #E8DDD3;
+        display: inline-block;
+        border-radius: 50%;
+        line-height: 190px;
+        position: relative;
+        transform: translate(0, -50px);
+        margin-bottom: -12px;
+        img {
+            transition: 0.4s;
+        }
+        &:after {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: -10px;
+            height: 100%;
+            width: 100%;
+            border: 1px solid $theme-color;
+            border-radius: 50%;
+        }
+    }
+    &_title {
+        margin-top: -0.3em;
+        margin-bottom: 0px;
+        font-size: 30px;
+        font-weight: 400;
+    }
+    &_time {
+        font-size: 14px;
+        font-weight: 400;
+        color: $theme-color;
+        display: block;
+        margin-bottom: 24px;
+    }
+    &_text {
+        font-size: 16px;
+        font-weight: 300;
+        line-height: 26px;
+        margin-bottom: -0.4em;
+    }
+    &:hover {
+        .service-card_icon {
+            img {
+                transform: rotateY(180deg);
+            }
+        }
+    }
+    @include ml {
+        padding: 0px 63px 70px;
+    }
+    @include lg {
+        padding: 0px 34px 50px;
+        .service-card_icon {
+            margin-bottom: -30px;
+        }
+        .service-card_time {
+            margin-bottom: 14px;
+        }        
+    }
+    @include md {
+        padding: 0px 54px 50px;
+        .service-card_content {
+            max-width: 230px;
+            margin: auto;
+        }
+    }
+    @include vxs {
+        .service-card_title {
+            font-size: 24px;
+        }
+    }
+}
+/* Service Card 2---------------------------------- */
+
+.service-card2 {
+    text-align: center;
+    &_icon {
+        margin-bottom: 30px;
+        transition: 0.4s;
+    }
+    &_title {
+        font-size: 30px;
+        font-weight: 400;
+        margin-bottom: 9px;
+    }
+    &_text {
+        font-weight: 300;
+        max-width: 250px;
+        margin: 0 auto -0.4em;
+    }
+    &:hover {
+        .service-card2_icon {
+            transform: rotateY(180deg);
+        } 
+    }
+}
+@include lg {
+    .service-card2_title {
+        font-size: 24px;
+    }
+}
+
+.service-card.style3 {
+    max-width: 380px;
+    padding: 0px 65px 80px;
+    margin-top: 139px;
+    .service-card_img {
+        position: relative;
+        display: inline-block;
+        transform: translate(0px, -124px);
+        margin-bottom: -124px;
+        &:before {
+            content: '';
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            border: 1px solid $theme-color;
+            border-radius: 50%;
+            left: -15px;
+            top: -15px;
+        }
+    }
+    .service-card_content {
+        padding-top: 32px;
+    }
+    .service-card_subtitle {
+        font-size: 14px;
+        color: $theme-color;
+        text-transform: uppercase;
+    }
+    .service-card_title {
+        font-size: 36px;
+        margin-top: 0px;
+        margin-bottom: 30px;
+    }
+}
+@include xl {
+    .service-card.style3 .service-card_title {
+        font-size: 30px;
+    }
+}
+@include lg {
+    .service-card.style3 .service-card_title {
+        font-size: 24px;
+    }
+    .service-card.style3 .service-card_img {
+        transform: translate(0px, -100px);
+        margin-bottom: -100px;
+    }
+    .service-card.style3 {
+        margin-top: 115px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}

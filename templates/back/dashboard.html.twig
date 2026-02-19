@@ -1,0 +1,54 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block page_title %}Gestion des Formations{% endblock %}
+
+{% block body %}
+<div class="card card-outline card-primary mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ path('app_admin_dashboard') }}" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="q" value="{{ app.request.query.get('q') }}" class="form-control" placeholder="Nom de la formation...">
+            </div>
+            <div class="col-md-4">
+                <select name="type" class="form-select">
+                    <option value="">Tous les types</option>
+                    <option value="Technique" {% if app.request.query.get('type') == 'Technique' %}selected{% endif %}>Technique</option>
+                    <option value="Management" {% if app.request.query.get('type') == 'Management' %}selected{% endif %}>Management</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th><a href="{{ path('app_admin_dashboard', {'sort': 'f.nomForm', 'dir': 'ASC'}) }}">Nom <i class="fas fa-sort"></i></a></th>
+                    <th><a href="{{ path('app_admin_dashboard', {'sort': 'f.dateForm', 'dir': 'DESC'}) }}">Date <i class="fas fa-sort"></i></a></th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in formations %}
+                <tr>
+                    <td>{{ f.nomForm }}</td>
+                    <td>{{ f.dateForm|date('d/m/Y') }}</td>
+                    <td><span class="badge bg-info">{{ f.type }}</span></td>
+                    <td>
+                        <a href="#" class="btn btn-sm btn-warning">Modifier</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted">Aucun résultat.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

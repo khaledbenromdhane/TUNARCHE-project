@@ -1,0 +1,35 @@
+.sidebar-menu-wrapper {
+    right: 0;
+    left: auto;
+    border-left: 1px solid #4B4D47;
+    border-right: 0;
+}
+.portfolio-area-4 {
+    padding: 40px 410px 40px 40px;
+}
+.portfolio-thumb.style2 .portfolio-details {
+    left: 0;
+} 
+@include md {
+    .portfolio-area-4 {
+        padding: 40px 340px 40px 40px;
+    }
+}
+@include sm {
+    .portfolio-area-4 {
+        padding: 30px 136px 30px 30px;
+    }
+}
+.footer-layout3.style2 {
+    padding: 0px 410px 0px 40px;
+}
+@include md {
+    .footer-layout3.style2 {
+        padding: 0px 340px 0px 40px;
+    }
+}
+@include sm {
+    .footer-layout3.style2 {
+        padding: 0px 136px 0px 30px;
+    }
+}

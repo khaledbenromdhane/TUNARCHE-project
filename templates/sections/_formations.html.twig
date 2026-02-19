@@ -1,0 +1,35 @@
+<div class="formation-area space-top space-extra-bottom">
+    <div class="container">
+        <div class="title-area text-center">
+            <span class="sub-title">NOS FORMATIONS</span>
+            <h2 class="sec-title">Apprenez l'Art avec Nous</h2>
+        </div>
+        <div class="row gy-4">
+            {% set formations = [
+                {'title': 'Peinture à l\'huile', 'level': 'Débutant', 'price': '45', 'img': 'f-1.png'},
+                {'title': 'Sculpture Moderne', 'level': 'Intermédiaire', 'price': '60', 'img': 'f-2.png'},
+                {'title': 'Histoire de l\'Art', 'level': 'Tous niveaux', 'price': '30', 'img': 'f-3.png'}
+            ] %}
+
+            {% for formation in formations %}
+            <div class="col-xl-4 col-md-6">
+                <div class="course-card style-border">
+                    <div class="course-img">
+                        <img src="{{ asset('assets/img/normal/' ~ formation.img) }}" alt="{{ formation.title }}">
+                    </div>
+                    <div class="course-content">
+                        <div class="course-meta">
+                            <span class="level"><i class="fas fa-layer-group"></i> {{ formation.level }}</span>
+                        </div>
+                        <h3 class="course-title"><a href="#">{{ formation.title }}</a></h3>
+                        <div class="course-footer">
+                            <span class="course-price">{{ formation.price }}€ / séance</span>
+                            <a href="#" class="link-btn">S'inscrire <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+.header-links li:not(:last-child) {
+    margin: 0 0 0 40px;
+}
+.header-links li > i {
+    margin-left: 8px;
+    margin-right: 0;
+}
+.header-links li .header-sub-links li:not(:last-child) {
+    margin: 0 0 0 30px;
+}
+.header-links li .header-sub-links li:not(:last-child):before {
+    left: -20px;
+    right: auto;
+}
+.main-menu a:before {
+    margin-left: 10px;
+    margin-right: 0;
+}
+.main-menu ul.sub-menu {
+    left: auto;
+    right: -27px;
+}
+.main-menu ul.sub-menu {
+    text-align: right;
+}
+.main-menu ul.sub-menu li ul.sub-menu {
+    right: 100%;
+    left: auto;
+    margin-right: 10px;
+    margin-left: 0;
+}
+.mobile-menu ul li a:before {
+    margin-left: 10px;
+    margin-right: 0;
+}

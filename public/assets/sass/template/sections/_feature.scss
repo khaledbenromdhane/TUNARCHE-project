@@ -1,0 +1,147 @@
+/***********Opening hour area**********/
+.opening-hour-table {
+    margin-bottom: 0;
+    thead {
+        tr {
+            th {
+                font-size: 24px;
+                font-weight: 400;
+                border-bottom: 0;
+                padding: 19px 60px;
+            }
+        }
+    }
+    tbody {
+        tr {
+            td {
+                font-size: 24px;
+                font-weight: 400;
+                padding: 19px 60px;
+                &.closing-day {
+                    color: #7B7E86;
+                }
+            }
+        }
+    }
+    @include ml {
+        thead {
+            tr {
+                th {
+                    font-size: 20px;
+                }
+            }
+        }
+        tbody {
+            tr {
+                td {
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+    @include lg {
+        thead {
+            tr {
+                th {
+                    font-size: 18px;
+                    padding: 14px 40px;
+                }
+            }
+        }
+        tbody {
+            tr {
+                td {
+                    font-size: 18px;
+                    padding: 14px 40px;
+                }
+            }
+        }
+    }
+    @include xs {
+        thead {
+            tr {
+                th {
+                    padding: 14px 30px;
+                }
+            }
+        }
+        tbody {
+            tr {
+                td {
+                    padding: 14px 30px;
+                }
+            }
+        }
+    }
+}
+.ticket-table-wrap {
+    border: 1px solid $border-color;
+    .ticket-wrap {
+        padding: 52px 60px 33px;
+        @include ml {
+            padding: 52px 50px 33px;
+        }
+        @include lg {
+            padding: 42px 40px 23px;
+        }
+        @include xs {
+            padding: 27px 30px 13px;
+        }
+    }
+}
+.ticket-table {
+    margin: 0;
+    border: 0;
+    tbody {
+        tr {
+            td {
+                font-size: 24px;
+                font-weight: 400;
+                padding: 16.5px 60px;
+                &:first-child {
+                    border-left: 0;
+                }
+                &:last-child {
+                    border-right: 0;
+                }
+                &.closing-day {
+                    color: #7B7E86;
+                }
+            }
+            &:last-child {
+                td {
+                    border-bottom: 0;
+                }
+            }
+        }
+    }
+    @include ml {
+        tbody {
+            tr {
+                td {
+                    font-size: 20px;
+                    padding: 16.5px 50px;
+                }
+            }
+        }
+    }
+    @include lg {
+        tbody {
+            tr {
+                td {
+                    font-size: 18px;
+                    padding: 14px 40px;
+                }
+            }
+        }
+    }
+    @include xs {
+        tbody {
+            tr {
+                td {
+                    padding: 14px 30px;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,71 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block title %}Liste des Questions{% endblock %}
+{% block page_title %}Gestion des Questions{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-outline card-primary shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-list-ol me-2"></i> Banque de Questions</h3>
+                <div class="card-tools ms-auto">
+                    <a href="{{ path('app_question_new') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> Ajouter une question
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Question</th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                            <th class="text-success">Correcte</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for question in questions %}
+                        <tr>
+                            <td>#{{ question.id }}</td>
+                            <td><strong>{{ question.questionText }}</strong></td>
+                            <td>{{ question.choiceA }}</td>
+                            <td>{{ question.choiceB }}</td>
+                            <td>{{ question.choiceC }}</td>
+                            <td><span class="badge bg-success">{{ question.correctAnswer }}</span></td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    {# Suppression du lien 'show' qui causait l'erreur 500 #}
+                                    <a href="{{ path('app_question_edit', {'id': question.id}) }}" class="btn btn-outline-warning btn-sm" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    {# Formulaire de suppression rapide #}
+                                    <form method="post" action="{{ path('app_question_delete', {'id': question.id}) }}" style="display:inline-block" onsubmit="return confirm('Supprimer cette question ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ question.id) }}">
+                                        <button class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle me-2"></i> Aucune question enregistrée.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

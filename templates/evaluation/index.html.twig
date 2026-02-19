@@ -1,0 +1,102 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block page_title %}Gestion des Évaluations{% endblock %}
+
+{% block body %}
+<div class="card card-outline card-warning mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="get" action="{{ path('app_evaluation_index') }}" class="row g-3">
+            <div class="col-md-5">
+                <label class="small fw-bold">Recherche</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Titre ou nom de formation..." value="{{ app.request.query.get('search') }}">
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <label class="small fw-bold">Note minimale</label>
+                <select name="note" class="form-select">
+                    <option value="">Toutes les notes</option>
+                    {% for i in 5..1 %}
+                        <option value="{{ i }}" {{ app.request.query.get('note') == i ? 'selected' }}>
+                            {{ i }} Étoile{{ i > 1 ? 's' : '' }} et plus
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-warning w-100 fw-bold">
+                    <i class="fas fa-filter"></i> Filtrer
+                </button>
+                <a href="{{ path('app_evaluation_index') }}" class="btn btn-outline-secondary" title="Réinitialiser">
+                    <i class="fas fa-sync"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card card-outline card-warning shadow-sm">
+    <div class="card-header">
+        <h3 class="card-title">Notes & Commentaires ({{ evaluations|length }})</h3>
+        <div class="card-tools">
+            <a href="{{ path('app_evaluation_new') }}" class="btn btn-warning btn-sm">
+                <i class="fas fa-star"></i> Noter une formation
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-striped mb-0">
+            <thead>
+                <tr>
+                    {# Tri dynamique sur la formation #}
+                    <th>
+                        <a href="{{ path('app_evaluation_index', app.request.query.all|merge({'sort': 'f.nomForm', 'direction': app.request.query.get('direction') == 'ASC' ? 'DESC' : 'ASC'})) }}" class="text-dark">
+                            Formation {% if app.request.query.get('sort') == 'f.nomForm' %}<i class="fas fa-sort-{{ app.request.query.get('direction') == 'ASC' ? 'up' : 'down' }}"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th>Titre</th>
+                    <th class="text-center">Note</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evaluation in evaluations %}
+                <tr>
+                    <td><span class="badge bg-secondary">{{ evaluation.formation.nomForm }}</span></td>
+                    <td>{{ evaluation.titre }}</td>
+                    <td class="text-center">
+                        {% for i in 1..5 %}
+                            <i class="fa{% if i <= evaluation.note %}s{% else %}r{% endif %} fa-star text-warning"></i>
+                        {% endfor %}
+                        <span class="small ms-1">({{ evaluation.note }}/5)</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <a href="{{ path('app_evaluation_edit', {'id': evaluation.id}) }}" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-edit"></i> Modifier
+                            </a>
+                            <form method="post" action="{{ path('app_evaluation_delete', {'id': evaluation.id}) }}" style="display:inline-block" onsubmit="return confirm('Supprimer cet avis ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evaluation.id) }}">
+                                <button class="btn btn-sm btn-outline-danger border-start-0">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <i class="fas fa-comment-slash fa-3x text-muted mb-3 d-block"></i>
+                        <p class="text-muted">Aucun avis ne correspond à vos filtres.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

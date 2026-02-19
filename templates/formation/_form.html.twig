@@ -1,0 +1,22 @@
+{{ form_start(form) }}
+    <div class="mb-3">
+        {{ form_label(form.nomForm, null, {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.nomForm, {'attr': {'class': form.nomForm.vars.errors|length > 0 ? 'form-control is-invalid' : 'form-control'}}) }}
+        <div class="invalid-feedback">{{ form_errors(form.nomForm) }}</div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.dateForm) }}
+            {{ form_widget(form.dateForm, {'attr': {'class': form.dateForm.vars.errors|length > 0 ? 'form-control is-invalid' : 'form-control'}}) }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.type) }}
+            {{ form_widget(form.type, {'attr': {'class': 'form-select'}}) }}
+        </div>
+    </div>
+    <div class="mb-3">
+        {{ form_label(form.description) }}
+        {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+    </div>
+    <button class="btn btn-primary"><i class="fas fa-save"></i> {{ button_label|default('Enregistrer') }}</button>
+{{ form_end(form) }}

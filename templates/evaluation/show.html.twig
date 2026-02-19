@@ -1,0 +1,21 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block page_title %}Avis sur {{ evaluation.formation.nomForm }}{% endblock %}
+
+{% block body %}
+<div class="card card-outline card-warning">
+    <div class="card-body">
+        <h5><strong>{{ evaluation.titre }}</strong></h5>
+        <div class="text-warning mb-3">
+            {% for i in 1..5 %}
+                <i class="fa{% if i <= evaluation.note %}s{% else %}r{% endif %} fa-star"></i>
+            {% endfor %}
+        </div>
+        <p class="text-muted">{{ evaluation.commentaire }}</p>
+    </div>
+    <div class="card-footer">
+        <a href="{{ path('app_evaluation_index') }}" class="btn btn-secondary">Retour</a>
+        {{ include('evaluation/_delete_form.html.twig') }}
+    </div>
+</div>
+{% endblock %}

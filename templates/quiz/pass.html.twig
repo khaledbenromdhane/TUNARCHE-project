@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+
+    <h2 class="mb-4">{{ quiz.title }}</h2>
+
+    <form method="post">
+
+        {% for question in quiz.questions %}
+            <div class="card p-3 mb-4">
+
+                <h5>{{ loop.index }}. {{ question.questionText }}</h5>
+
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="question_{{ question.id }}"
+                           value="A"
+                           id="q{{ question.id }}A"
+                           required>
+                    <label class="form-check-label" for="q{{ question.id }}A">
+                        {{ question.choiceA }}
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="question_{{ question.id }}"
+                           value="B"
+                           id="q{{ question.id }}B">
+                    <label class="form-check-label" for="q{{ question.id }}B">
+                        {{ question.choiceB }}
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="question_{{ question.id }}"
+                           value="C"
+                           id="q{{ question.id }}C">
+                    <label class="form-check-label" for="q{{ question.id }}C">
+                        {{ question.choiceC }}
+                    </label>
+                </div>
+
+            </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-success">
+            Valider Quiz
+        </button>
+
+    </form>
+
+</div>
+{% endblock %}

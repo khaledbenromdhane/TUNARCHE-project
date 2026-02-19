@@ -1,0 +1,22 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block title %}Nouvelle Évaluation{% endblock %}
+{% block page_title %}Ajouter une Évaluation{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-outline card-success shadow">
+            <div class="card-header">
+                <h3 class="card-title">Formulaire de notation</h3>
+            </div>
+            <div class="card-body">
+                {{ include('evaluation/_form.html.twig') }}
+            </div>
+            <div class="card-footer text-muted small">
+                Veuillez remplir tous les champs obligatoires.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

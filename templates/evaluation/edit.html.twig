@@ -1,0 +1,36 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block page_title %}Modifier l'Évaluation{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-outline card-warning shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-star-half-alt me-2"></i> Édition de la note
+                </h3>
+            </div>
+            
+            <div class="card-body">
+                {# Utilise le formulaire corrigé avec Bootstrap 5 #}
+                {{ include('evaluation/_form.html.twig', {'button_label': 'Mettre à jour l\'avis'}) }}
+            </div>
+
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a href="{{ path('app_evaluation_index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Annuler
+                </a>
+                
+                {# BOUTON DELETE #}
+                <form method="post" action="{{ path('app_evaluation_delete', {'id': evaluation.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette évaluation ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evaluation.id) }}">
+                    <button class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
