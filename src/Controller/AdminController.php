@@ -767,4 +767,125 @@ class AdminController extends AbstractController
 
         return $html;
     }
+
+    // ─── QR CODE SCANNER ───────────────────────────────────
+
+    /**
+     * Scanner page — staff opens this on their phone to scan QR codes.
+     */
+    #[Route('/scan', name: 'scan')]
+    public function scan(): Response
+    {
+        return $this->render('admin/scan.html.twig');
+    }
+
+    /**
+     * AJAX endpoint: verify a scanned QR code and confirm participation.
+     */
+    #[Route('/scan/verify', name: 'scan_verify', methods: ['POST'])]
+    public function scanVerify(Request $request, ParticipationRepository $repo, ManagerRegistry $m): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $qrText = $data['qr'] ?? '';
+
+        // Parse participation ID from QR text (first line: "SCAN:123")
+        $participationId = null;
+        if (preg_match('/^SCAN:(\d+)/m', $qrText, $matches)) {
+            $participationId = (int) $matches[1];
+        } elseif (preg_match('/Participation #(\d+)/m', $qrText, $matches)) {
+            $participationId = (int) $matches[1];
+        }
+
+        if (!$participationId) {
+            return $this->json([
+                'success' => false,
+                'message' => 'QR code invalide — impossible de lire l\'identifiant de participation.',
+            ], 400);
+        }
+
+        $participation = $repo->find($participationId);
+
+        if (!$participation) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Participation #' . $participationId . ' introuvable.',
+            ], 404);
+        }
+
+        $evt = $participation->getEvenement();
+
+        // Check if already scanned
+        if ($participation->isScanned()) {
+            return $this->json([
+                'success' => false,
+                'already_scanned' => true,
+                'message' => 'Ce QR code a déjà été scanné le ' . ($participation->getScannedAt()?->format('d/m/Y à H:i') ?? ''),
+                'participation' => $this->buildParticipationData($participation),
+            ], 409);
+        }
+
+        // Cancelled
+        if ($participation->getStatut() === 'Annulée') {
+            return $this->json([
+                'success' => false,
+                'message' => 'Cette participation a été annulée.',
+            ], 400);
+        }
+
+        $em = $m->getManager();
+        $confirmedNow = false;
+
+        // Any "En attente" (Cash, Carte, Gratuit) → Confirm on scan
+        if ($participation->getStatut() === 'En attente') {
+            $participation->setStatut('Confirmée');
+            $confirmedNow = true;
+        }
+
+        $participation->setScanned(true);
+        $participation->setScannedAt(new \DateTime());
+        $em->flush();
+
+        $mode = $participation->getModePaiement() ?? 'Gratuit';
+        $msg = $confirmedNow
+            ? 'Participation confirmée ! (' . $mode . ') Statut changé à "Confirmée".'
+            : 'Participation déjà confirmée. QR marqué comme utilisé.';
+
+        return $this->json([
+            'success' => true,
+            'message' => $msg,
+            'confirmed_now' => $confirmedNow,
+            'participation' => $this->buildParticipationData($participation),
+        ]);
+    }
+
+    /**
+     * AJAX: return all previously scanned participations (for table persistence).
+     */
+    #[Route('/scan/list', name: 'scan_list', methods: ['GET'])]
+    public function scanList(ParticipationRepository $repo): JsonResponse
+    {
+        $scanned = $repo->findBy(['scanned' => true], ['scannedAt' => 'DESC']);
+        $data = array_map(fn(Participation $p) => $this->buildParticipationData($p), $scanned);
+        return $this->json(['results' => $data]);
+    }
+
+    private function buildParticipationData(Participation $p): array
+    {
+        $evt = $p->getEvenement();
+        return [
+            'id' => $p->getId(),
+            'statut' => $p->getStatut(),
+            'modePaiement' => $p->getModePaiement() ?? 'Gratuit',
+            'nbrParticipation' => $p->getNbrParticipation(),
+            'dateParticipation' => $p->getDateParticipation()?->format('d/m/Y'),
+            'scannedAt' => $p->getScannedAt()?->format('d/m/Y H:i'),
+            'evenement' => $evt ? [
+                'nom' => $evt->getNom(),
+                'date' => $evt->getDate()?->format('d/m/Y'),
+                'heure' => $evt->getHeure()?->format('H:i'),
+                'lieu' => $evt->getLieu(),
+                'type' => $evt->getTypeEvenement(),
+            ] : null,
+        ];
+    }
 }

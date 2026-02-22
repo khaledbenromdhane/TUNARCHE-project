@@ -49,6 +49,12 @@ class Participation
     #[ORM\Column(name: 'mode_paiement', length: 30, nullable: true)]
     private ?string $modePaiement = null;
 
+    #[ORM\Column(name: 'scanned', type: 'boolean', options: ['default' => false])]
+    private bool $scanned = false;
+
+    #[ORM\Column(name: 'scanned_at', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $scannedAt = null;
+
     // ─── Getters & Setters ─────────────────────────────────
 
     public function getId(): ?int
@@ -119,6 +125,28 @@ class Participation
     public function setModePaiement(?string $modePaiement): static
     {
         $this->modePaiement = $modePaiement;
+        return $this;
+    }
+
+    public function isScanned(): bool
+    {
+        return $this->scanned;
+    }
+
+    public function setScanned(bool $scanned): static
+    {
+        $this->scanned = $scanned;
+        return $this;
+    }
+
+    public function getScannedAt(): ?\DateTimeInterface
+    {
+        return $this->scannedAt;
+    }
+
+    public function setScannedAt(?\DateTimeInterface $scannedAt): static
+    {
+        $this->scannedAt = $scannedAt;
         return $this;
     }
 }

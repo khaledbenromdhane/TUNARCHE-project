@@ -988,7 +988,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 var sStatut = stripAccents(d.partStatut || '');
                 var sMode  = stripAccents(d.partMode   || '');
 
-                var qrText = 'CONFIRMATION DE PARTICIPATION'
+                var qrText = 'SCAN:' + d.participationId
+                    + '\nCONFIRMATION DE PARTICIPATION'
                     + '\nParticipation #' + d.participationId
                     + '\nDate: ' + (d.partDate || '')
                     + '\nPlaces: ' + (d.partNbr || '')

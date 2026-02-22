@@ -223,6 +223,12 @@
                                     <span>Participation</span>
                                 </a>
                             </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_scan') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>Scanner QR</span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     <li class="sidebar-item {% if 'blog' in app.request.get('_route')|default('') %}active{% endif %}">
