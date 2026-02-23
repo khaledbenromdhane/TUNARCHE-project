@@ -524,7 +524,7 @@ body.modal-open { overflow: hidden !important; }
 
         <div class="evt-grid" id="evtGrid">
                 {% for evt in evenements %}
-                <div class="evt-card">
+                <div class="evt-card" id="event-{{ evt.id }}">
                     <div class="evt-thumb">
                         {% if evt.image %}
                             <img src="{{ asset('uploads/evenements/' ~ evt.image) }}" alt="{{ evt.nom }}">

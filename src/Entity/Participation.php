@@ -34,7 +34,7 @@ class Participation
     private ?int $idUser = null;
 
     #[ORM\ManyToOne(targetEntity: Evenement::class)]
-    #[ORM\JoinColumn(name: 'id_evenement', referencedColumnName: 'id_evenement', nullable: false)]
+    #[ORM\JoinColumn(name: 'id_evenement', referencedColumnName: 'id_evenement', nullable: false, onDelete: 'CASCADE')]
     private ?Evenement $evenement = null;
 
     #[ORM\Column(name: 'date_participation', type: Types::DATE_MUTABLE)]
