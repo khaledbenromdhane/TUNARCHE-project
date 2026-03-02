@@ -1,0 +1,151 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Modifier Utilisateur{% endblock %}
+
+{% block page_title %}Modifier {{ user.prenom }} {{ user.nom }}{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_users_index') }}">Utilisateurs</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Modifier #{{ user.id }}</li>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card admin-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Modifier l'Utilisateur
+                    </h5>
+                    <span class="badge bg-info">ID: {{ user.id }}</span>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.nom, 'Nom', {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+                                    <div class="text-danger small mt-1">
+                                        {{ form_errors(form.nom) }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.prenom, 'Prénom', {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.prenom, {'attr': {'class': 'form-control'}}) }}
+                                    <div class="text-danger small mt-1">
+                                        {{ form_errors(form.prenom) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.email, 'Email', {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                                    <div class="text-danger small mt-1">
+                                        {{ form_errors(form.email) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form_label(form.telephone, 'Téléphone', {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.telephone, {'attr': {'class': 'form-control'}}) }}
+                                    <div class="text-danger small mt-1">
+                                        {{ form_errors(form.telephone) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    {{ form_label(form.password, 'Nouveau mot de passe (laisser vide pour ne pas modifier)', {'label_attr': {'class': 'form-label'}}) }}
+                                    {{ form_widget(form.password, {'attr': {'class': 'form-control', 'required': false}}) }}
+                                    <div class="text-danger small mt-1">
+                                        {{ form_errors(form.password) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    {{ form_label(form.role, 'Rôle(s)', {'label_attr': {'class': 'form-label'}}) }}
+                                    <div class="role-selection">
+                                        {{ form_widget(form.role) }}
+                                    </div>
+                                    <div class="text-danger small mt-1">
+                                        {{ form_errors(form.role) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-gold">
+                                <i class="fas fa-save me-2"></i>Enregistrer les Modifications
+                            </button>
+                            <a href="{{ path('app_admin_users_index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour
+                            </a>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            {# Section de suppression #}
+            <div class="card admin-card border-danger mt-3">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Zone de Danger
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        La suppression de cet utilisateur est irréversible. Toutes les données associées seront perdues.
+                    </p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-2"></i>Supprimer cet Utilisateur
+                    </button>
+                </div>
+            </div>
+
+            {# Modal de confirmation #}
+            <div class="modal fade" id="deleteModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                Confirmer la suppression
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Êtes-vous sûr de vouloir supprimer <strong>{{ user.prenom }} {{ user.nom }}</strong> ?</p>
+                            <p class="text-danger mb-0">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Cette action est irréversible !
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <form method="post" action="{{ path('app_admin_users_delete', {'id': user.id}) }}" class="d-inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user.id) }}">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-1"></i>Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

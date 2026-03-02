@@ -1,0 +1,141 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Œuvres{% endblock %}
+{% block page_title %}Œuvres{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Œuvres</li>
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ path('app_admin_oeuvre_export_vendues') }}" class="btn btn-outline-success btn-sm me-2">
+        <i class="fas fa-file-excel me-1"></i> Exporter Excel (œuvres vendues)
+    </a>
+    <a href="{{ path('app_admin_oeuvre_new') }}" class="btn btn-admin-primary">
+        <i class="fas fa-plus me-1"></i> Ajouter une œuvre
+    </a>
+{% endblock %}
+
+{% block body %}
+    <div class="admin-table-card animate-in" id="oeuvre-list-card">
+        <div class="admin-table-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <h3 class="admin-table-title mb-0"><i class="fas fa-palette me-2 text-accent"></i>Liste des œuvres</h3>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="input-group input-group-sm" style="max-width: 220px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control form-control-sm" id="oeuvre-search" placeholder="Rechercher (titre)..." autocomplete="off">
+                </div>
+                <select class="form-select form-select-sm" id="oeuvre-sort" style="width: auto;">
+                    <option value="">Tri par défaut</option>
+                    <option value="titre">Titre</option>
+                    <option value="prix">Prix</option>
+                    <option value="annee">Année</option>
+                    <option value="etat">État</option>
+                    <option value="galerie">Galerie</option>
+                    <option value="id">ID</option>
+                </select>
+                <select class="form-select form-select-sm" id="oeuvre-order" style="width: auto;">
+                    <option value="ASC">Croissant</option>
+                    <option value="DESC">Décroissant</option>
+                </select>
+                <select class="form-select form-select-sm" id="oeuvre-galerie" style="width: auto;">
+                    <option value="">Toutes les galeries</option>
+                    {% for gal in galeries %}
+                        <option value="{{ gal.idGalerie }}">{{ gal.nom }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select form-select-sm" id="oeuvre-etat" style="width: auto;">
+                    <option value="">Tous les états</option>
+                    <option value="neuve">Neuve</option>
+                    <option value="défectueuse">Défectueuse</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-responsive position-relative">
+            <div class="admin-list-loader position-absolute top-0 start-0 end-0 bottom-0 bg-dark bg-opacity-25 d-none d-flex align-items-center justify-content-center" style="min-height: 120px; z-index: 5;">
+                <div class="spinner-border text-light" role="status"><span class="visually-hidden">Chargement...</span></div>
+            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Titre</th>
+                        <th>Galerie</th>
+                        <th>Artiste</th>
+                        <th>Prix (DT)</th>
+                        <th>État</th>
+                        <th>Statut</th>
+                        <th>Année</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="oeuvre-list-body">
+                    {% include 'admin/oeuvre/_list_rows.html.twig' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var baseUrl = ("{{ path('app_admin_oeuvre_index')|e('js') }}").replace(/\/$/, '');
+        var card = document.getElementById('oeuvre-list-card');
+        var tbody = document.getElementById('oeuvre-list-body');
+        if (!tbody) return;
+        var searchEl = document.getElementById('oeuvre-search');
+        var sortEl = document.getElementById('oeuvre-sort');
+        var orderEl = document.getElementById('oeuvre-order');
+        var galerieEl = document.getElementById('oeuvre-galerie');
+        var etatEl = document.getElementById('oeuvre-etat');
+        var loader = card ? card.querySelector('.admin-list-loader') : null;
+        var timeout = null;
+
+        function buildUrl() {
+            var params = new URLSearchParams();
+            params.set('q', searchEl ? searchEl.value.trim() : '');
+            if (sortEl && sortEl.value) params.set('sort', sortEl.value);
+            if (orderEl && orderEl.value) params.set('order', orderEl.value);
+            if (galerieEl && galerieEl.value) params.set('galerie', galerieEl.value);
+            if (etatEl && etatEl.value) params.set('etat', etatEl.value);
+            var sep = baseUrl.indexOf('?') >= 0 ? '&' : '?';
+            return baseUrl + sep + params.toString();
+        }
+
+        function load() {
+            if (loader) loader.classList.remove('d-none');
+            fetch(buildUrl(), {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            }).then(function(r) {
+                if (!r.ok) throw new Error(r.status);
+                return r.json();
+            }).then(function(data) {
+                if (data && data.html !== undefined) tbody.innerHTML = data.html;
+            }).catch(function() {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger py-3">Erreur de chargement.</td></tr>';
+            }).finally(function() {
+                if (loader) loader.classList.add('d-none');
+            });
+        }
+
+        function schedule() {
+            clearTimeout(timeout);
+            timeout = setTimeout(load, 300);
+        }
+
+        if (searchEl) { searchEl.addEventListener('input', schedule); searchEl.addEventListener('keyup', schedule); }
+        if (sortEl) sortEl.addEventListener('change', load);
+        if (orderEl) orderEl.addEventListener('change', load);
+        if (galerieEl) galerieEl.addEventListener('change', load);
+        if (etatEl) etatEl.addEventListener('change', load);
+    });
+    </script>
+{% endblock %}

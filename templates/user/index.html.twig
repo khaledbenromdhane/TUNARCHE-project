@@ -1,0 +1,298 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil - ArtVista{% endblock %}
+
+{% block body %}
+<div class="breadcumb-wrapper" data-bg-src="{{ asset('assets/img/bg/breadcumb-bg.jpg') }}">
+    <div class="container">
+        <div class="breadcumb-content">
+            <h1 class="breadcumb-title">Mon Profil</h1>
+            <ul class="breadcumb-menu">
+                <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li>Profil</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="space overflow-hidden">
+    <div class="container">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show mb-4">
+                <i class="fas fa-check-circle me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row g-4">
+
+            {# ═══════════════════════════════
+               Colonne gauche : Carte profil + Avatar
+            ═══════════════════════════════ #}
+            <div class="col-lg-4">
+
+                {# Carte Avatar / Identité #}
+                <div class="contact-form-area text-center p-4">
+                    <div class="position-relative d-inline-block mb-3">
+                        <img src="{{ user.avatarUrl }}"
+                             alt="{{ user.fullName }}"
+                             id="profileAvatar"
+                             style="width:140px;height:140px;border-radius:50%;object-fit:cover;border:5px solid #d4a574;box-shadow:0 8px 25px rgba(212,165,116,.3);"
+                             onerror="this.src='https://ui-avatars.com/api/?name={{ user.prenom|url_encode }}+{{ user.nom|url_encode }}&background=d4a574&color=fff&size=200'">
+                        <a href="{{ path('app_profile_edit') }}"
+                           class="position-absolute btn"
+                           style="bottom:4px;right:4px;width:36px;height:36px;border-radius:50%;padding:0;background:#d4a574;border:3px solid #fff;"
+                           title="Modifier la photo">
+                            <i class="fas fa-camera" style="font-size:13px;color:white;"></i>
+                        </a>
+                    </div>
+
+                    <h3 style="color:#1a1a2e;font-weight:700;margin-bottom:4px;">
+                        {{ user.prenom }} {{ user.nom }}
+                    </h3>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+
+                    {# Badge rôle #}
+                    {% for role in user.roles %}
+                        {% if role != 'ROLE_USER' %}
+                            <span class="badge mb-2"
+                                  style="background:linear-gradient(135deg,#d4a574,#c4924e);font-size:12px;padding:6px 12px;border-radius:20px;">
+                                {% if role == 'ROLE_ADMIN' %}<i class="fas fa-crown me-1"></i>Administrateur
+                                {% elseif role == 'ROLE_ARTIST' %}<i class="fas fa-paint-brush me-1"></i>Artiste
+                                {% else %}{{ role|replace({'ROLE_': ''}) }}
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    {% endfor %}
+                    {% if user.roles == ['ROLE_USER'] %}
+                        <span class="badge mb-2" style="background:#6c757d;font-size:12px;padding:6px 12px;border-radius:20px;">
+                            <i class="fas fa-user me-1"></i>Utilisateur
+                        </span>
+                    {% endif %}
+
+                    {# Badge Google #}
+                    {% if user.googleId %}
+                        <div class="mt-1">
+                            <span class="badge" style="background:#4285F4;font-size:11px;padding:5px 10px;">
+                                <i class="fab fa-google me-1"></i>Connecté via Google
+                            </span>
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-3">
+
+                    {# Actions #}
+                    <a href="{{ path('app_profile_edit') }}" class="btn w-100 mb-2">
+                        <i class="fas fa-edit me-2"></i>Modifier le profil
+                    </a>
+                    <a href="{{ path('app_logout') }}" class="btn style2 w-100">
+                        <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                    </a>
+
+                    {% if user.avatarFilename %}
+                        <form method="post" action="{{ path('app_profile_delete_avatar') }}" class="mt-2"
+                              onsubmit="return confirm('Supprimer la photo de profil ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_avatar') }}">
+                            <button type="submit" class="btn btn-link text-danger w-100" style="font-size:13px;">
+                                <i class="fas fa-trash me-1"></i>Supprimer la photo
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            {# ═══════════════════════════════
+               Colonne droite : Infos + Stats Chart.js
+            ═══════════════════════════════ #}
+            <div class="col-lg-8">
+
+                {# Informations personnelles #}
+                <div class="contact-form-area mb-4">
+                    <h4 style="color:#1a1a2e;font-weight:700;margin-bottom:20px;">
+                        <i class="fas fa-user-circle me-2" style="color:#d4a574;"></i>Informations personnelles
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-user me-1"></i>Nom</small>
+                                <strong>{{ user.nom }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-user me-1"></i>Prénom</small>
+                                <strong>{{ user.prenom }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-envelope me-1"></i>Email</small>
+                                <strong>{{ user.email }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-phone me-1"></i>Téléphone</small>
+                                <strong>{{ user.telephone ?: 'Non renseigné' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Statistiques graphique (Chart.js) #}
+                <div class="contact-form-area">
+                    <h4 style="color:#1a1a2e;font-weight:700;margin-bottom:20px;">
+                        <i class="fas fa-chart-bar me-2" style="color:#d4a574;"></i>Activité du profil
+                    </h4>
+                    <div class="row g-3 mb-4">
+                        {# Mini KPIs #}
+                        <div class="col-4">
+                            <div class="text-center" style="background:linear-gradient(135deg,#d4a574,#c4924e);border-radius:12px;padding:20px;color:white;">
+                                <div style="font-size:28px;font-weight:700;">1</div>
+                                <small>Compte actif</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center" style="background:linear-gradient(135deg,#4a90d9,#357abd);border-radius:12px;padding:20px;color:white;">
+                                <div style="font-size:28px;font-weight:700;">
+                                    {{ user.roles|filter(r => r != 'ROLE_USER')|length + 1 }}
+                                </div>
+                                <small>Rôle(s)</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center" style="background:linear-gradient(135deg,#50c878,#3da85f);border-radius:12px;padding:20px;color:white;">
+                                <div style="font-size:28px;font-weight:700;">✓</div>
+                                <small>Profil complet</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Graphique doughnut - complétude du profil #}
+                    <div class="row align-items-center">
+                        <div class="col-md-5 text-center">
+                            <canvas id="profileChart" width="200" height="200"></canvas>
+                        </div>
+                        <div class="col-md-7">
+                            <h5 class="mb-3">Complétude du profil</h5>
+                            {% set completeness = [] %}
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Nom & Prénom</small>
+                                    <small class="text-success">100%</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" style="width:100%;background:#d4a574;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Email</small>
+                                    <small class="text-success">100%</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" style="width:100%;background:#4a90d9;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Téléphone</small>
+                                    <small class="{{ user.telephone ? 'text-success' : 'text-warning' }}">{{ user.telephone ? '100%' : '0%' }}</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" style="width:{{ user.telephone ? '100%' : '0%' }};background:#50c878;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Photo de profil</small>
+                                    <small class="{{ user.avatarFilename ? 'text-success' : 'text-warning' }}">{{ user.avatarFilename ? '100%' : '0%' }}</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" style="width:{{ user.avatarFilename ? '100%' : '0%' }};background:#ffc107;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Lien admin si ROLE_ADMIN #}
+        {% if is_granted('ROLE_ADMIN') %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="contact-form-area" style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);color:white;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1 text-white"><i class="fas fa-crown me-2" style="color:#d4a574;"></i>Espace Administrateur</h5>
+                                <p class="text-muted mb-0">Accédez au tableau de bord de gestion</p>
+                            </div>
+                            <a href="{{ path('app_admin_dashboard') }}" class="btn">
+                                <i class="fas fa-tachometer-alt me-2"></i>Administration
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// Graphique doughnut complétude profil
+const profileData = {
+    labels: ['Nom & Prénom', 'Email', 'Téléphone', 'Photo'],
+    datasets: [{
+        data: [
+            100,
+            100,
+            {{ user.telephone ? 100 : 0 }},
+            {{ user.avatarFilename ? 100 : 0 }}
+        ],
+        backgroundColor: ['#d4a574', '#4a90d9', '#50c878', '#ffc107'],
+        borderWidth: 0,
+        borderRadius: 4,
+    }]
+};
+
+new Chart(document.getElementById('profileChart'), {
+    type: 'doughnut',
+    data: profileData,
+    options: {
+        cutout: '70%',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (ctx) => ` ${ctx.label}: ${ctx.raw}%`
+                }
+            }
+        },
+        animation: { animateRotate: true, duration: 1000 }
+    },
+    plugins: [{
+        id: 'centerText',
+        afterDraw(chart) {
+            const { ctx, chartArea: { width, height } } = chart;
+            const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0) / 4;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#1a1a2e';
+            ctx.font = 'bold 24px Jost';
+            ctx.fillText(Math.round(total) + '%', chart.getDatasetMeta(0).data[0]?.x || width/2, chart.getDatasetMeta(0).data[0]?.y || height/2);
+            ctx.font = '12px Jost';
+            ctx.fillStyle = '#999';
+            ctx.fillText('Complété', chart.getDatasetMeta(0).data[0]?.x || width/2, (chart.getDatasetMeta(0).data[0]?.y || height/2) + 22);
+            ctx.restore();
+        }
+    }]
+});
+</script>
+{% endblock %}

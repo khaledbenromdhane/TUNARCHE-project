@@ -1,0 +1,45 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block page_title %}Détails : {{ formation.nomForm }}{% endblock %}
+
+{% block body %}
+<div class="card card-outline card-info">
+    <div class="card-header">
+        <h3 class="card-title">Informations Générales</h3>
+    </div>
+    <div class="card-body">
+
+        {# ✅ IMAGE #}
+        {% if formation.imageName %}
+            <div class="text-center mb-4">
+                <img src="{{ asset('uploads/formations/' ~ formation.imageName) }}"
+                     alt="{{ formation.nomForm }}"
+                     style="max-width: 300px; border-radius: 10px; border: 2px solid #ddd; padding: 4px;">
+            </div>
+        {% else %}
+            <div class="text-center mb-4 text-muted">
+                <i class="fas fa-image fa-3x"></i>
+                <p class="mt-2">Aucune image disponible</p>
+            </div>
+        {% endif %}
+
+        <table class="table table-bordered">
+            <tbody>
+                <tr><th>ID</th><td>{{ formation.id }}</td></tr>
+                <tr><th>Nom</th><td>{{ formation.nomForm }}</td></tr>
+                <tr><th>Date</th><td>{{ formation.dateForm ? formation.dateForm|date('d/m/Y') : '' }}</td></tr>
+                <tr><th>Type</th><td><span class="badge bg-primary">{{ formation.type }}</span></td></tr>
+                <tr><th>Description</th><td>{{ formation.description }}</td></tr>
+            </tbody>
+        </table>
+
+    </div>
+    <div class="card-footer">
+        <div class="btn-group">
+            <a href="{{ path('app_formation_index') }}" class="btn btn-secondary">Retour</a>
+            <a href="{{ path('app_formation_edit', {'id': formation.id}) }}" class="btn btn-warning">Modifier</a>
+        </div>
+        {{ include('formation/_delete_form.html.twig') }}
+    </div>
+</div>
+{% endblock %}

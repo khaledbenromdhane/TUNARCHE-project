@@ -1,0 +1,295 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+{% block page_title %}Gestion des Utilisateurs{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item active" aria-current="page">Utilisateurs</li>
+{% endblock %}
+
+{% block page_actions %}
+    <div class="d-flex gap-2">
+        <a href="{{ path('app_admin_users_export_pdf') }}" class="btn btn-outline-danger" target="_blank">
+            <i class="fas fa-file-pdf me-2"></i>Exporter PDF
+        </a>
+        <a href="{{ path('app_admin_users_new') }}" class="btn btn-gold">
+            <i class="fas fa-plus me-2"></i>Nouvel Utilisateur
+        </a>
+    </div>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {# ═══ 4 CARTES STATS DYNAMIQUES ═══ #}
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-stat-card stat-primary">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.total }}</h3>
+                    <p>Total Utilisateurs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-stat-card" style="background:linear-gradient(135deg,#dc3545,#a71d2a);border-radius:12px;padding:20px;display:flex;align-items:center;gap:16px;color:#fff;box-shadow:0 4px 15px rgba(220,53,69,.3);">
+                <div class="stat-icon" style="font-size:2rem;opacity:.8;"><i class="fas fa-shield-alt"></i></div>
+                <div class="stat-content">
+                    <h3 style="margin:0;font-size:2rem;font-weight:700;">{{ stats.admins }}</h3>
+                    <p style="margin:0;opacity:.85;">Administrateurs</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-stat-card stat-warning">
+                <div class="stat-icon"><i class="fas fa-palette"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.artists }}</h3>
+                    <p>Artistes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-stat-card stat-success">
+                <div class="stat-icon"><i class="fas fa-user"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.users }}</h3>
+                    <p>Utilisateurs simples</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══ GRAPHIQUES ═══ #}
+    <div class="row g-3 mb-4">
+        <div class="col-lg-5">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Répartition</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center">
+                    <div style="position:relative;width:220px;height:220px;">
+                        <canvas id="rolesChart"></canvas>
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                            <div style="font-size:1.8rem;font-weight:700;color:#c9a84c;">{{ stats.total }}</div>
+                            <div style="font-size:0.7rem;color:#aaa;">Total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistiques</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statsBarChart" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ═══ TABLEAU ═══ #}
+    <div class="card admin-card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Liste des Utilisateurs</h5>
+            <div class="d-flex gap-2">
+                <div class="input-group" style="max-width:240px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Rechercher..." id="searchUsers">
+                </div>
+                <select class="form-select" id="filterRole" style="max-width:170px;">
+                    <option value="">Tous les rôles</option>
+                    <option value="ROLE_ADMIN">Admins</option>
+                    <option value="ROLE_ARTIST">Artistes</option>
+                    <option value="ROLE_USER">Utilisateurs</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover admin-table mb-0" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th width="5%"><input class="form-check-input" type="checkbox" id="selectAll"></th>
+                            <th width="5%">ID</th>
+                            <th width="15%">Avatar</th>
+                            <th width="20%">Nom Complet</th>
+                            <th width="20%">Email</th>
+                            <th width="15%">Téléphone</th>
+                            <th width="12%">Rôle(s)</th>
+                            <th width="8%" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr data-roles="{{ user.role|join(',') }}">
+                                <td><input class="form-check-input" type="checkbox" value="{{ user.id }}"></td>
+                                <td><strong>#{{ user.id }}</strong></td>
+                                <td>
+                                    {% if user.avatarFilename %}
+                                        <img src="{{ asset('uploads/avatars/' ~ user.avatarFilename) }}"
+                                             class="rounded-circle" width="38" height="38"
+                                             style="object-fit:cover;border:2px solid #c9a84c;" alt="Avatar">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ user.prenom }}+{{ user.nom }}&background=c9a84c&color=0a0a12&bold=true&size=38"
+                                             class="rounded-circle" width="38" height="38" alt="Avatar">
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ user.prenom }} {{ user.nom }}</strong></td>
+                                <td class="text-muted small">{{ user.email }}</td>
+                                <td>{{ user.telephone ?: '—' }}</td>
+                                <td>
+                                    {% for role in user.role %}
+                                        {% if role == 'ROLE_ADMIN' %}
+                                            <span class="badge bg-danger">Admin</span>
+                                        {% elseif role == 'ROLE_ARTIST' %}
+                                            <span class="badge bg-warning text-dark">Artiste</span>
+                                        {% elseif role == 'ROLE_USER' %}
+                                            <span class="badge bg-primary">User</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ path('app_admin_users_show', {'id': user.id}) }}" class="btn btn-sm btn-info" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ path('app_admin_users_edit', {'id': user.id}) }}" class="btn btn-sm btn-warning" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" title="Supprimer"
+                                        onclick="confirmDelete({{ user.id }}, '{{ user.prenom }} {{ user.nom }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">Aucun utilisateur trouvé</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Modal suppression #}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer <strong id="deleteUserName"></strong> ?</p>
+                <p class="text-danger mb-0"><i class="fas fa-info-circle me-1"></i>Cette action est irréversible !</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="deleteForm" method="post">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <input type="hidden" name="_token" id="deleteToken">
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Graphique donut ──
+new Chart(document.getElementById('rolesChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Admins', 'Artistes', 'Utilisateurs'],
+        datasets: [{
+            data: [{{ stats.admins }}, {{ stats.artists }}, {{ stats.users }}],
+            backgroundColor: ['#dc3545','#ffc107','#198754'],
+            borderColor: ['#1a1a2e','#1a1a2e','#1a1a2e'],
+            borderWidth: 3,
+        }]
+    },
+    options: {
+        responsive: false,
+        cutout: '65%',
+        plugins: { legend: { display: false } }
+    }
+});
+
+// ── Graphique barres ──
+new Chart(document.getElementById('statsBarChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['Total','Admins','Artistes','Utilisateurs'],
+        datasets: [{
+            label: 'Nombre',
+            data: [{{ stats.total }}, {{ stats.admins }}, {{ stats.artists }}, {{ stats.users }}],
+            backgroundColor: ['#c9a84c','#dc3545','#ffc107','#198754'],
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1, color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            x: { ticks: { color: '#aaa' }, grid: { display: false } }
+        }
+    }
+});
+
+// ── Recherche + filtre ──
+const searchInput = document.getElementById('searchUsers');
+const filterRole  = document.getElementById('filterRole');
+const rows        = document.querySelectorAll('#usersTable tbody tr');
+
+function applyFilters() {
+    const q    = searchInput.value.toLowerCase();
+    const role = filterRole.value;
+    rows.forEach(row => {
+        const text  = row.textContent.toLowerCase();
+        const roles = row.dataset.roles || '';
+        row.style.display = (text.includes(q) && (!role || roles.includes(role))) ? '' : 'none';
+    });
+}
+searchInput.addEventListener('keyup', applyFilters);
+filterRole.addEventListener('change', applyFilters);
+
+// ── Select all ──
+document.getElementById('selectAll')?.addEventListener('change', function(e) {
+    document.querySelectorAll('#usersTable tbody input[type="checkbox"]').forEach(cb => cb.checked = e.target.checked);
+});
+
+// ── Suppression avec modal ──
+const tokenMap = {
+    {% for user in users %}
+        {{ user.id }}: '{{ csrf_token('delete' ~ user.id) }}',
+    {% endfor %}
+};
+
+function confirmDelete(id, name) {
+    document.getElementById('deleteUserName').textContent = name;
+    document.getElementById('deleteToken').value = tokenMap[id];
+    document.getElementById('deleteForm').action = `/admin/users/${id}`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

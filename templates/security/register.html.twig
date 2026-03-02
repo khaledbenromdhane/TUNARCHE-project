@@ -1,0 +1,252 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription - ArtVista{% endblock %}
+
+{% block body %}
+<div class="breadcumb-wrapper" data-bg-src="{{ asset('assets/img/bg/breadcumb-bg.jpg') }}">
+    <div class="container">
+        <div class="breadcumb-content">
+            <h1 class="breadcumb-title">Inscription</h1>
+            <ul class="breadcumb-menu">
+                <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li>Inscription</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="space overflow-hidden">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="contact-form-area">
+
+                    <div class="text-center mb-4">
+                        <h2 class="sec-title">Créer un compte</h2>
+                        <p class="sec-text">Rejoignez la communauté ArtVista</p>
+                    </div>
+
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger alert-dismissible fade show">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    {% endfor %}
+
+                    {# Bouton Google #}
+                    <a href="{{ path('connect_google_start') }}" class="btn w-100 mb-3"
+                       style="background:#fff;border:2px solid #ddd;color:#333;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;">
+                        <svg width="20" height="20" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        S'inscrire avec Google
+                    </a>
+                    <div class="text-center mb-4 position-relative"><hr>
+                        <span class="position-absolute bg-white px-3" style="top:-12px;left:50%;transform:translateX(-50%);color:#999;">ou</span>
+                    </div>
+
+                    {{ form_start(form, {'attr': {'class': 'contact-form', 'novalidate': 'novalidate', 'enctype': 'multipart/form-data', 'id': 'registerForm'}}) }}
+                        <div class="row gx-20">
+
+                            {# ── Zone Avatar ── #}
+                            <div class="col-12 mb-4">
+                                <div class="text-center">
+                                    <div class="position-relative d-inline-block mb-2">
+                                        <img id="avatarPreview"
+                                             src="https://ui-avatars.com/api/?name=?&background=d4a574&color=fff&size=200"
+                                             style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid #d4a574;cursor:pointer;"
+                                             onclick="document.getElementById('avatarFile').click()" alt="Avatar">
+                                        <button type="button" onclick="document.getElementById('avatarFile').click()"
+                                                class="position-absolute btn"
+                                                style="bottom:4px;right:4px;width:30px;height:30px;border-radius:50%;padding:0;background:#d4a574;border:2px solid #fff;">
+                                            <i class="fas fa-camera" style="font-size:11px;color:white;"></i>
+                                        </button>
+                                    </div>
+                                    <div id="faceStatus" style="display:none;" class="mb-2">
+                                        <span id="faceBadge" class="badge"></span>
+                                    </div>
+                                    <p class="text-muted small mb-0">Cliquez pour ajouter votre photo</p>
+                                    <p style="font-size:11px;color:#999;"><i class="fas fa-shield-alt me-1" style="color:#d4a574;"></i>Détection faciale activée</p>
+                                    <div style="display:none;">{{ form_widget(form.avatarFile, {'attr': {'id': 'avatarFile', 'accept': 'image/*'}}) }}</div>
+                                    <div class="text-danger small">{{ form_errors(form.avatarFile) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form_label(form.nom, 'Nom') }}
+                                    {{ form_widget(form.nom, {'attr': {'class': 'form-control', 'placeholder': 'Votre nom'}}) }}
+                                    <div class="text-danger small">{{ form_errors(form.nom) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form_label(form.prenom, 'Prénom') }}
+                                    {{ form_widget(form.prenom, {'attr': {'class': 'form-control', 'placeholder': 'Votre prénom'}}) }}
+                                    <div class="text-danger small">{{ form_errors(form.prenom) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form_label(form.email, 'Email') }}
+                                    {{ form_widget(form.email, {'attr': {'class': 'form-control', 'placeholder': 'exemple@email.com'}}) }}
+                                    <div class="text-danger small">{{ form_errors(form.email) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form_label(form.telephone, 'Téléphone') }}
+                                    {{ form_widget(form.telephone, {'attr': {'class': 'form-control', 'placeholder': '+216 XX XXX XXX'}}) }}
+                                    <div class="text-danger small">{{ form_errors(form.telephone) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form_label(form.password, 'Mot de passe') }}
+                                    <div class="position-relative">
+                                        {{ form_widget(form.password, {'attr': {'class': 'form-control', 'id': 'pwdInput', 'placeholder': 'Min. 8 caractères'}}) }}
+                                        <button type="button" onclick="togglePwd()" class="btn position-absolute top-0 end-0 h-100 px-3" style="background:none;border:none;">
+                                            <i class="fas fa-eye" id="pwdIcon" style="color:#d4a574;"></i>
+                                        </button>
+                                    </div>
+                                    <div class="mt-2" id="pwdStrength" style="display:none;">
+                                        <div class="progress" style="height:4px;"><div class="progress-bar" id="pwdBar" style="width:0%;transition:width .3s;"></div></div>
+                                        <small id="pwdText" class="text-muted"></small>
+                                    </div>
+                                    <div class="text-danger small">{{ form_errors(form.password) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form_label(form.role, 'Je suis') }}
+                                    <div class="p-3 border rounded" style="background:#f8f4ef;">
+                                        {% for choice in form.role %}
+                                            <div class="form-check mb-2">
+                                                {{ form_widget(choice, {'attr': {'class': 'form-check-input'}}) }}
+                                                {{ form_label(choice, null, {'label_attr': {'class': 'form-check-label fw-medium'}}) }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="text-danger small">{{ form_errors(form.role) }}</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="acceptTerms" required>
+                                    <label class="form-check-label" for="acceptTerms">
+                                        J'accepte les <a href="#" style="color:#d4a574;">conditions d'utilisation</a>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="recaptcha_token" id="recaptchaToken">
+
+                            <div class="col-12">
+                                <button type="submit" class="btn w-100">
+                                    <i class="fas fa-user-plus me-2"></i>CRÉER MON COMPTE
+                                </button>
+                            </div>
+
+                            <div class="col-12 text-center mt-3">
+                                <p class="mb-0">Déjà un compte ? <a href="{{ path('app_login') }}" style="color:#d4a574;" class="fw-bold">Connectez-vous</a></p>
+                            </div>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key|default('YOUR_SITE_KEY') }}"></script>
+<script>
+const SITE_KEY = '{{ recaptcha_site_key|default('YOUR_SITE_KEY') }}';
+let faceApiReady = false;
+
+// Charger modèles face-api (mettez les modèles dans /public/models/)
+(async () => {
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+        faceApiReady = true;
+    } catch(e) { /* modèles non dispo, détection désactivée */ }
+})();
+
+// ── Preview avatar + détection faciale ──
+document.getElementById('avatarFile').addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        document.getElementById('avatarPreview').src = e.target.result;
+        if (!faceApiReady) return;
+
+        const badge = document.getElementById('faceBadge');
+        document.getElementById('faceStatus').style.display = 'block';
+        badge.className = 'badge bg-warning text-dark';
+        badge.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Analyse...';
+
+        const img = new Image();
+        img.src = e.target.result;
+        await img.decode();
+        const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions());
+
+        if (detections.length === 1) {
+            badge.className = 'badge bg-success';
+            badge.innerHTML = '<i class="fas fa-check me-1"></i>Visage détecté ✓';
+        } else if (detections.length > 1) {
+            badge.className = 'badge bg-warning text-dark';
+            badge.innerHTML = '<i class="fas fa-users me-1"></i>Photo individuelle requise';
+        } else {
+            badge.className = 'badge bg-secondary';
+            badge.innerHTML = '<i class="fas fa-info me-1"></i>Aucun visage détecté';
+        }
+    };
+    reader.readAsDataURL(file);
+});
+
+// ── Force mot de passe ──
+document.getElementById('pwdInput').addEventListener('input', function() {
+    const v = this.value;
+    const bar = document.getElementById('pwdBar');
+    const txt = document.getElementById('pwdText');
+    document.getElementById('pwdStrength').style.display = v ? 'block' : 'none';
+    let s = [v.length >= 8, /[A-Z]/.test(v), /[a-z]/.test(v), /\d/.test(v), /[^A-Za-z0-9]/.test(v)].filter(Boolean).length;
+    const lvl = [['#dc3545','Très faible','20%'],['#fd7e14','Faible','40%'],['#ffc107','Moyen','60%'],['#20c997','Fort','80%'],['#198754','Très fort','100%']][Math.max(0, s-1)];
+    bar.style.cssText = `width:${lvl[2]};background:${lvl[0]};transition:width .3s;`;
+    txt.textContent = lvl[1]; txt.style.color = lvl[0];
+});
+
+// ── Submit avec reCAPTCHA (graceful fallback) ──
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const f = this;
+    try {
+        if (typeof grecaptcha !== 'undefined' && SITE_KEY && SITE_KEY !== 'YOUR_SITE_KEY') {
+            grecaptcha.ready(() => grecaptcha.execute(SITE_KEY, {action:'register'})
+                .then(t => { document.getElementById('recaptchaToken').value = t; f.submit(); })
+                .catch(() => f.submit())
+            );
+        } else { f.submit(); }
+    } catch(err) { f.submit(); }
+});
+
+function togglePwd() {
+    const i = document.getElementById('pwdInput'), ic = document.getElementById('pwdIcon');
+    i.type = i.type === 'password' ? 'text' : 'password';
+    ic.classList.toggle('fa-eye'); ic.classList.toggle('fa-eye-slash');
+}
+</script>
+<style>.form-check-input:checked { background-color:#d4a574; border-color:#d4a574; }</style>
+{% endblock %}

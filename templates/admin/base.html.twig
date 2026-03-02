@@ -75,24 +75,24 @@
                     <ul class="dropdown-menu dropdown-menu-end admin-dropdown notifications-dropdown">
                         <li class="dropdown-header">
                             <strong>Notifications</strong>
-                            <a href="#" class="float-end small text-accent">Mark all read</a>
+                            <a href="#" class="float-end small text-accent">Tout lire</a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item notification-item unread" href="#">
                                 <div class="notification-icon bg-gold"><i class="fas fa-calendar-check"></i></div>
                                 <div class="notification-content">
-                                    <p>New event "Gala Night" created</p>
-                                    <small>2 minutes ago</small>
+                                    <p>Nouvel événement créé</p>
+                                    <small>Il y a 2 minutes</small>
                                 </div>
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item notification-item unread" href="#">
+                            <a class="dropdown-item notification-item unread" href="{{ path('app_admin_users_index') }}">
                                 <div class="notification-icon bg-purple"><i class="fas fa-user-plus"></i></div>
                                 <div class="notification-content">
-                                    <p>5 new users registered</p>
-                                    <small>1 hour ago</small>
+                                    <p>Gestion des utilisateurs</p>
+                                    <small>Administration</small>
                                 </div>
                             </a>
                         </li>
@@ -100,13 +100,13 @@
                             <a class="dropdown-item notification-item" href="#">
                                 <div class="notification-icon bg-teal"><i class="fas fa-blog"></i></div>
                                 <div class="notification-content">
-                                    <p>Blog post published successfully</p>
-                                    <small>3 hours ago</small>
+                                    <p>Publication en attente</p>
+                                    <small>Il y a 3 heures</small>
                                 </div>
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-center small text-accent" href="#">View all notifications</a></li>
+                        <li><a class="dropdown-item text-center small text-accent" href="#">Voir toutes les notifications</a></li>
                     </ul>
                 </div>
 
@@ -116,51 +116,89 @@
                     <span class="badge-count">3</span>
                 </button>
 
-                {# ── Admin Profile Dropdown ── #}
+                {# ══════════════════════════════════════════════════
+                   PROFIL ADMIN – DONNÉES RÉELLES DE L'UTILISATEUR
+                ══════════════════════════════════════════════════ #}
+                {% if app.user %}
                 <div class="dropdown">
                     <button class="btn admin-profile-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <div class="admin-avatar">
-                            <img src="https://ui-avatars.com/api/?name=Admin&background=c9a84c&color=0a0a12&bold=true&size=40" alt="Admin Avatar">
+                            {% if app.user.avatarFilename is defined and app.user.avatarFilename %}
+                                <img src="{{ asset('uploads/avatars/' ~ app.user.avatarFilename) }}"
+                                     alt="Avatar"
+                                     style="width:40px;height:40px;object-fit:cover;border-radius:50%;">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ app.user.prenom|default('A') }}+{{ app.user.nom|default('U') }}&background=c9a84c&color=0a0a12&bold=true&size=40"
+                                     alt="Avatar">
+                            {% endif %}
                         </div>
                         <div class="admin-info d-none d-md-block">
-                            <span class="admin-name">Admin User</span>
-                            <span class="admin-role">Super Admin</span>
+                            <span class="admin-name">{{ app.user.prenom }} {{ app.user.nom }}</span>
+                            <span class="admin-role">
+                                {% if 'ROLE_ADMIN' in app.user.roles %}Administrateur
+                                {% elseif 'ROLE_ARTIST' in app.user.roles %}Artiste
+                                {% else %}Utilisateur{% endif %}
+                            </span>
                         </div>
                     </button>
+
                     <ul class="dropdown-menu dropdown-menu-end admin-dropdown profile-dropdown">
                         <li class="dropdown-header">
                             <div class="d-flex align-items-center">
-                                <img src="https://ui-avatars.com/api/?name=Admin&background=c9a84c&color=0a0a12&bold=true&size=60" class="rounded-circle me-3" width="48" height="48" alt="Avatar">
+                                {% if app.user.avatarFilename is defined and app.user.avatarFilename %}
+                                    <img src="{{ asset('uploads/avatars/' ~ app.user.avatarFilename) }}"
+                                         class="rounded-circle me-3"
+                                         width="48" height="48"
+                                         style="object-fit:cover;border:2px solid #c9a84c;"
+                                         alt="Avatar">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ app.user.prenom|default('A') }}+{{ app.user.nom|default('U') }}&background=c9a84c&color=0a0a12&bold=true&size=60"
+                                         class="rounded-circle me-3"
+                                         width="48" height="48"
+                                         alt="Avatar">
+                                {% endif %}
                                 <div>
-                                    <strong>Admin User</strong>
-                                    <p class="mb-0 small text-muted">admin@tunarche.com</p>
+                                    <strong>{{ app.user.prenom }} {{ app.user.nom }}</strong>
+                                    <p class="mb-1 small text-muted">{{ app.user.email }}</p>
+                                    {% for role in app.user.roles %}
+                                        {% if role == 'ROLE_ADMIN' %}
+                                            <span class="badge bg-danger" style="font-size:0.65rem;">
+                                                <i class="fas fa-shield-alt me-1"></i>Admin
+                                            </span>
+                                        {% elseif role == 'ROLE_ARTIST' %}
+                                            <span class="badge bg-warning text-dark" style="font-size:0.65rem;">
+                                                <i class="fas fa-palette me-1"></i>Artiste
+                                            </span>
+                                        {% endif %}
+                                    {% endfor %}
                                 </div>
                             </div>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="#">
-                                <i class="fas fa-user me-2 text-accent"></i> My Profile
+                            <a class="dropdown-item" href="{{ path('app_profile') }}">
+                                <i class="fas fa-user me-2 text-accent"></i>Mon Profil
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#">
-                                <i class="fas fa-cog me-2 text-accent"></i> Settings
+                            <a class="dropdown-item" href="{{ path('app_profile_edit') }}">
+                                <i class="fas fa-edit me-2 text-accent"></i>Modifier le Profil
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#">
-                                <i class="fas fa-question-circle me-2 text-accent"></i> Help Center
+                            <a class="dropdown-item" href="{{ path('app_admin_users_index') }}">
+                                <i class="fas fa-users-cog me-2 text-accent"></i>Gestion Utilisateurs
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-danger" href="#">
-                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            <a class="dropdown-item text-danger" href="{{ path('app_logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
                             </a>
                         </li>
                     </ul>
                 </div>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -197,16 +235,15 @@
                             <span class="sidebar-text">Dashboard</span>
                         </a>
                     </li>
-                    <li class="sidebar-item {% if 'users' in app.request.get('_route')|default('') %}active{% endif %}">
-                        <a href="{{ path('app_admin_users') }}" class="sidebar-link">
+                    <li class="sidebar-item {% if 'app_admin_users' in (app.request.get('_route')|default('')) %}active{% endif %}">
+                        <a href="{{ path('app_admin_users_index') }}" class="sidebar-link">
                             <i class="fas fa-users"></i>
-                            <span class="sidebar-text">Users</span>
-                            <span class="sidebar-badge">248</span>
+                            <span class="sidebar-text">Utilisateurs</span>
                         </a>
                     </li>
                     <li class="sidebar-item {% if 'evenement' in app.request.get('_route')|default('') %}active{% endif %}">
                         <a href="#" class="sidebar-link sidebar-dropdown-toggle" data-dropdown="evenement-submenu">
-                            <i class="fas fa-calendar-star"></i>
+                            <i class="fas fa-calendar-alt"></i>
                             <span class="sidebar-text">Événements</span>
                             <i class="fas fa-chevron-down sidebar-dropdown-icon"></i>
                         </a>
@@ -221,6 +258,12 @@
                                 <a href="{{ path('app_admin_participations') }}" class="sidebar-submenu-link">
                                     <i class="fas fa-users-between-lines"></i>
                                     <span>Participation</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_scan') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>Scanner QR</span>
                                 </a>
                             </li>
                         </ul>
@@ -265,9 +308,15 @@
                                     <span>Œuvre</span>
                                 </a>
                             </li>
+                            <li class="sidebar-submenu-item {% if 'app_admin_stats' in (app.request.get('_route')|default('')) %}active{% endif %}">
+                                <a href="{{ path('app_admin_stats_ventes') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>Stats Ventes</span>
+                                </a>
+                            </li>
                         </ul>
                     </li>
-                    <li class="sidebar-item {% if 'formation' in app.request.get('_route')|default('') %}active{% endif %}">
+                    <li class="sidebar-item {% if 'formation' in app.request.get('_route')|default('') or 'quiz' in app.request.get('_route')|default('') or 'question' in app.request.get('_route')|default('') or 'evaluation' in app.request.get('_route')|default('') %}active{% endif %}">
                         <a href="#" class="sidebar-link sidebar-dropdown-toggle" data-dropdown="formation-submenu">
                             <i class="fas fa-graduation-cap"></i>
                             <span class="sidebar-text">Formation</span>
@@ -275,13 +324,25 @@
                         </a>
                         <ul class="sidebar-submenu" id="formation-submenu">
                             <li class="sidebar-submenu-item">
-                                <a href="{{ path('app_admin_formations') }}" class="sidebar-submenu-link">
+                                <a href="{{ path('app_formation_index') }}" class="sidebar-submenu-link">
                                     <i class="fas fa-graduation-cap"></i>
                                     <span>Formation</span>
                                 </a>
                             </li>
                             <li class="sidebar-submenu-item">
-                                <a href="{{ path('app_admin_evaluations') }}" class="sidebar-submenu-link">
+                                <a href="{{ path('app_admin_quiz_index') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-question-circle"></i>
+                                    <span>Quiz</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_question_index') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-list-ol"></i>
+                                    <span>Questions</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_evaluation_index') }}" class="sidebar-submenu-link">
                                     <i class="fas fa-clipboard-check"></i>
                                     <span>Évaluation</span>
                                 </a>
@@ -292,6 +353,31 @@
             </div>
 
             {# ── Secondary Navigation ── #}
+            <div class="sidebar-section">
+                <span class="sidebar-section-title">Compte</span>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{{ path('app_profile') }}" class="sidebar-link">
+                            <i class="fas fa-user-circle"></i>
+                            <span class="sidebar-text">Mon Profil</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{{ path('app_profile_edit') }}" class="sidebar-link">
+                            <i class="fas fa-edit"></i>
+                            <span class="sidebar-text">Modifier le Profil</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="{{ path('app_logout') }}" class="sidebar-link" style="color:#dc3545;">
+                            <i class="fas fa-sign-out-alt" style="color:#dc3545;"></i>
+                            <span class="sidebar-text">Déconnexion</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            {# ── Settings ── #}
             <div class="sidebar-section">
                 <span class="sidebar-section-title">Settings</span>
                 <ul class="sidebar-nav">
@@ -310,14 +396,6 @@
                 </ul>
             </div>
 
-            {# ── Sidebar Footer ── #}
-            <div class="sidebar-footer">
-                <div class="sidebar-footer-card">
-                    <div class="sfc-icon"><i class="fas fa-crown"></i></div>
-                    <p class="sfc-text">Upgrade to <strong>Pro</strong></p>
-                    <a href="#" class="btn btn-sm btn-gold">Upgrade</a>
-                </div>
-            </div>
         </div>
     </aside>
 
@@ -353,6 +431,17 @@
                 </div>
             </div>
 
+            {# ── Flash Messages Globaux ── #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'success' ? 'success' : (label == 'error' ? 'danger' : label) }} alert-dismissible fade show mb-3">
+                        <i class="fas fa-{{ label == 'success' ? 'check-circle' : 'exclamation-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
             {# ── Main Body Content ── #}
             {% block body %}{% endblock %}
 
@@ -361,8 +450,8 @@
         {# ── Footer ── #}
         <footer class="admin-footer">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <p class="mb-0">&copy; {{ "now"|date("Y") }} <strong class="text-accent">Tun'Arche</strong>. All rights reserved.</p>
-                <p class="mb-0 small">Crafted with <i class="fas fa-heart text-danger"></i> for Arts & Events</p>
+                <p class="mb-0">© {{ "now"|date("Y") }} <strong class="text-accent">Tun'Arche</strong>. All rights reserved.</p>
+                <p class="mb-0 small">Crafted with <i class="fas fa-heart text-danger"></i> for Arts &amp; Events</p>
             </div>
         </footer>
     </main>

@@ -1,0 +1,24 @@
+{{ form_start(form) }}
+    <div class="mb-3">
+        {{ form_label(form.formation, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+        {{ form_widget(form.formation, {'attr': {'class': 'form-select'}}) }}
+    </div>
+    <div class="mb-3">
+        {{ form_label(form.titre, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+        {{ form_widget(form.titre, {'attr': {'class': 'form-control', 'placeholder': 'Titre de l\'avis'}}) }}
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            {{ form_label(form.note, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+            {{ form_widget(form.note, {'attr': {'class': 'form-control'}}) }}
+        </div>
+        <div class="col-md-8 mb-3">
+            {{ form_label(form.commentaire, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+            {{ form_widget(form.commentaire, {'attr': {'class': 'form-control', 'rows': 4}}) }}
+        </div>
+    </div>
+    <hr>
+    <button class="btn btn-warning w-100 fw-bold">
+        <i class="fas fa-sync-alt me-1"></i> {{ button_label|default('Enregistrer') }}
+    </button>
+{{ form_end(form) }}

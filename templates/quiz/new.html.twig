@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-4">
+    <h2>Créer un Quiz</h2>
+
+    {{ include('quiz/_form.html.twig') }}
+
+    <a href="{{ path('app_admin_quiz_index') }}" class="btn btn-secondary mt-3">Retour</a>
+</div>
+{% endblock %}

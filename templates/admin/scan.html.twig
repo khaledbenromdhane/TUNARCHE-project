@@ -1,0 +1,458 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Scanner QR Code{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .scan-page { max-width: 900px; margin: 0 auto; }
+
+    .scanner-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid rgba(184,134,11,0.3);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .scanner-header {
+        background: rgba(184,134,11,0.1);
+        border-bottom: 1px solid rgba(184,134,11,0.2);
+        padding: 20px 24px;
+    }
+    .scanner-header h2 {
+        color: #b8860b;
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.4rem;
+    }
+    .scanner-header p {
+        color: #aaa;
+        margin: 4px 0 0;
+        font-size: 0.85rem;
+    }
+    .scanner-body { padding: 24px; }
+
+    /* Camera view */
+    #reader {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2px solid rgba(184,134,11,0.4);
+    }
+    #reader video { border-radius: 12px; }
+
+    /* Status banner */
+    .scan-status {
+        margin-top: 16px;
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        display: none;
+        animation: fadeInUp 0.3s ease;
+    }
+    .scan-status.success {
+        display: block;
+        background: rgba(40,167,69,0.15);
+        border: 1px solid rgba(40,167,69,0.4);
+        color: #28a745;
+    }
+    .scan-status.error {
+        display: block;
+        background: rgba(255,76,76,0.15);
+        border: 1px solid rgba(255,76,76,0.4);
+        color: #ff4c4c;
+    }
+    .scan-status.warning {
+        display: block;
+        background: rgba(255,193,7,0.15);
+        border: 1px solid rgba(255,193,7,0.4);
+        color: #ffc107;
+    }
+    .scan-status.info {
+        display: block;
+        background: rgba(23,162,184,0.15);
+        border: 1px solid rgba(23,162,184,0.4);
+        color: #17a2b8;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scanned table */
+    .scanned-table-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border: 1px solid rgba(184,134,11,0.3);
+        border-radius: 16px;
+        overflow: hidden;
+        margin-top: 24px;
+    }
+    .scanned-table-card .card-header-scan {
+        background: rgba(184,134,11,0.1);
+        border-bottom: 1px solid rgba(184,134,11,0.2);
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .scanned-table-card .card-header-scan h5 {
+        color: #b8860b;
+        font-weight: 700;
+        margin: 0;
+    }
+    .scanned-count {
+        background: rgba(184,134,11,0.2);
+        color: #b8860b;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    #scannedTableBody tr {
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    #scannedTableBody td {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        vertical-align: middle;
+        color: #ccc;
+    }
+    .badge-confirmed {
+        background: rgba(40,167,69,0.2);
+        color: #28a745;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-already {
+        background: rgba(255,193,7,0.2);
+        color: #ffc107;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-carte {
+        background: rgba(23,162,184,0.2);
+        color: #17a2b8;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+    .badge-cash {
+        background: rgba(108,117,125,0.2);
+        color: #adb5bd;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+    .badge-gratuit {
+        background: rgba(111,66,193,0.2);
+        color: #a78bfa;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+    }
+    .empty-scan-msg {
+        text-align: center;
+        color: #666;
+        padding: 30px;
+        font-style: italic;
+    }
+
+    /* Button styles */
+    .btn-scan-toggle {
+        background: linear-gradient(135deg, #b8860b, #d4a017);
+        border: none;
+        color: #1a1a2e;
+        font-weight: 700;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+    .btn-scan-toggle:hover {
+        background: linear-gradient(135deg, #d4a017, #b8860b);
+        transform: translateY(-1px);
+        color: #1a1a2e;
+    }
+    .btn-scan-stop {
+        background: linear-gradient(135deg, #dc3545, #c82333) !important;
+        color: #fff !important;
+    }
+
+    /* Manual input */
+    .manual-input-group input {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(184,134,11,0.3);
+        color: #fff;
+        border-radius: 8px 0 0 8px;
+    }
+    .manual-input-group input::placeholder { color: #666; }
+    .manual-input-group input:focus {
+        background: rgba(255,255,255,0.08);
+        border-color: #b8860b;
+        box-shadow: 0 0 0 2px rgba(184,134,11,0.2);
+        color: #fff;
+    }
+    .manual-input-group .btn {
+        border-radius: 0 8px 8px 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+        .scanner-header { padding: 14px 16px; }
+        .scanner-body { padding: 16px; }
+        #reader { max-width: 100%; }
+        .scan-page { padding: 0 4px; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="scan-page p-3 p-md-4">
+
+    {# ── Scanner Card ── #}
+    <div class="scanner-card">
+        <div class="scanner-header">
+            <h2><i class="fas fa-qrcode me-2"></i>Scanner QR Code</h2>
+            <p>Scannez le QR code d'un participant pour confirmer sa présence</p>
+        </div>
+        <div class="scanner-body text-center">
+
+            <button type="button" class="btn btn-scan-toggle mb-3" id="btnStartScan">
+                <i class="fas fa-camera me-2"></i>Démarrer le scanner
+            </button>
+
+            <div id="reader"></div>
+
+            <div id="scanStatus" class="scan-status"></div>
+
+            {# ── Manual ID input fallback ── #}
+            <div class="manual-input-group mt-3">
+                <label class="text-muted small mb-1 d-block">Ou saisir l'ID manuellement :</label>
+                <div class="input-group" style="max-width:340px;margin:0 auto;">
+                    <input type="number" id="manualId" class="form-control" placeholder="ID participation…" min="1">
+                    <button class="btn btn-scan-toggle" type="button" id="btnManualVerify">
+                        <i class="fas fa-check me-1"></i>Vérifier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Scanned Entries Table ── #}
+    <div class="scanned-table-card">
+        <div class="card-header-scan">
+            <h5><i class="fas fa-list-check me-2"></i>Participations scannées</h5>
+            <span class="scanned-count" id="scannedCount">0</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(184,134,11,0.3);">
+                        <th style="color:#b8860b;font-size:0.8rem;padding:12px 14px;">#ID</th>
+                        <th style="color:#b8860b;font-size:0.8rem;padding:12px 14px;">Événement</th>
+                        <th style="color:#b8860b;font-size:0.8rem;padding:12px 14px;">Places</th>
+                        <th style="color:#b8860b;font-size:0.8rem;padding:12px 14px;">Paiement</th>
+                        <th style="color:#b8860b;font-size:0.8rem;padding:12px 14px;">Statut</th>
+                        <th style="color:#b8860b;font-size:0.8rem;padding:12px 14px;">Scanné à</th>
+                    </tr>
+                </thead>
+                <tbody id="scannedTableBody">
+                    <tr id="emptyRow">
+                        <td colspan="6" class="empty-scan-msg">
+                            <i class="fas fa-camera-retro me-2"></i>Aucun QR code scanné pour le moment
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ── html5-qrcode library ── #}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+(function() {
+    var scanner = null;
+    var isScanning = false;
+    var scannedIds = new Set();
+    var scanCount = 0;
+    var processingQr = false;
+
+    var btnStart   = document.getElementById('btnStartScan');
+    var statusEl   = document.getElementById('scanStatus');
+    var tableBody  = document.getElementById('scannedTableBody');
+    var emptyRow   = document.getElementById('emptyRow');
+    var countEl    = document.getElementById('scannedCount');
+    var btnManual  = document.getElementById('btnManualVerify');
+    var manualInput = document.getElementById('manualId');
+
+    // ── Load previously scanned participations from DB ──
+    fetch('{{ path("app_admin_scan_list") }}')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.results && d.results.length > 0) {
+                d.results.forEach(function(p) {
+                    addRow(p, false, false, true);
+                });
+            }
+        })
+        .catch(function() {});
+
+    // ── Toggle scanner ──
+    btnStart.addEventListener('click', function() {
+        if (isScanning) {
+            stopScanner();
+        } else {
+            startScanner();
+        }
+    });
+
+    function startScanner() {
+        scanner = new Html5Qrcode('reader');
+        scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccess,
+            function() {}
+        ).then(function() {
+            isScanning = true;
+            btnStart.innerHTML = '<i class="fas fa-stop me-2"></i>Arrêter le scanner';
+            btnStart.classList.add('btn-scan-stop');
+        }).catch(function(err) {
+            showStatus('error', '<i class="fas fa-times-circle me-2"></i>Impossible d\'accéder à la caméra. Vérifiez les permissions.');
+        });
+    }
+
+    function stopScanner() {
+        if (scanner) {
+            scanner.stop().then(function() {
+                scanner.clear();
+                isScanning = false;
+                btnStart.innerHTML = '<i class="fas fa-camera me-2"></i>Démarrer le scanner';
+                btnStart.classList.remove('btn-scan-stop');
+            });
+        }
+    }
+
+    // ── QR detected ──
+    function onScanSuccess(decodedText) {
+        if (processingQr) return;
+        processingQr = true;
+
+        // Beep sound feedback
+        try {
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            var osc = ctx.createOscillator();
+            osc.frequency.value = 880;
+            osc.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.12);
+        } catch(e) {}
+
+        verifyQr(decodedText);
+    }
+
+    // ── Manual verify ──
+    btnManual.addEventListener('click', function() {
+        var id = manualInput.value.trim();
+        if (!id) return;
+        verifyQr('SCAN:' + id);
+        manualInput.value = '';
+    });
+    manualInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') btnManual.click();
+    });
+
+    // ── Call backend ──
+    function verifyQr(qrText) {
+        showStatus('info', '<i class="fas fa-spinner fa-spin me-2"></i>Vérification en cours…');
+
+        fetch('{{ path("app_admin_scan_verify") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ qr: qrText })
+        })
+        .then(function(resp) { return resp.json().then(function(d) { return { ok: resp.ok, data: d }; }); })
+        .then(function(result) {
+            var d = result.data;
+
+            if (d.already_scanned) {
+                showStatus('warning', '<i class="fas fa-exclamation-triangle me-2"></i>' + d.message);
+                if (d.participation && !scannedIds.has(d.participation.id)) {
+                    addRow(d.participation, false, true);
+                }
+            } else if (d.success) {
+                var icon = d.confirmed_now ? 'fa-check-circle' : 'fa-info-circle';
+                showStatus('success', '<i class="fas ' + icon + ' me-2"></i>' + d.message);
+                if (d.participation && !scannedIds.has(d.participation.id)) {
+                    addRow(d.participation, d.confirmed_now, false);
+                }
+            } else {
+                showStatus('error', '<i class="fas fa-times-circle me-2"></i>' + d.message);
+            }
+
+            setTimeout(function() { processingQr = false; }, 2000);
+        })
+        .catch(function(err) {
+            showStatus('error', '<i class="fas fa-times-circle me-2"></i>Erreur réseau: ' + err);
+            setTimeout(function() { processingQr = false; }, 2000);
+        });
+    }
+
+    function showStatus(type, html) {
+        statusEl.className = 'scan-status ' + type;
+        statusEl.innerHTML = html;
+        statusEl.style.display = 'block';
+    }
+
+    function addRow(p, confirmedNow, alreadyScanned, fromHistory) {
+        if (scannedIds.has(p.id)) return; // skip duplicates
+        if (emptyRow) { emptyRow.remove(); emptyRow = null; }
+
+        scannedIds.add(p.id);
+        scanCount++;
+        countEl.textContent = scanCount;
+
+        var modeBadge = '';
+        if (p.modePaiement === 'Carte') modeBadge = '<span class="badge-carte">Carte</span>';
+        else if (p.modePaiement === 'Cash') modeBadge = '<span class="badge-cash">Cash</span>';
+        else modeBadge = '<span class="badge-gratuit">Gratuit</span>';
+
+        var statutBadge = '';
+        if (alreadyScanned) {
+            statutBadge = '<span class="badge-already"><i class="fas fa-exclamation-triangle me-1"></i>Déjà scanné</span>';
+        } else if (confirmedNow) {
+            statutBadge = '<span class="badge-confirmed"><i class="fas fa-check me-1"></i>Confirmée</span>';
+        } else {
+            statutBadge = '<span class="badge-confirmed">' + p.statut + '</span>';
+        }
+
+        var evtName = p.evenement ? p.evenement.nom : 'N/A';
+        var evtInfo = '';
+        if (p.evenement) {
+            evtInfo = '<div style="font-size:0.75rem;color:#888;">'
+                + (p.evenement.date || '') + ' ' + (p.evenement.heure || '') + ' — ' + (p.evenement.lieu || '')
+                + '</div>';
+        }
+
+        var tr = document.createElement('tr');
+        tr.style.animation = 'fadeInUp 0.3s ease';
+        tr.innerHTML = '<td style="font-weight:700;color:#b8860b;">#' + p.id + '</td>'
+            + '<td><strong style="color:#e0e0e0;">' + evtName + '</strong>' + evtInfo + '</td>'
+            + '<td>' + p.nbrParticipation + '</td>'
+            + '<td>' + modeBadge + '</td>'
+            + '<td>' + statutBadge + '</td>'
+            + '<td style="font-size:0.8rem;">' + (p.scannedAt || 'Maintenant') + '</td>';
+
+        tableBody.insertBefore(tr, tableBody.firstChild);
+    }
+
+})();
+</script>
+{% endblock %}

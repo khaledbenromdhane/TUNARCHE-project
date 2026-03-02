@@ -1,0 +1,35 @@
+<div class="portfolio-area-1 space overflow-hidden bg-title">           
+    <div class="container">
+        <div class="row justify-content-between text-lg-start text-center">
+            <div class="col-lg-8">
+                <div class="title-area wow custom-anim-left" data-wow-duration="1.5s" data-wow-delay="0.1s">
+                    <h2 class="sec-title text-white">Our Lets Stories</h2>
+                </div>
+            </div>
+            <div class="col-lg-auto">
+                <div class="icon-box mb-40">
+                    <button data-slick-prev=".portfolio-slider1" class="slick-arrow default">PREV</button>
+                    <button data-slick-next=".portfolio-slider1" class="slick-arrow default">NEXT</button>
+                </div>
+            </div>
+        </div>                
+    </div>
+    <div class="container-fluid wow custom-anim-top" data-wow-duration="1.5s" data-wow-delay="0.1s">
+        <div class="row global-carousel portfolio-slider1 gx-20" data-slide-show="3">
+            {% for i in 1..3 %}
+            <div class="col-lg-4">
+                <div class="portfolio-card ">
+                    <div class="portfolio-thumb">
+                        <a class="popup-image icon-btn" href="{{ asset('assets/img/portfolio/portfolio1_' ~ i ~ '.png') }}"><i class="far fa-eye"></i></a>
+                        <img src="{{ asset('assets/img/portfolio/portfolio1_' ~ i ~ '.png') }}" alt="portfolio">
+                    </div>
+                    <div class="portfolio-details">
+                        <h3 class="portfilio-card-title"><a href="#">Sculpting Dreams into Reality</a></h3>
+                        <a href="#" class="btn btn-border btn-radius">CARVER IN STONE</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

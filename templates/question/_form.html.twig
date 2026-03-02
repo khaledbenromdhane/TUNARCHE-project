@@ -1,0 +1,12 @@
+{{ form_start(form) }}
+    {{ form_row(form.questionText) }}
+    {{ form_row(form.choiceA) }}
+    {{ form_row(form.choiceB) }}
+    {{ form_row(form.choiceC) }}
+    {{ form_row(form.correctAnswer) }}
+    {{ form_row(form.quiz) }}
+
+    <button class="btn btn-primary">
+        {{ button_label|default('Enregistrer') }}
+    </button>
+{{ form_end(form) }}

@@ -1,0 +1,33 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block title %}Nouveau Quiz{% endblock %}
+{% block page_title %}Gestion des Quiz{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        {# card-success pour indiquer une création #}
+        <div class="card card-outline card-success shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-plus-circle me-2"></i> 
+                    Créer un nouveau Quiz
+                </h3>
+            </div>
+            
+            <div class="card-body">
+                {# On réutilise le formulaire partagé #}
+                {{ include('admin_quiz/_form.html.twig') }}
+            </div>
+
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-start">
+                    <a href="{{ path('app_admin_quiz_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i> Annuler et retourner à la liste
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

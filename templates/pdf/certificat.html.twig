@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: #fff;
+            color: #333;
+        }
+
+        .certificate {
+            width: 100%;
+            min-height: 100vh;
+            padding: 40px;
+            border: 12px solid #2c3e50;
+            box-sizing: border-box;
+            position: relative;
+            background: #fff;
+        }
+
+        .certificate::before {
+            content: '';
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border: 3px solid #c9a84c;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header .logo-text {
+            font-size: 13px;
+            color: #888;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            color: #2c3e50;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #c9a84c;
+            padding-bottom: 15px;
+            display: inline-block;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 20px 0;
+        }
+
+        .presented-to {
+            text-align: center;
+            font-size: 13px;
+            color: #555;
+            margin: 20px 0 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .recipient-name {
+            text-align: center;
+            font-size: 38px;
+            color: #c9a84c;
+            font-style: italic;
+            margin: 10px 0 25px;
+            font-family: 'Georgia', serif;
+        }
+
+        .body-text {
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.8;
+            margin: 15px auto;
+            max-width: 600px;
+        }
+
+        .formation-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px 30px;
+            border-top: 1px solid #c9a84c;
+            border-bottom: 1px solid #c9a84c;
+            display: inline-block;
+        }
+
+        .formation-wrap {
+            text-align: center;
+            margin: 10px 0 20px;
+        }
+
+        .score-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .score-badge {
+            display: inline-block;
+            background: #2c3e50;
+            color: #c9a84c;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 4px;
+            letter-spacing: 2px;
+        }
+
+        .badge-label {
+            display: inline-block;
+            margin-left: 10px;
+            background: #c9a84c;
+            color: #fff;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 40px;
+        }
+
+        .sign-block {
+            text-align: center;
+        }
+
+        .sign-line {
+            width: 180px;
+            border-top: 1px solid #333;
+            margin: 0 auto 5px;
+        }
+
+        .sign-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .date-block {
+            text-align: center;
+        }
+
+        .seal {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #c9a84c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            color: #c9a84c;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="certificate">
+
+    <div class="header">
+        <p class="logo-text">Plateforme de Formation Professionnelle</p>
+        <h1>Certificat de Réussite</h1>
+    </div>
+
+    <p class="subtitle">Ce certificat est décerné à</p>
+
+    <p class="recipient-name">{{ participantName }}</p>
+
+    <p class="body-text">
+        Pour avoir complété avec succès la formation et réussi l'évaluation associée
+        avec un résultat satisfaisant.
+    </p>
+
+    <div class="formation-wrap">
+        <span class="formation-name">{{ formation.nomForm }}</span>
+    </div>
+
+    <p class="body-text">
+        Type : <strong>{{ formation.type }}</strong> &nbsp;|&nbsp;
+        Date : <strong>{{ formation.dateForm ? formation.dateForm|date('d/m/Y') : 'N/A' }}</strong>
+    </p>
+
+    <div class="score-section">
+        <span class="score-badge">Score : {{ score }} / {{ total }}</span>
+        <span class="badge-label">{{ badge }}</span>
+    </div>
+
+    <div class="footer">
+        <div class="sign-block">
+            <div class="sign-line"></div>
+            <p class="sign-label">Directeur de Formation</p>
+        </div>
+
+        <div class="seal">
+            OFFICIEL
+        </div>
+
+        <div class="date-block">
+            <div class="sign-line"></div>
+            <p class="sign-label">Date : {{ "now"|date("d/m/Y") }}</p>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

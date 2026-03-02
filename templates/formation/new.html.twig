@@ -1,0 +1,15 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block page_title %}Nouvelle Formation{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card card-outline card-success">
+            <div class="card-body">
+                {{ include('formation/_form.html.twig') }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

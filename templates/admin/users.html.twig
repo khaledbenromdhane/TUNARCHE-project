@@ -44,7 +44,7 @@
             <div class="user-stat-card animate-in">
                 <div class="usc-icon gold"><i class="fas fa-users"></i></div>
                 <div class="usc-info">
-                    <span class="usc-value" data-counter="248">0</span>
+                    <span class="usc-value" data-counter="{{ totalCount }}">0</span>
                     <span class="usc-label">Total Users</span>
                 </div>
             </div>
@@ -53,7 +53,7 @@
             <div class="user-stat-card animate-in">
                 <div class="usc-icon purple"><i class="fas fa-user-shield"></i></div>
                 <div class="usc-info">
-                    <span class="usc-value" data-counter="12">0</span>
+                    <span class="usc-value" data-counter="{{ adminCount }}">0</span>
                     <span class="usc-label">Admins</span>
                 </div>
             </div>
@@ -62,7 +62,7 @@
             <div class="user-stat-card animate-in">
                 <div class="usc-icon teal"><i class="fas fa-palette"></i></div>
                 <div class="usc-info">
-                    <span class="usc-value" data-counter="86">0</span>
+                    <span class="usc-value" data-counter="{{ artistCount }}">0</span>
                     <span class="usc-label">Artists</span>
                 </div>
             </div>
@@ -71,7 +71,7 @@
             <div class="user-stat-card animate-in">
                 <div class="usc-icon gold"><i class="fas fa-user-check"></i></div>
                 <div class="usc-info">
-                    <span class="usc-value" data-counter="150">0</span>
+                    <span class="usc-value" data-counter="{{ participantCount }}">0</span>
                     <span class="usc-label">Participants</span>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                 <h3 class="admin-table-title mb-0">
                     <i class="fas fa-users me-2 text-accent"></i>All Users
                 </h3>
-                <span class="table-count-badge">248</span>
+                <span class="table-count-badge">{{ totalCount }}</span>
             </div>
             <div class="table-filters d-flex flex-wrap gap-2 align-items-center mt-3 mt-md-0">
                 <div class="search-input-wrap">
@@ -122,194 +122,52 @@
                 </thead>
                 <tbody id="usersTableBody">
 
-                    {# ── User Row 1 ── #}
-                    <tr data-user-id="1" data-role="admin">
+                    {% for u in users %}
+                    {% set roleLabel = 'participant' %}
+                    {% set roleIcon = 'fa-user' %}
+                    {% set roleClass = 'role-participant' %}
+                    {% if 'ROLE_ADMIN' in u.role %}
+                        {% set roleLabel = 'admin' %}
+                        {% set roleIcon = 'fa-shield-halved' %}
+                        {% set roleClass = 'role-admin' %}
+                    {% elseif 'ROLE_ARTIST' in u.role %}
+                        {% set roleLabel = 'artiste' %}
+                        {% set roleIcon = 'fa-palette' %}
+                        {% set roleClass = 'role-artiste' %}
+                    {% endif %}
+                    <tr data-user-id="{{ u.id }}" data-role="{{ roleLabel }}">
                         <td><input type="checkbox" class="form-check-input user-check"></td>
-                        <td class="user-id">#001</td>
+                        <td class="user-id">#{{ '%03d'|format(u.id) }}</td>
                         <td>
                             <div class="table-user">
-                                <img src="https://ui-avatars.com/api/?name=Laurent+Sophie&background=c9a84c&color=0a0a12&bold=true&size=36" class="table-user-avatar" alt="Avatar">
-                                <span class="table-user-name">Laurent</span>
+                                <img src="{{ u.avatarUrl }}" class="table-user-avatar" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name={{ u.prenom|url_encode }}+{{ u.nom|url_encode }}&background=c9a84c&color=fff&bold=true&size=36'">
+                                <span class="table-user-name">{{ u.nom }}</span>
                             </div>
                         </td>
-                        <td>Sophie</td>
+                        <td>{{ u.prenom }}</td>
                         <td>
                             <span class="user-email">
-                                <i class="fas fa-envelope me-1 text-muted"></i>sophie.laurent@email.com
+                                <i class="fas fa-envelope me-1 text-muted"></i>{{ u.email }}
                             </span>
                         </td>
-                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 22 345 678</span></td>
-                        <td><span class="role-badge role-admin"><i class="fas fa-shield-halved me-1"></i>Admin</span></td>
+                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>{{ u.telephone }}</span></td>
+                        <td><span class="role-badge {{ roleClass }}"><i class="fas {{ roleIcon }} me-1"></i>{{ roleLabel|capitalize }}</span></td>
                         <td>
                             <div class="table-actions">
-                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="1"><i class="fas fa-eye"></i></button>
-                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="1"><i class="fas fa-pen-to-square"></i></button>
-                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="1" data-user-name="Sophie Laurent"><i class="fas fa-trash-can"></i></button>
+                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="{{ u.id }}"><i class="fas fa-eye"></i></button>
+                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip"
+                                    data-user-id="{{ u.id }}"
+                                    data-nom="{{ u.nom }}"
+                                    data-prenom="{{ u.prenom }}"
+                                    data-email="{{ u.email }}"
+                                    data-telephone="{{ u.telephone }}"
+                                    data-role="{{ roleLabel }}"
+                                ><i class="fas fa-pen-to-square"></i></button>
+                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="{{ u.id }}" data-user-name="{{ u.prenom }} {{ u.nom }}"><i class="fas fa-trash-can"></i></button>
                             </div>
                         </td>
                     </tr>
-
-                    {# ── User Row 2 ── #}
-                    <tr data-user-id="2" data-role="artiste">
-                        <td><input type="checkbox" class="form-check-input user-check"></td>
-                        <td class="user-id">#002</td>
-                        <td>
-                            <div class="table-user">
-                                <img src="https://ui-avatars.com/api/?name=Benali+Ahmed&background=7c5cbf&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
-                                <span class="table-user-name">Benali</span>
-                            </div>
-                        </td>
-                        <td>Ahmed</td>
-                        <td>
-                            <span class="user-email">
-                                <i class="fas fa-envelope me-1 text-muted"></i>ahmed.benali@email.com
-                            </span>
-                        </td>
-                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 55 123 456</span></td>
-                        <td><span class="role-badge role-artiste"><i class="fas fa-palette me-1"></i>Artiste</span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="2"><i class="fas fa-eye"></i></button>
-                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="2"><i class="fas fa-pen-to-square"></i></button>
-                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="2" data-user-name="Ahmed Benali"><i class="fas fa-trash-can"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {# ── User Row 3 ── #}
-                    <tr data-user-id="3" data-role="participant">
-                        <td><input type="checkbox" class="form-check-input user-check"></td>
-                        <td class="user-id">#003</td>
-                        <td>
-                            <div class="table-user">
-                                <img src="https://ui-avatars.com/api/?name=Dubois+Clara&background=2ec4b6&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
-                                <span class="table-user-name">Dubois</span>
-                            </div>
-                        </td>
-                        <td>Clara</td>
-                        <td>
-                            <span class="user-email">
-                                <i class="fas fa-envelope me-1 text-muted"></i>clara.dubois@email.com
-                            </span>
-                        </td>
-                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 98 765 432</span></td>
-                        <td><span class="role-badge role-participant"><i class="fas fa-user me-1"></i>Participant</span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="3"><i class="fas fa-eye"></i></button>
-                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="3"><i class="fas fa-pen-to-square"></i></button>
-                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="3" data-user-name="Clara Dubois"><i class="fas fa-trash-can"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {# ── User Row 4 ── #}
-                    <tr data-user-id="4" data-role="artiste">
-                        <td><input type="checkbox" class="form-check-input user-check"></td>
-                        <td class="user-id">#004</td>
-                        <td>
-                            <div class="table-user">
-                                <img src="https://ui-avatars.com/api/?name=Mabrouk+Lina&background=9b7fd4&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
-                                <span class="table-user-name">Mabrouk</span>
-                            </div>
-                        </td>
-                        <td>Lina</td>
-                        <td>
-                            <span class="user-email">
-                                <i class="fas fa-envelope me-1 text-muted"></i>lina.mabrouk@email.com
-                            </span>
-                        </td>
-                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 27 891 234</span></td>
-                        <td><span class="role-badge role-artiste"><i class="fas fa-palette me-1"></i>Artiste</span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="4"><i class="fas fa-eye"></i></button>
-                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="4"><i class="fas fa-pen-to-square"></i></button>
-                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="4" data-user-name="Lina Mabrouk"><i class="fas fa-trash-can"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {# ── User Row 5 ── #}
-                    <tr data-user-id="5" data-role="admin">
-                        <td><input type="checkbox" class="form-check-input user-check"></td>
-                        <td class="user-id">#005</td>
-                        <td>
-                            <div class="table-user">
-                                <img src="https://ui-avatars.com/api/?name=Fontaine+Marc&background=c9a84c&color=0a0a12&bold=true&size=36" class="table-user-avatar" alt="Avatar">
-                                <span class="table-user-name">Fontaine</span>
-                            </div>
-                        </td>
-                        <td>Marc</td>
-                        <td>
-                            <span class="user-email">
-                                <i class="fas fa-envelope me-1 text-muted"></i>marc.fontaine@email.com
-                            </span>
-                        </td>
-                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 50 432 876</span></td>
-                        <td><span class="role-badge role-admin"><i class="fas fa-shield-halved me-1"></i>Admin</span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="5"><i class="fas fa-eye"></i></button>
-                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="5"><i class="fas fa-pen-to-square"></i></button>
-                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="5" data-user-name="Marc Fontaine"><i class="fas fa-trash-can"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {# ── User Row 6 ── #}
-                    <tr data-user-id="6" data-role="participant">
-                        <td><input type="checkbox" class="form-check-input user-check"></td>
-                        <td class="user-id">#006</td>
-                        <td>
-                            <div class="table-user">
-                                <img src="https://ui-avatars.com/api/?name=Trabelsi+Yassine&background=2ec4b6&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
-                                <span class="table-user-name">Trabelsi</span>
-                            </div>
-                        </td>
-                        <td>Yassine</td>
-                        <td>
-                            <span class="user-email">
-                                <i class="fas fa-envelope me-1 text-muted"></i>yassine.trabelsi@email.com
-                            </span>
-                        </td>
-                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 92 111 333</span></td>
-                        <td><span class="role-badge role-participant"><i class="fas fa-user me-1"></i>Participant</span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="6"><i class="fas fa-eye"></i></button>
-                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="6"><i class="fas fa-pen-to-square"></i></button>
-                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="6" data-user-name="Yassine Trabelsi"><i class="fas fa-trash-can"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {# ── User Row 7 ── #}
-                    <tr data-user-id="7" data-role="artiste">
-                        <td><input type="checkbox" class="form-check-input user-check"></td>
-                        <td class="user-id">#007</td>
-                        <td>
-                            <div class="table-user">
-                                <img src="https://ui-avatars.com/api/?name=Chaker+Nour&background=e74c3c&color=fff&bold=true&size=36" class="table-user-avatar" alt="Avatar">
-                                <span class="table-user-name">Chaker</span>
-                            </div>
-                        </td>
-                        <td>Nour</td>
-                        <td>
-                            <span class="user-email">
-                                <i class="fas fa-envelope me-1 text-muted"></i>nour.chaker@email.com
-                            </span>
-                        </td>
-                        <td><span class="user-phone"><i class="fas fa-phone me-1 text-muted"></i>+216 23 456 789</span></td>
-                        <td><span class="role-badge role-artiste"><i class="fas fa-palette me-1"></i>Artiste</span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="table-action-btn view-btn" title="View" data-bs-toggle="tooltip" data-user-id="7"><i class="fas fa-eye"></i></button>
-                                <button class="table-action-btn edit-btn" title="Edit" data-bs-toggle="tooltip" data-user-id="7"><i class="fas fa-pen-to-square"></i></button>
-                                <button class="table-action-btn delete delete-btn" title="Delete" data-bs-toggle="tooltip" data-user-id="7" data-user-name="Nour Chaker"><i class="fas fa-trash-can"></i></button>
-                            </div>
-                        </td>
-                    </tr>
+                    {% endfor %}
 
                 </tbody>
             </table>
@@ -318,23 +176,8 @@
         {# ── Table Footer / Pagination ── #}
         <div class="admin-table-footer">
             <div class="table-footer-info">
-                Showing <strong>1–7</strong> of <strong>248</strong> users
+                Showing <strong>{{ users|length }}</strong> users
             </div>
-            <nav aria-label="Users pagination">
-                <ul class="pagination admin-pagination mb-0">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" aria-label="Previous"><i class="fas fa-chevron-left"></i></a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">…</a></li>
-                    <li class="page-item"><a class="page-link" href="#">36</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#" aria-label="Next"><i class="fas fa-chevron-right"></i></a>
-                    </li>
-                </ul>
-            </nav>
         </div>
     </div>
 
@@ -542,5 +385,14 @@
 {% endblock %}
 
 {% block javascripts %}
+    <script>
+        const USER_URLS = {
+            search: '{{ path("app_admin_user_search") }}',
+            create: '{{ path("app_admin_user_create") }}',
+            update: '{{ path("app_admin_user_update", {id: 0}) }}'.replace('/0', ''),
+            delete: '{{ path("app_admin_user_delete", {id: 0}) }}'.replace('/0', ''),
+            get:    '{{ path("app_admin_user_get",    {id: 0}) }}'.replace('/0', '')
+        };
+    </script>
     <script src="{{ asset('assets/js/admin-users.js') }}"></script>
 {% endblock %}

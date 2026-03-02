@@ -1,0 +1,49 @@
+{{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+
+    <div class="mb-3">
+        {{ form_label(form.nomForm, null, {'label_attr': {'class': 'form-label'}}) }}
+        {{ form_widget(form.nomForm, {'attr': {'class': form.nomForm.vars.errors|length > 0 ? 'form-control is-invalid' : 'form-control'}}) }}
+        <div class="invalid-feedback">{{ form_errors(form.nomForm) }}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.dateForm) }}
+            {{ form_widget(form.dateForm, {'attr': {'class': form.dateForm.vars.errors|length > 0 ? 'form-control is-invalid' : 'form-control'}}) }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form_label(form.type) }}
+            {{ form_widget(form.type, {'attr': {'class': 'form-select'}}) }}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(form.description) }}
+        {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+    </div>
+
+   
+    <div class="mb-3">
+        <label class="form-label fw-bold">
+            <i class="fas fa-image me-1"></i> Image de la formation
+        </label>
+
+   
+        {% if form.vars.data.imageName %}
+            <div class="mb-2">
+                <img src="{{ asset('uploads/formations/' ~ form.vars.data.imageName) }}"
+                     alt="Image actuelle"
+                     style="max-width: 200px; border-radius: 8px; border: 1px solid #ddd; padding: 4px;">
+                <p class="text-muted small mt-1">Image actuelle</p>
+            </div>
+        {% endif %}
+
+        {{ form_widget(form.imageFile, {'attr': {'class': 'form-control'}}) }}
+        <div class="form-text text-muted">Formats acceptés : JPG, PNG, WEBP. Max 2MB.</div>
+    </div>
+
+    <button class="btn btn-primary">
+        <i class="fas fa-save"></i> {{ button_label|default('Enregistrer') }}
+    </button>
+
+{{ form_end(form) }}

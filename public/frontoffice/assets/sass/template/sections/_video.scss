@@ -1,0 +1,65 @@
+/* Video global ---------------------------------- */ 
+.video-wrap {
+    position: relative;
+    .play-btn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+    @include md {
+        .play-btn > i {
+            --icon-size: 80px;
+            --icon-font-size: 20px;
+        }
+    }
+    @include xs {
+        .play-btn > i {
+            --icon-size: 60px;
+            --icon-font-size: 16px;
+        }
+    } 
+}
+/* Video 1 ---------------------------------- */ 
+.video-wrap1 {
+    padding: 190px 0;
+    .play-btn {
+        border: 1px solid $white-color;
+        width: 256px;
+        height: 256px;
+        border-radius: 50%;
+        line-height: 256px;
+        text-align: center;
+        &:after,
+        &:before {
+            display: none;
+        }
+        img {
+            margin-left: 20px;
+        }
+    }
+    @include lg {
+        padding: 100px 0;
+        .play-btn {
+            width: 150px;
+            height: 150px;
+            line-height: 150px;
+            img {
+                width: 40px;
+                margin-left: 10px;
+            }
+        }
+    }
+    @include xs {
+        padding: 80px 0;
+        .play-btn {
+            width: 100px;
+            height: 100px;
+            line-height: 100px;
+            img {
+                width: 30px;
+                margin-left: 5px;
+            }
+        }
+    }
+}

@@ -1,39 +1,78 @@
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    # ═══════════════════════════════════════════════════════════
+    # Password Hasher — BCRYPT
+    # ✅ FIX LOGIN : doit correspondre à l'algo utilisé dans les controllers
+    # ═══════════════════════════════════════════════════════════
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+        App\Entity\User:
+            algorithm: bcrypt
+            cost: 12
+
+    # ═══════════════════════════════════════════════════════════
+    # User Provider
+    # ═══════════════════════════════════════════════════════════
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    # ═══════════════════════════════════════════════════════════
+    # Firewalls
+    # ═══════════════════════════════════════════════════════════
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
         main:
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
+            # Formulaire de connexion
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                username_parameter: _username
+                password_parameter: _password
+                default_target_path: app_home
+                always_use_default_target_path: false
+                enable_csrf: true
 
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            # Déconnexion
+            logout:
+                path: app_logout
+                target: app_login
+                invalidate_session: true
 
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
+            # Se souvenir de moi
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+                remember_me_parameter: _remember_me
+
+            # Google OAuth — Custom authenticator
+            custom_authenticators:
+                - App\Security\GoogleAuthenticator
+
+    # ═══════════════════════════════════════════════════════════
+    # Contrôle d'accès
+    # ═══════════════════════════════════════════════════════════
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/forgot-password, roles: PUBLIC_ACCESS }
+        - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+        - { path: ^/connect/google, roles: PUBLIC_ACCESS }
+        - { path: ^/home, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/profile, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/user, roles: IS_AUTHENTICATED_FULLY }
 
-when@test:
-    security:
-        password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon
+    # ═══════════════════════════════════════════════════════════
+    # Hiérarchie des rôles
+    # ═══════════════════════════════════════════════════════════
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_USER, ROLE_ARTIST]
+        ROLE_ARTIST: ROLE_USER

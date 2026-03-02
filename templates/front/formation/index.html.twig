@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nos Formations - Artvista{% endblock %}
+
+{% block body %}
+<div class="formation-area space overflow-hidden">
+    <div class="container">
+        <div class="title-area text-center wow custom-anim-top">
+            <span class="sub-title">NOS PROGRAMMES</span>
+            <h2 class="sec-title">Explorez nos Formations</h2>
+        </div>
+        
+        <div class="row gy-40">
+            {% for formation in formations %}
+                <div class="col-xl-4 col-md-6">
+                    <div class="course-card wow custom-anim-top" style="border: 1px solid #eee; padding: 20px; border-radius: 10px; height: 100%; display: flex; flex-direction: column;">
+                        
+                        <div class="course-content" style="flex-grow: 1;">
+                            <div class="course-meta mb-10">
+                                <span class="tag" style="background: #f3f3f3; padding: 5px 10px; font-size: 11px; border-radius: 5px;">
+                                    <i class="fas fa-tag"></i> {{ formation.type }}
+                                </span>
+                                <span class="date" style="margin-left: 15px; font-size: 11px; color: #777;">
+                                    <i class="fas fa-calendar-alt"></i> {{ formation.dateForm|date('d/m/Y') }}
+                                </span>
+                            </div>
+                            
+                            <h3 class="course-title" style="font-size: 18px; margin: 10px 0;">
+                                <a href="#">{{ formation.nomForm }}</a>
+                            </h3>
+                            
+                            <p class="course-text" style="font-size: 13px; color: #666; line-height: 1.4;">
+                                {{ formation.description|slice(0, 80) }}...
+                            </p>
+
+                            <div class="course-footer" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <a href="#" class="btn btn-sm" style="padding: 8px 15px; font-size: 12px;">S'INSCRIRE</a>
+                                <span class="eval-count" style="font-size: 12px; font-weight: bold;">
+                                    <i class="fas fa-star text-theme" style="color: #dca668;"></i> {{ formation.evaluations|length }} avis
+                                </span>
+                            </div>
+
+                            {# ✅ QUIZ BUTTON #}
+                            {% if formation.quizzes|length > 0 %}
+                                <div class="mb-3">
+                                    {% for quiz in formation.quizzes %}
+                                        <a href="{{ path('quiz_pass', {'id': quiz.id}) }}"
+                                           style="display: block; background: #dca668; color: #fff; text-align: center; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; margin-bottom: 5px;">
+                                            <i class="fas fa-question-circle me-1"></i> Passer le Quiz : {{ quiz.title }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="mb-3">
+                                    <span style="display: block; background: #f3f3f3; color: #aaa; text-align: center; padding: 8px 15px; border-radius: 6px; font-size: 12px;">
+                                        <i class="fas fa-clock me-1"></i> Quiz bientôt disponible
+                                    </span>
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                        <div class="evaluation-box" style="background: #fafafa; padding: 15px; border-radius: 8px; margin-top: auto;">
+                            <h4 style="font-size: 14px; margin-bottom: 10px;">Laisser un avis</h4>
+                            <form action="{{ path('app_formation_evaluer', {'id': formation.id}) }}" method="POST">
+                                <div class="mb-2">
+                                    <select name="note" class="form-select form-select-sm" required>
+                                        <option value="">Donner une note...</option>
+                                        <option value="5">⭐⭐⭐⭐⭐</option>
+                                        <option value="4">⭐⭐⭐⭐</option>
+                                        <option value="3">⭐⭐⭐</option>
+                                        <option value="2">⭐⭐</option>
+                                        <option value="1">⭐</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <input type="text" name="commentaire" class="form-control form-control-sm"
+                                           placeholder="Avis (min. 10 car.)" minlength="10" required>
+                                    <button type="submit" class="btn btn-sm">OK</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center">
+                    <p>Aucune formation n'est disponible pour le moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

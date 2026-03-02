@@ -1,0 +1,224 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Statistiques des ventes{% endblock %}
+{% block page_title %}Statistiques des ventes d'œuvres{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Statistiques ventes</li>
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ path('app_admin_oeuvre_index') }}" class="btn btn-admin-outline btn-sm">
+        <i class="fas fa-palette me-1"></i> Liste des œuvres
+    </a>
+    <a href="{{ path('app_admin_oeuvre_export_vendues') }}" class="btn btn-outline-success btn-sm">
+        <i class="fas fa-file-excel me-1"></i> Exporter Excel
+    </a>
+{% endblock %}
+
+{% block body %}
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-table-card h-100 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 bg-success bg-opacity-25 p-3 me-3">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Œuvres vendues</p>
+                        <h3 class="mb-0">{{ stats.nb_vendues }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-table-card h-100 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 bg-primary bg-opacity-25 p-3 me-3">
+                        <i class="fas fa-box-open fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Œuvres disponibles</p>
+                        <h3 class="mb-0">{{ stats.nb_disponibles }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-table-card h-100 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 bg-warning bg-opacity-25 p-3 me-3">
+                        <i class="fas fa-coins fa-2x text-warning"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Chiffre d'affaires total (DT)</p>
+                        <h3 class="mb-0">{{ stats.total_revenus|number_format(2, ',', ' ') }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="admin-table-card h-100 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-3 bg-info bg-opacity-25 p-3 me-3">
+                        <i class="fas fa-chart-line fa-2x text-info"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small mb-0">Prix moyen (DT)</p>
+                        <h3 class="mb-0">{{ stats.prix_moyen|number_format(2, ',', ' ') }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="admin-table-card h-100">
+                <div class="admin-table-header">
+                    <h3 class="admin-table-title mb-0"><i class="fas fa-calendar-alt me-2 text-accent"></i>Ventes par mois (date de vente)</h3>
+                </div>
+                <div class="p-4">
+                    <canvas id="chartVentesParMois" height="280"></canvas>
+                    {% if stats.ventes_par_mois is empty %}
+                        <p class="text-muted text-center py-4 mb-0">Aucune vente avec date enregistrée. Passez une œuvre en « Vendue » pour voir les statistiques par mois.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="admin-table-card h-100">
+                <div class="admin-table-header">
+                    <h3 class="admin-table-title mb-0"><i class="fas fa-pie-chart me-2 text-accent"></i>Disponible / Vendue</h3>
+                </div>
+                <div class="p-4">
+                    <canvas id="chartStatut" height="280"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="admin-table-card">
+                <div class="admin-table-header">
+                    <h3 class="admin-table-title mb-0"><i class="fas fa-images me-2 text-accent"></i>Chiffre d'affaires par galerie</h3>
+                </div>
+                <div class="p-4">
+                    <canvas id="chartRevenusGalerie" height="120"></canvas>
+                    {% if stats.revenus_par_galerie is empty %}
+                        <p class="text-muted text-center py-3 mb-0">Aucune vente pour l'instant.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var stats = {{ stats|json_encode|raw }};
+
+            // 1. Ventes par mois (bar chart: date + prix)
+            var ctxMois = document.getElementById('chartVentesParMois');
+            if (ctxMois && stats.ventes_par_mois && stats.ventes_par_mois.length > 0) {
+                new Chart(ctxMois, {
+                    type: 'bar',
+                    data: {
+                        labels: stats.ventes_par_mois.map(function(d) { return d.mois_label; }),
+                        datasets: [
+                            {
+                                label: 'Nombre de ventes',
+                                data: stats.ventes_par_mois.map(function(d) { return d.count; }),
+                                backgroundColor: 'rgba(201, 168, 76, 0.6)',
+                                borderColor: 'rgb(201, 168, 76)',
+                                borderWidth: 1,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Revenus (DT)',
+                                data: stats.ventes_par_mois.map(function(d) { return d.revenus; }),
+                                type: 'line',
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Nombre' } },
+                            y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Revenus (DT)' }, grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+            }
+
+            // 2. Pie Disponible / Vendue
+            var ctxStatut = document.getElementById('chartStatut');
+            if (ctxStatut) {
+                new Chart(ctxStatut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Disponible', 'Vendue'],
+                        datasets: [{
+                            data: [stats.nb_disponibles, stats.nb_vendues],
+                            backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+
+            // 3. Bar CA par galerie
+            var ctxGal = document.getElementById('chartRevenusGalerie');
+            if (ctxGal && stats.revenus_par_galerie && stats.revenus_par_galerie.length > 0) {
+                new Chart(ctxGal, {
+                    type: 'bar',
+                    data: {
+                        labels: stats.revenus_par_galerie.map(function(d) { return d.galerie; }),
+                        datasets: [{
+                            label: 'Revenus (DT)',
+                            data: stats.revenus_par_galerie.map(function(d) { return d.revenus; }),
+                            backgroundColor: 'rgba(201, 168, 76, 0.6)',
+                            borderColor: 'rgb(201, 168, 76)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { beginAtZero: true, title: { display: true, text: 'Revenus (DT)' } }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(context) {
+                                        var idx = context.dataIndex;
+                                        var item = stats.revenus_par_galerie[idx];
+                                        return item ? (item.count + ' œuvre(s) vendue(s)') : '';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

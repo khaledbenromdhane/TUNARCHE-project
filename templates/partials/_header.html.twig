@@ -1,0 +1,36 @@
+<header class="nav-header header-layout1">
+    <div class="sticky-wrapper">
+        <div class="menu-area">
+            <div class="container">
+                <div class="row align-items-center justify-content-between">
+                    <div class="col-auto">
+                        <div class="header-logo">
+                            {# Correction : app_home au lieu de home #}
+                            <a href="{{ path('app_home') }}">
+                                <img src="{{ asset('assets/img/logo.svg') }}" alt="Artvista">
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <nav class="main-menu d-none d-lg-inline-block">
+                            <ul>
+                                <li><a href="{{ path('app_home') }}">HOME</a></li>
+                                {# Lien vers votre nouvelle route front #}
+                                <li><a href="{{ path('app_formation_front') }}">FORMATIONS</a></li>
+                                <li><a href="#">EXHIBITIONS</a></li>
+                                <li><a href="#">EVENTS</a></li>
+                                <li><a href="#">ABOUT</a></li>
+                                <li><a href="#">SHOP</a></li>
+                            </ul>
+                        </nav>
+                        <div class="header-button">
+                            <button type="button" class="icon-btn searchBoxToggler"><i class="far fa-search"></i></button>
+                            <a href="#" class="icon-btn"><i class="far fa-shopping-cart"></i></a>
+                            <a href="#" class="btn d-none d-xl-inline-block">GET TICKETS</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

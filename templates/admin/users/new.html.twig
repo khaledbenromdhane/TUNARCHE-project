@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h2 class="mb-0">Créer un compte</h2>
+                    <p class="mb-0 mt-2 text-muted">Rejoignez-nous dès aujourd'hui</p>
+                </div>
+                <div class="card-body p-4">
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                    
+                    <div class="row">
+                        {# Nom #}
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.nom, 'Nom', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">
+                                {{ form_errors(form.nom) }}
+                            </div>
+                        </div>
+
+                        {# Prénom #}
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.prenom, 'Prénom', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.prenom, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">
+                                {{ form_errors(form.prenom) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        {# Email #}
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.email, 'Email', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">
+                                {{ form_errors(form.email) }}
+                            </div>
+                        </div>
+
+                        {# Téléphone #}
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.telephone, 'Téléphone', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                            {{ form_widget(form.telephone, {'attr': {'class': 'form-control'}}) }}
+                            <div class="text-danger small mt-1">
+                                {{ form_errors(form.telephone) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Mot de passe #}
+                    <div class="mb-3">
+                        {{ form_label(form.password, 'Mot de passe', {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                        {{ form_widget(form.password, {'attr': {'class': 'form-control'}}) }}
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i> Minimum 8 caractères, avec majuscule, minuscule et chiffre
+                        </small>
+                        <div class="text-danger small mt-1">
+                            {{ form_errors(form.password) }}
+                        </div>
+                    </div>
+
+                    {# ✅ CHOIX DU RÔLE - C'EST ICI QUE ÇA MANQUAIT ! #}
+                    <div class="mb-4">
+                        {{ form_label(form.role, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                        <div class="role-selection p-3 bg-light rounded">
+                            {% for choice in form.role %}
+                                <div class="form-check mb-2">
+                                    {{ form_widget(choice, {'attr': {'class': 'form-check-input'}}) }}
+                                    {{ form_label(choice, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-danger small mt-1">
+                            {{ form_errors(form.role) }}
+                        </div>
+                    </div>
+
+                    {# Bouton de soumission #}
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus"></i> S'INSCRIRE
+                        </button>
+                    </div>
+
+                    {{ form_end(form) }}
+
+                    {# Lien vers la connexion #}
+                    <div class="text-center mt-4">
+                        <p class="text-muted">
+                            Vous avez déjà un compte ? 
+                            <a href="{{ path('app_login') }}" class="text-decoration-none fw-bold">Se connecter</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .role-selection {
+        border: 1px solid #dee2e6;
+    }
+    
+    .form-check-input:checked {
+        background-color: #d4a574;
+        border-color: #d4a574;
+    }
+    
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}

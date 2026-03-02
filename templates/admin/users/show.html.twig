@@ -1,0 +1,136 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Détails Utilisateur{% endblock %}
+
+{% block page_title %}{{ user.prenom }} {{ user.nom }}{% endblock %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_admin_users_index') }}">Utilisateurs</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Détails #{{ user.id }}</li>
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ path('app_admin_users_edit', {'id': user.id}) }}" class="btn btn-gold">
+        <i class="fas fa-edit me-2"></i>Modifier
+    </a>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card admin-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Informations de l'Utilisateur
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4 mb-md-0">
+                            <img src="https://ui-avatars.com/api/?name={{ user.prenom }}+{{ user.nom }}&background=c9a84c&color=0a0a12&size=150&bold=true" 
+                                 alt="Avatar" 
+                                 class="rounded-circle mb-3">
+                            <h4>{{ user.prenom }} {{ user.nom }}</h4>
+                            <p class="text-muted">ID: #{{ user.id }}</p>
+                            
+                            {# Badges de rôles #}
+                            {% for role in user.role %}
+                                {% if role == 'ROLE_ADMIN' %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-shield-alt me-1"></i>Administrateur
+                                    </span>
+                                {% elseif role == 'ROLE_ARTIST' %}
+                                    <span class="badge bg-warning fs-6">
+                                        <i class="fas fa-palette me-1"></i>Artiste
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-primary fs-6">
+                                        <i class="fas fa-user me-1"></i>Utilisateur
+                                    </span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th width="30%">
+                                            <i class="fas fa-hashtag text-accent me-2"></i>ID
+                                        </th>
+                                        <td><strong>{{ user.id }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <i class="fas fa-user text-accent me-2"></i>Nom
+                                        </th>
+                                        <td>{{ user.nom }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <i class="fas fa-user text-accent me-2"></i>Prénom
+                                        </th>
+                                        <td>{{ user.prenom }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <i class="fas fa-envelope text-accent me-2"></i>Email
+                                        </th>
+                                        <td>
+                                            <a href="mailto:{{ user.email }}" class="text-accent">
+                                                {{ user.email }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <i class="fas fa-phone text-accent me-2"></i>Téléphone
+                                        </th>
+                                        <td>
+                                            <a href="tel:{{ user.telephone }}">
+                                                {{ user.telephone }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <i class="fas fa-shield-alt text-accent me-2"></i>Rôle(s)
+                                        </th>
+                                        <td>
+                                            {% for role in user.role %}
+                                                {% if role == 'ROLE_ADMIN' %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-shield-alt me-1"></i>Administrateur
+                                                    </span>
+                                                {% elseif role == 'ROLE_ARTIST' %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-palette me-1"></i>Artiste
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-primary">
+                                                        <i class="fas fa-user me-1"></i>Utilisateur
+                                                    </span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                        <a href="{{ path('app_admin_users_index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Retour à la Liste
+                        </a>
+                        <a href="{{ path('app_admin_users_edit', {'id': user.id}) }}" class="btn btn-gold">
+                            <i class="fas fa-edit me-2"></i>Modifier
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,153 @@
+/**gallery-card 1*****************/
+.single-gallery-card {
+	position: relative;
+	border-bottom: 1px solid $border-color;
+	padding: 85px 0;
+	.gallery-card-bg {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		opacity: 0;
+		transition: 0.4s;
+		&:after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: $black-color;
+			opacity: 0.7;
+		}
+	}
+	.gallery-card {
+		max-width: var(--main-container);
+		margin: 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 30px;
+		.card-title {
+			font-size: 48px;
+			font-weight: 600;
+			margin-bottom: 36px;
+			margin-top: -0.2em;
+			transition: 0.4s;
+			a {
+				color: $title-color;
+			}
+		}
+		.btn {
+			border-color: $title-color;
+			color: $title-color;
+		}	
+		.icon-btn {
+			--btn-size: 150px;
+			border-radius: 50%;
+			background: transparent;
+			border: 1px solid $theme-color;
+			color: $theme-color;
+			transition: 0.4s;
+			flex: none;
+			svg {
+				fill: $theme-color;
+				transform: rotate(-30deg);
+				transition: 0.4s;
+			}
+		}
+	}
+	&:hover {
+		.gallery-card-bg {
+			opacity: 1;
+		}
+		.gallery-card {
+			.card-title {
+				a {
+					color: $white-color;
+					&:hover {
+						color: $theme-color;
+					}
+				}
+			}
+			.btn {
+				border-color: $white-color;
+				color: $white-color;
+				&:before {
+					background: $white-color;
+				}
+				&:hover {
+					color: $theme-color;
+				}
+			}
+			.icon-btn {
+				border-color: $white-color;
+				color: $white-color;
+				svg {
+					fill: $white-color;
+				}
+				&:hover {
+					background: $white-color;
+					color: $theme-color;
+					svg {
+						fill: $theme-color;
+					}
+				}
+			}
+		}
+	}
+	@include ml {
+		.gallery-card {
+			max-width: 1140px;
+		}
+	}
+	@include lg {
+		.gallery-card {
+			max-width: 960px;
+			.card-title {
+				font-size: 40px;
+			}
+			.icon-btn {
+				--btn-size: 120px;
+			}
+		}
+	}
+	@include md {
+		padding: 60px 0;
+		.gallery-card {
+			max-width: 720px;
+			.card-title {
+				font-size: 36px;
+			}
+			.icon-btn {
+				--btn-size: 100px;
+				svg {
+					width: 50px;
+				}
+			}
+		}
+	}
+	@include sm {
+		.gallery-card {
+			max-width: 540px;
+			.card-title {
+				font-size: 30px;
+				margin-bottom: 30px;
+			}
+			.icon-btn {
+				--btn-size: 80px;
+				svg {
+					width: 40px;
+				}
+			}
+		}
+	}
+	@include xs {
+		padding: 50px 12px;
+		.gallery-card {
+			flex-wrap: wrap;
+		}
+		.icon-btn {
+			--btn-size: 60px;
+			svg {
+				width: 30px;
+			}
+		}
+	}
+}

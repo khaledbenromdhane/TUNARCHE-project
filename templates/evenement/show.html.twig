@@ -1,0 +1,168 @@
+{# ═══════════════════════════════════════════════════════════════
+   Evenement – Show (Detail View)
+   Route: GET /evenement/{id}
+═══════════════════════════════════════════════════════════════ #}
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ evenement.nom }}{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37; --gold-dark: #b8860b;
+            --purple: #a855f7; --bg-dark: #0a0a0f;
+            --bg-card: rgba(20,20,30,0.95); --border: rgba(212,175,55,0.15);
+        }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: #e0e0e0; min-height: 100vh; }
+        .page-header {
+            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(138,43,226,0.08));
+            border-bottom: 1px solid var(--border); padding: 2rem 0; margin-bottom: 2rem;
+        }
+        .page-header h1 { color: #fff; font-weight: 700; }
+        .detail-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 2.5rem; max-width: 800px; margin: 0 auto;
+        }
+        .detail-row {
+            display: flex; padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label {
+            width: 200px; flex-shrink: 0; color: rgba(255,255,255,0.5);
+            font-weight: 600; font-size: 0.875rem; display: flex;
+            align-items: center; gap: 0.5rem;
+        }
+        .detail-label i { color: var(--gold); width: 18px; text-align: center; }
+        .detail-value { color: #fff; font-size: 0.9375rem; flex: 1; }
+        .badge-type {
+            padding: 0.375rem 0.75rem; border-radius: 6px;
+            font-size: 0.8125rem; font-weight: 600;
+            background: rgba(168,85,247,0.15); color: #a855f7;
+            border: 1px solid rgba(168,85,247,0.3);
+        }
+        .badge-paid { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+        .badge-free { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #0a0a0f; border: none; font-weight: 600;
+            padding: 0.625rem 1.5rem; border-radius: 8px; transition: all 0.3s;
+        }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,175,55,0.4); color: #0a0a0f; }
+        .btn-outline-light { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); padding: 0.625rem 1.5rem; border-radius: 8px; }
+        .btn-outline-light:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .btn-danger-outline {
+            border: 1px solid rgba(239,68,68,0.3); color: #ef4444;
+            padding: 0.625rem 1.5rem; border-radius: 8px; background: transparent;
+            transition: all 0.3s;
+        }
+        .btn-danger-outline:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .id-badge {
+            background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3);
+            color: var(--gold); padding: 0.375rem 0.75rem; border-radius: 6px;
+            font-weight: 600; font-size: 0.875rem;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="mb-1"><i class="fas fa-eye me-2" style="color: var(--gold);"></i>Détails de l'Événement</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0" style="font-size: 0.875rem;">
+                            <li class="breadcrumb-item"><a href="{{ path('app_evenement_index') }}" style="color: var(--gold); text-decoration: none;">Événements</a></li>
+                            <li class="breadcrumb-item active text-muted">{{ evenement.nom }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="{{ path('app_evenement_index') }}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        <div class="detail-card">
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <span class="id-badge"><i class="fas fa-hashtag me-1"></i>ID: {{ evenement.id }}</span>
+            </div>
+
+            {% if evenement.image %}
+                <div class="text-center mb-4">
+                    <img src="{{ asset('uploads/evenements/' ~ evenement.image) }}" alt="{{ evenement.nom }}"
+                         style="max-width: 100%; max-height: 350px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover;">
+                </div>
+            {% endif %}
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-bookmark"></i> Nom</div>
+                <div class="detail-value">{{ evenement.nom }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-tags"></i> Type</div>
+                <div class="detail-value"><span class="badge-type">{{ evenement.typeEvenement }}</span></div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-users"></i> Participants</div>
+                <div class="detail-value">{{ evenement.nbrParticipant }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-calendar-day"></i> Date</div>
+                <div class="detail-value">{{ evenement.date|date('d/m/Y') }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-clock"></i> Heure</div>
+                <div class="detail-value">{{ evenement.heure|date('H:i') }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Lieu</div>
+                <div class="detail-value">{{ evenement.lieu }}</div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-credit-card"></i> Paiement</div>
+                <div class="detail-value">
+                    {% if evenement.paiement %}
+                        <span class="badge-type badge-paid"><i class="fas fa-check-circle me-1"></i>Payant</span>
+                    {% else %}
+                        <span class="badge-type badge-free"><i class="fas fa-gift me-1"></i>Gratuit</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-label"><i class="fas fa-align-left"></i> Description</div>
+                <div class="detail-value">{{ evenement.description }}</div>
+            </div>
+
+            <hr style="border-color: rgba(255,255,255,0.06); margin: 1.5rem 0;">
+
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+                <form action="{{ path('app_evenement_delete', {id: evenement.id}) }}" method="post"
+                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet événement ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_evenement_' ~ evenement.id) }}">
+                    <button type="submit" class="btn btn-danger-outline">
+                        <i class="fas fa-trash-alt me-1"></i> Supprimer
+                    </button>
+                </form>
+                <a href="{{ path('app_evenement_edit', {id: evenement.id}) }}" class="btn btn-gold">
+                    <i class="fas fa-edit me-1"></i> Modifier
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

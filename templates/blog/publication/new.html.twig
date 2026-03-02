@@ -1,0 +1,705 @@
+<!doctype html>
+<html class="no-js" lang="zxx">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>New Publication - Artvista</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicons/favicon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <style>
+        .user-avatar-btn {
+            display: flex; align-items: center; gap: 8px;
+            background: none; border: none; cursor: pointer;
+            color: inherit; text-decoration: none;
+        }
+        .user-avatar-btn img {
+            width: 36px; height: 36px;
+            border-radius: 50%; object-fit: cover;
+            border: 2px solid #d4a574;
+        }
+        .user-avatar-btn .user-name { font-size: 14px; font-weight: 500; }
+        .profile-dropdown {
+            min-width: 220px; border: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            border-radius: 12px; overflow: hidden;
+        }
+        .profile-dropdown .dropdown-header {
+            background: linear-gradient(135deg, #d4a574, #c4924e);
+            color: white; padding: 16px;
+        }
+        .profile-dropdown .dropdown-header img {
+            width: 55px; height: 55px;
+            border-radius: 50%; object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.5); margin-bottom: 8px;
+        }
+        .profile-dropdown .dropdown-item {
+            padding: 10px 16px; font-size: 14px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .profile-dropdown .dropdown-item:hover { background-color: #f8f4ef; color: #d4a574; }
+        .profile-dropdown .dropdown-item i { width: 16px; color: #d4a574; }
+        .profile-dropdown .dropdown-item.text-danger i { color: #dc3545; }
+    </style>
+</head>
+
+<body>
+    <!-- Cursor -->
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+
+    <div class="preloader">
+        <div class="preloader-inner">
+            <img src="/assets/img/logo-white.svg" alt="Artvista">
+            <span class="loader"></span>
+        </div>
+    </div>
+
+    <div class="sidemenu-wrapper">
+        <div class="sidemenu-content">
+            <button class="closeButton sideMenuCls"><i class="fas fa-times"></i></button>
+            <div class="widget footer-widget mb-4">
+                <h4 class="widget_title text-white mb-3">Mon Compte</h4>
+                {% if app.user %}
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="{{ app.user.avatarUrl }}" alt="Avatar"
+                             style="width:45px;height:45px;border-radius:50%;object-fit:cover;border:2px solid #d4a574;">
+                        <div>
+                            <div class="text-white fw-bold">{{ app.user.prenom }} {{ app.user.nom }}</div>
+                            <small class="text-muted">{{ app.user.email }}</small>
+                        </div>
+                    </div>
+                    <a href="{{ path('app_profile') }}" class="btn w-100 mb-2">
+                        <i class="fas fa-user me-2"></i>Mon Profil
+                    </a>
+                    <a href="{{ path('app_logout') }}" class="btn style2 w-100">
+                        <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                    </a>
+                {% else %}
+                    <a href="{{ path('app_login') }}" class="btn w-100 mb-2">
+                        <i class="fas fa-sign-in-alt me-2"></i>Connexion
+                    </a>
+                    <a href="{{ path('app_register') }}" class="btn style2 w-100">
+                        <i class="fas fa-user-plus me-2"></i>Inscription
+                    </a>
+                {% endif %}
+            </div>
+            <div class="widget footer-widget">
+                <div class="widget widget-about footer-widget">
+                    <div class="footer-logo">
+                        <a href="{{ path('app_front_index') }}"><img src="/assets/img/logo-white.svg" alt="logo"></a>
+                    </div>
+                    <p class="about-text mb-4 text-white">Découvrez l'art sous toutes ses formes avec Artvista.</p>
+                    <div class="social-btn style2 mt-30">
+                        <a href="https://facebook.com/"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.twitter.com/"><i class="fab fa-twitter"></i></a>
+                        <a href="https://linkedin.com/"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://instagram.com/"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="popup-search-box">
+        <button class="searchClose"><i class="fas fa-times"></i></button>
+        <form action="#">
+            <input type="text" placeholder="Search Here..">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
+
+    <div class="mobile-menu-wrapper">
+        <div class="mobile-menu-area text-center">
+            <button class="menu-toggle"><i class="fas fa-times"></i></button>
+            <div class="mobile-logo">
+                <a href="{{ path('app_front_index') }}"><img src="/assets/img/logo-white.svg" alt="Artvista"></a>
+            </div>
+            <div class="mobile-menu">
+                <ul>
+                    {% if app.user %}
+                        <li><a href="{{ path('app_profile') }}"><i class="fas fa-user-circle me-2"></i>Mon Profil</a></li>
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <li><a href="{{ path('app_admin_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Administration</a></li>
+                        {% endif %}
+                        <li><a href="{{ path('app_logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Déconnexion</a></li>
+                    {% else %}
+                        <li><a href="{{ path('app_login') }}"><i class="fas fa-sign-in-alt me-2"></i>Connexion</a></li>
+                        <li><a href="{{ path('app_register') }}"><i class="fas fa-user-plus me-2"></i>Inscription</a></li>
+                    {% endif %}
+                    <li><a href="{{ path('app_front_index') }}">Accueil</a></li>
+                    <li><a href="{{ path('app_front_oeuvre') }}">Œuvres</a></li>
+                    <li><a href="{{ path('app_evenement_index') }}">Événements</a></li>
+                    <li><a href="{{ path('blog_publication_index') }}">Blog</a></li>
+                    <li><a href="{{ path('app_formation_front') }}">Formation</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!--==============================
+	Header Area
+    ==============================-->
+    <header class="nav-header header-layout1">
+        <div class="header-top d-md-block d-none">
+            <div class="container">
+                <div class="row justify-content-center justify-content-lg-between align-items-center gy-2">
+                    <div class="col-auto">
+                        <div class="header-links">
+                            <ul>
+                                <li><i class="far fa-envelope"></i><a href="mailto:info@artvista.com">Mail Us: info@artvista.com</a></li>
+                                <li><i class="far fa-clock"></i>Mon - Fri: 8:00AM - 6:00PM</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-auto d-none d-lg-block">
+                        <div class="header-links header-links-right">
+                            <ul>
+                                <li>
+                                    {% if app.user %}
+                                        <div class="dropdown">
+                                            <a class="user-avatar-btn dropdown-toggle" href="#" role="button"
+                                               data-bs-toggle="dropdown" aria-expanded="false">
+                                                <img src="{{ app.user.avatarUrl }}" alt="{{ app.user.prenom }}"
+                                                     onerror="this.src='https://ui-avatars.com/api/?name={{ app.user.prenom|url_encode }}+{{ app.user.nom|url_encode }}&background=d4a574&color=fff'">
+                                                <span class="user-name">{{ app.user.prenom }}</span>
+                                                <i class="fas fa-chevron-down ms-1" style="font-size:10px;"></i>
+                                            </a>
+                                            <ul class="dropdown-menu dropdown-menu-end profile-dropdown">
+                                                <li>
+                                                    <div class="dropdown-header text-center">
+                                                        <img src="{{ app.user.avatarUrl }}" alt="{{ app.user.prenom }}"
+                                                             onerror="this.src='https://ui-avatars.com/api/?name={{ app.user.prenom|url_encode }}+{{ app.user.nom|url_encode }}&background=d4a574&color=fff'">
+                                                        <div class="fw-bold">{{ app.user.prenom }} {{ app.user.nom }}</div>
+                                                        <small style="opacity:.8;">{{ app.user.email }}</small>
+                                                        <div class="mt-1">
+                                                            {% for role in app.user.roles %}
+                                                                {% if role != 'ROLE_USER' %}
+                                                                    <span class="badge" style="background:rgba(255,255,255,0.3);font-size:10px;">
+                                                                        {{ role|replace({'ROLE_': ''}) }}
+                                                                    </span>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li><hr class="dropdown-divider m-0"></li>
+                                                <li><a class="dropdown-item" href="{{ path('app_profile') }}"><i class="fas fa-user"></i> Mon Profil</a></li>
+                                                <li><a class="dropdown-item" href="{{ path('app_profile_edit') }}"><i class="fas fa-edit"></i> Modifier le profil</a></li>
+                                                {% if is_granted('ROLE_ADMIN') %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item" href="{{ path('app_admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Administration</a></li>
+                                                    <li><a class="dropdown-item" href="{{ path('app_admin_users_index') }}"><i class="fas fa-users-cog"></i> Gestion utilisateurs</a></li>
+                                                {% endif %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="{{ path('app_logout') }}"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                                            </ul>
+                                        </div>
+                                    {% else %}
+                                        <i class="fas fa-user"></i>
+                                        <a href="{{ path('app_login') }}">Connexion</a>
+                                        <span style="margin:0 5px;">|</span>
+                                        <a href="{{ path('app_register') }}">Inscription</a>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    <button type="button" class="sidebar-btn sideMenuToggler">
+                                        <span class="line"></span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="sticky-wrapper">
+            <!-- Main Menu Area -->
+            <div class="menu-area">
+                <div class="container">
+                    <div class="row align-items-center justify-content-between">
+                        <div class="col-auto">
+                            <div class="header-logo">
+                                <a href="{{ path('app_front_index') }}"><img src="/assets/img/logo.svg" alt="logo"></a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <nav class="main-menu d-none d-lg-inline-block">
+                                <ul>
+                                    <li><a href="{{ path('app_front_index') }}">Accueil</a></li>
+                                    <li><a href="{{ path('app_front_oeuvre') }}">Œuvres</a></li>
+                                    <li><a href="{{ path('app_evenement_index') }}">Événements</a></li>
+                                    <li><a href="{{ path('blog_publication_index') }}">Blog</a></li>
+                                    <li><a href="{{ path('app_formation_front') }}">Formation</a></li>
+                                </ul>
+                            </nav>
+                            <div class="navbar-right d-inline-flex d-lg-none">
+                                <button type="button" class="menu-toggle icon-btn"><i class="fas fa-bars"></i></button>
+                            </div>
+                        </div>
+                        <div class="col-auto d-none d-xl-block">
+                            <div class="header-button">
+                                <a href="{{ path('app_evenement_index') }}" class="btn d-none d-xl-block">
+                                    ÉVÉNEMENTS &amp; TICKETS
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="breadcumb-wrapper" data-bg-src="/assets/img/bg/breadcrumb-bg.png">
+        <div class="container">
+            <div class="breadcumb-content">
+                <h1 class="breadcumb-title">New Publication</h1>
+                <ul class="breadcumb-menu">
+                    <li><a href="{{ path('app_home') }}">Home</a></li>
+                    <li><a href="{{ path('blog_publication_index') }}">Blog</a></li>
+                    <li>New Publication</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <section class="space-top space-extra-bottom">
+        <div class="container">
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="background: #28a745; color: white; border-radius: 8px; margin-bottom: 20px;">
+                    <i class="fas fa-check-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="background: #dc3545; color: white; border-radius: 8px; margin-bottom: 20px;">
+                    <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="contact-form-area">
+                        <h3 class="from-title mb-35">Create New Publication</h3>
+                        <form method="POST" class="contact-form" enctype="multipart/form-data" id="publicationForm" novalidate>
+                            <div class="row gx-20">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="form-label">Author</label>
+                                        <div class="form-control style-border" style="background:#f8f9fa; cursor:default;">
+                                            <i class="fas fa-user me-2 text-muted"></i>
+                                            {% if connectedUser %}
+                                                {{ connectedUser.fullName }}
+                                            {% else %}
+                                                <span class="text-muted">Not logged in</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="titre" class="form-label">Title *</label>
+                                        <div class="error-message" id="error-titre" style="display:none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                                        <input type="text" class="form-control style-border" name="titre" id="titre" placeholder="Enter publication title">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="description" class="form-label">Description *</label>
+                                        <div class="error-message" id="error-description" style="display:none; color: #dc3545; font-size: 14px; margin-top: 5px;"></div>
+                                        <textarea class="form-control style-border" name="description" id="description" rows="8" placeholder="Enter publication description"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="image" class="form-label">Image</label>
+                                        <input type="file" class="form-control style-border" name="image" id="image" accept="image/*" onchange="previewImage(event)">
+                                        <small class="form-text text-muted">Upload an image from your computer (JPG, PNG, GIF, WEBP - Max 5MB)</small>
+                                        <div id="imagePreview" style="margin-top: 15px; display: none;">
+                                            <img id="preview" src="" alt="Preview" style="max-width: 300px; max-height: 300px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                        </div>
+                                        <!-- Live Analysis Panel -->
+                                        <div id="liveAnalysis" style="display:none; margin-top:20px; padding:20px; background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:12px; border:1px solid rgba(255,200,50,0.25); color:#f0f0f0;">
+                                            <h5 style="color:#ffc832; margin-bottom:15px; font-size:15px; letter-spacing:1px; text-transform:uppercase;">
+                                                <i class="fas fa-palette me-2"></i>Live Image Analysis
+                                            </h5>
+                                            <!-- Dominant Colors -->
+                                            <div style="margin-bottom:14px;">
+                                                <span style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#aaa;">Dominant Colors</span>
+                                                <div id="colorSwatches" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"></div>
+                                            </div>
+                                            <!-- Metrics row -->
+                                            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+                                                <div style="background:rgba(255,255,255,0.07); border-radius:8px; padding:10px 14px; min-width:100px; text-align:center;">
+                                                    <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Brightness</div>
+                                                    <div id="brightnessVal" style="font-size:16px; font-weight:700; color:#ffc832; margin-top:4px;">-</div>
+                                                </div>
+                                                <div style="background:rgba(255,255,255,0.07); border-radius:8px; padding:10px 14px; min-width:100px; text-align:center;">
+                                                    <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Saturation</div>
+                                                    <div id="saturationVal" style="font-size:16px; font-weight:700; color:#ffc832; margin-top:4px;">-</div>
+                                                </div>
+                                                <div style="background:rgba(255,255,255,0.07); border-radius:8px; padding:10px 14px; min-width:100px; text-align:center;">
+                                                    <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:1px;">Tone</div>
+                                                    <div id="toneVal" style="font-size:16px; font-weight:700; color:#ffc832; margin-top:4px;">-</div>
+                                                </div>
+                                            </div>
+                                            <!-- Composition -->
+                                            <div style="margin-bottom:14px;">
+                                                <span style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#aaa;">Composition</span>
+                                                <div id="compositionVal" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+                                            </div>
+                                            <!-- Style Tags -->
+                                            <div>
+                                                <span style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#aaa;">Detected Style</span>
+                                                <div id="styleTags" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;"></div>
+                                            </div>
+                                            <!-- Suggested Description -->
+                                            <div style="margin-top:20px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+                                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                                    <span style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#aaa;"><i class="fas fa-magic me-1"></i> Suggested Description</span>
+                                                    <button type="button" onclick="useSuggestedDescription()" style="background:rgba(255,200,50,0.15); border:1px solid rgba(255,200,50,0.4); color:#ffc832; border-radius:4px; padding:2px 8px; font-size:11px; cursor:pointer; transition:all 0.2s;">Use This</button>
+                                                </div>
+                                                <div id="suggestedDescText" style="font-size:13px; color:#e0e0e0; font-style:italic; line-height:1.5;"></div>
+                                            </div>
+                                            <canvas id="analysisCanvas" style="display:none;"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-btn col-12 mt-4">
+                                <button type="submit" class="btn">
+                                    <i class="fas fa-paper-plane me-2"></i>CREATE PUBLICATION
+                                </button>
+                                <a href="{{ path('blog_publication_index') }}" class="btn" style="background: #6c757d; border-color: #6c757d; margin-left: 10px;">
+                                    <i class="fas fa-times me-2"></i>CANCEL
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer-wrapper footer-layout1">
+        <div class="container">
+            <div class="copyright-wrap text-center">
+                <p class="copyright-text text-white">© 2026 <a href="#">Artvista.</a> All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/assets/js/vendor/jquery-3.7.1.min.js"></script>
+    <script src="/assets/js/bootstrap.min.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+
+                // Run live analysis once image loads
+                const img = new Image();
+                img.onload = () => analyzeImageLive(img);
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function analyzeImageLive(img) {
+            const SAMPLE = 30;
+            const canvas = document.getElementById('analysisCanvas');
+            canvas.width  = SAMPLE;
+            canvas.height = SAMPLE;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, SAMPLE, SAMPLE);
+            const data = ctx.getImageData(0, 0, SAMPLE, SAMPLE).data;
+
+            // Build pixel array
+            const pixels = [];
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i], g = data[i+1], b = data[i+2];
+                const idx = i / 4;
+                const col = idx % SAMPLE;
+                const row = Math.floor(idx / SAMPLE);
+                const luma = 0.299*r + 0.587*g + 0.114*b;
+                const [h, s, v] = rgbToHsv(r, g, b);
+                pixels.push({r, g, b, h, s, v, luma, col, row});
+            }
+
+            // Dominant colors (bucket quantisation)
+            const buckets = {};
+            pixels.forEach(p => {
+                const key = ((p.r>>5)<<4)|((p.g>>5)<<2)|(p.b>>5);
+                if (!buckets[key]) buckets[key] = {count:0,r:0,g:0,b:0};
+                buckets[key].count++;
+                buckets[key].r += p.r;
+                buckets[key].g += p.g;
+                buckets[key].b += p.b;
+            });
+            const sorted = Object.values(buckets).sort((a,b)=>b.count-a.count).slice(0,5);
+            const colors = sorted.map(b => {
+                const r = Math.round(b.r/b.count).toString(16).padStart(2,'0');
+                const g = Math.round(b.g/b.count).toString(16).padStart(2,'0');
+                const bh = Math.round(b.b/b.count).toString(16).padStart(2,'0');
+                return `#${r}${g}${bh}`;
+            });
+
+            // Global averages
+            const avgLuma = pixels.reduce((s,p)=>s+p.luma,0)/pixels.length;
+            const avgSat  = pixels.reduce((s,p)=>s+p.s,0)/pixels.length;
+            const avgR    = pixels.reduce((s,p)=>s+p.r,0)/pixels.length;
+            const avgB    = pixels.reduce((s,p)=>s+p.b,0)/pixels.length;
+            const warmth  = avgR - avgB;
+
+            const brightness  = avgLuma < 80 ? 'Dark' : avgLuma < 170 ? 'Medium' : 'Bright';
+            const saturation  = avgSat  < 0.25 ? 'Muted' : avgSat < 0.55 ? 'Moderate' : 'Vivid';
+            const tone        = warmth > 15 ? 'Warm' : warmth < -15 ? 'Cool' : 'Neutral';
+
+            // Contrast
+            const lumas   = pixels.map(p=>p.luma);
+            const contrast = (Math.max(...lumas)-Math.min(...lumas))/255;
+
+            // Style tags
+            const tags = [];
+            if (brightness==='Bright' && saturation==='Muted')  tags.push('Minimalist');
+            if (saturation==='Muted')                            tags.push('Monochromatic');
+            if (brightness==='Dark' && contrast>0.45)            tags.push('Dramatic');
+            if (saturation==='Vivid' && warmth>20)               tags.push('Impressionist');
+            if (saturation==='Vivid')                            tags.push('Vibrant');
+            if (brightness==='Dark' && saturation==='Vivid')     tags.push('Surrealist');
+            if (saturation==='Moderate' && contrast<0.4)         tags.push('Realist');
+            if (tags.length===0)                                 tags.push('Contemporary');
+
+            // Composition — 3×3 grid
+            const bs = SAMPLE/3;
+            const lumaGrid = Array.from({length:3},(_,br)=>
+                Array.from({length:3},(_,bc)=>{
+                    let sum=0, cnt=0;
+                    for(let r=Math.floor(br*bs);r<Math.min(Math.floor((br+1)*bs),SAMPLE);r++){
+                        for(let c=Math.floor(bc*bs);c<Math.min(Math.floor((bc+1)*bs),SAMPLE);c++){
+                            sum += pixels[r*SAMPLE+c].luma; cnt++;
+                        }
+                    }
+                    return cnt>0?sum/cnt:0;
+                })
+            );
+            const leftL   = (lumaGrid[0][0]+lumaGrid[1][0]+lumaGrid[2][0])/3;
+            const centL   = (lumaGrid[0][1]+lumaGrid[1][1]+lumaGrid[2][1])/3;
+            const rightL  = (lumaGrid[0][2]+lumaGrid[1][2]+lumaGrid[2][2])/3;
+            const maxSide = Math.max(leftL,rightL);
+            const minSide = Math.min(leftL,rightL);
+            const bal     = maxSide>0?(maxSide-minSide)/maxSide:0;
+            let weight = bal<0.12 ? 'Balanced' : leftL>rightL ? 'Left-heavy' : 'Right-heavy';
+            if(centL > leftL*1.2 && centL > rightL*1.2) weight = 'Centered';
+
+            const surround = (lumaGrid[0][0]+lumaGrid[0][1]+lumaGrid[0][2]+lumaGrid[1][0]+lumaGrid[1][2]+lumaGrid[2][0]+lumaGrid[2][1]+lumaGrid[2][2])/8;
+            const thirds   = (lumaGrid[0][1]+lumaGrid[0][2]+lumaGrid[2][0]+lumaGrid[2][1])/4;
+            let position = lumaGrid[1][1] > surround*1.25 ? 'Central' : thirds > lumaGrid[1][1]*1.1 ? 'Rule of Thirds' : 'Distributed';
+
+            // Render UI
+            document.getElementById('liveAnalysis').style.display = 'block';
+
+            const swatches = document.getElementById('colorSwatches');
+            swatches.innerHTML = colors.map(c=>
+                `<div title="${c}" style="width:36px;height:36px;background:${c};border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.4);cursor:default;border:2px solid rgba(255,255,255,0.15);"></div>`
+            ).join('');
+
+            document.getElementById('brightnessVal').textContent  = brightness;
+            document.getElementById('saturationVal').textContent  = saturation;
+            document.getElementById('toneVal').textContent        = tone;
+
+            const compDiv = document.getElementById('compositionVal');
+            compDiv.innerHTML = [
+                `<span style="background:rgba(255,200,50,0.15);border:1px solid rgba(255,200,50,0.3);color:#ffc832;padding:4px 12px;border-radius:20px;font-size:13px;">⚖ ${weight}</span>`,
+                `<span style="background:rgba(255,200,50,0.15);border:1px solid rgba(255,200,50,0.3);color:#ffc832;padding:4px 12px;border-radius:20px;font-size:13px;">🎯 ${position}</span>`
+            ].join('');
+
+            const tagsDiv = document.getElementById('styleTags');
+            tagsDiv.innerHTML = tags.map(t=>
+                `<span style="background:#ffc832;color:#1a1a2e;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;">${t}</span>`
+            ).join('');
+
+            // Generate and show description
+            const desc = generateDescriptionResult(brightness, saturation, warmth, contrast, tags, weight, position);
+            document.getElementById('suggestedDescText').innerText = desc;
+        }
+
+        function useSuggestedDescription() {
+            const desc = document.getElementById('suggestedDescText').innerText;
+            const textarea = document.getElementById('description');
+            if (textarea) {
+                if (textarea.value.trim() !== '' && !confirm('This will overwrite your current description. Continue?')) {
+                    return;
+                }
+                textarea.value = desc;
+                // clear error if exists
+                document.getElementById('error-description').style.display = 'none';
+                textarea.style.borderColor = '';
+            }
+        }
+
+        function generateDescriptionResult(brightness, saturation, warmth, contrast, tags, weight, position) {
+            let openingList = [
+                'A nuanced and carefully balanced work,',
+                'Thoughtful in tone and execution,',
+                'Poised between light and shadow,'
+            ];
+            if (brightness === 'Dark' && contrast > 0.45) openingList = ['A striking work of dramatic intensity,', 'A bold and moody composition,', 'This arresting piece commands attention,'];
+            else if (brightness === 'Dark') openingList = ['Shrouded in deep, atmospheric shadows,', 'A quietly powerful work imbued with darkness,', 'Rich with depth and mystery,'];
+            else if (brightness === 'Bright' && saturation === 'Muted') openingList = ['Serene and restrained in its luminosity,', 'A clean, light-filled composition,', 'Minimal yet radiant in its simplicity,'];
+            else if (brightness === 'Bright') openingList = ['Radiating light and energy,', 'Vibrant and sun-drenched,', 'Filled with luminous brilliance,'];
+            const opening = openingList[Math.floor(Math.random() * openingList.length)];
+
+            const tone = warmth > 15 ? 'warm' : (warmth < -15 ? 'cool' : 'balanced');
+            const satLabel = saturation.toLowerCase();
+            let palette = `The palette is balanced and harmonious, weaving together ${satLabel} tones without a single dominant temperature.`;
+            if (tone === 'warm') palette = `The palette leans into ${satLabel} warm tones — golds, ambers, and earthy reds that invite the eye inward.`;
+            if (tone === 'cool') palette = `Cool hues dominate the palette — blues, teals, and silvers lending a calm, introspective atmosphere.`;
+
+            const compSentences = {
+                'Central': 'The subject anchors the composition at its heart, drawing the viewer into a single focal point.',
+                'Rule of Thirds': 'The artist leverages the classic rule of thirds, placing key elements at the natural tension points of the frame.',
+                'Distributed': 'Visual interest is distributed across the frame, encouraging the eye to explore freely.'
+            };
+            const weightSentences = {
+                'Left-heavy': ' Visual weight pulls gently to the left, creating a sense of flow and directional momentum.',
+                'Right-heavy': ' The composition anchors to the right, with a sense of deliberate tension and counterbalance.',
+                'Centered': ' A strong central axis grounds the work with symmetry and stability.',
+                'Balanced': ' The composition achieves a graceful equilibrium across the frame.'
+            };
+            const compositionSentence = (compSentences[position] || '') + (weightSentences[weight] || '');
+
+            const primaryTag = tags.length > 0 ? tags[0] : 'Contemporary';
+            const styleDescriptions = {
+                'Minimalist': 'In the tradition of minimalist art, the work distils its subject to essentials, finding power in what is left unsaid.',
+                'Monochromatic': 'The monochromatic treatment strips away colour distraction, turning subtle tonal gradations into the language of the piece.',
+                'Dramatic': 'Executed with dramatic flair, this piece evokes the chiaroscuro mastery of the Old Masters — light and shadow locked in expressive dialogue.',
+                'Impressionist': 'Inspired by the Impressionist tradition, the work captures a fleeting moment, colour and light dissolving into pure sensation.',
+                'Vibrant': 'Colour is the true subject here — vivid, uncompromising, and emotionally direct.',
+                'Surrealist': 'The image inhabits a liminal space between the real and the imagined, its dark palette amplifying an air of dreamlike tension.',
+                'Abstract': 'Moving beyond representation, this abstract work trusts shape, colour, and rhythm to carry the full weight of meaning.',
+                'Realist': 'Grounded in careful observation, this realist composition renders its subject with quiet fidelity to the visible world.',
+                'Contemporary': 'A contemporary work that speaks in the visual language of its time — self-aware, considered, and open to interpretation.'
+            };
+            const styleSentence = styleDescriptions[primaryTag] || styleDescriptions['Contemporary'];
+
+            return [opening, palette, compositionSentence, styleSentence].join(' ');
+        }
+
+        function rgbToHsv(r,g,b){
+            r/=255;g/=255;b/=255;
+            const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+            let h=0,s=max>0?d/max:0,v=max;
+            if(d!==0){
+                if(max===r)      h=60*(((g-b)/d)%6);
+                else if(max===g) h=60*((b-r)/d+2);
+                else             h=60*((r-g)/d+4);
+            }
+            return [h<0?h+360:h,s,v];
+        }
+
+        // Custom form validation
+        document.getElementById('publicationForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Clear all previous errors
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            document.querySelectorAll('.style-border').forEach(el => {
+                el.style.borderColor = '';
+            });
+
+            // Validate Author
+            const idUser = document.getElementById('id_user');
+            if (!idUser.value || idUser.value === '') {
+                showError('id_user', 'Please select an author');
+                isValid = false;
+            }
+
+            // Validate Title
+            const titre = document.getElementById('titre');
+            const titreValue = titre.value.trim();
+            if (titreValue === '') {
+                showError('titre', 'Title is required');
+                isValid = false;
+            } else if (titreValue.length < 3) {
+                showError('titre', 'Title must be at least 3 characters long');
+                isValid = false;
+            } else if (titreValue.length > 255) {
+                showError('titre', 'Title cannot exceed 255 characters');
+                isValid = false;
+            }
+
+            // Validate Description
+            const description = document.getElementById('description');
+            const descValue = description.value.trim();
+            if (descValue === '') {
+                showError('description', 'Description is required');
+                isValid = false;
+            } else if (descValue.length < 10) {
+                showError('description', 'Description must be at least 10 characters long');
+                isValid = false;
+            } else if (descValue.length > 5000) {
+                showError('description', 'Description cannot exceed 5000 characters');
+                isValid = false;
+            }
+
+            // Validate Image (optional but check size if provided)
+            const imageInput = document.getElementById('image');
+            if (imageInput.files.length > 0) {
+                const file = imageInput.files[0];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    alert('Image file is too large. Maximum size is 5MB.');
+                    isValid = false;
+                }
+                
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Invalid file type. Only JPG, PNG, GIF, and WEBP images are allowed.');
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+
+        function showError(fieldId, message) {
+            const errorDiv = document.getElementById('error-' + fieldId);
+            const field = document.getElementById(fieldId);
+            
+            errorDiv.textContent = '⚠ ' + message;
+            errorDiv.style.display = 'block';
+            field.style.borderColor = '#dc3545';
+            
+            // Scroll to first error
+            if (!window.scrolledToError) {
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                window.scrolledToError = true;
+                setTimeout(() => { window.scrolledToError = false; }, 1000);
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+<div class="product-area-1 space overflow-hidden">          
+    <div class="container">
+        <div class="title-area text-center wow custom-anim-top">
+            <span class="sub-title">OUR ONLINE SHOP</span>
+            <h2 class="sec-title">Our Online Products</h2>
+        </div>
+        <div class="row gy-4">
+            {% set products = [
+                {'name': 'Lady Seraphina', 'price': '250.00', 'old_price': '550.00', 'img': '1-1.png'},
+                {'name': 'Nova Byte', 'price': '150.00', 'old_price': '550.00', 'img': '1-2.png'},
+                {'name': 'Synth Sphere', 'price': '260.00', 'old_price': '550.00', 'img': '1-3.png'},
+                {'name': 'NeoGlow Ahe', 'price': '250.00', 'old_price': '550.00', 'img': '1-4.png'}
+            ] %}
+
+            {% for product in products %}
+            <div class="col-lg-3 col-md-6">
+                <div class="product-card wow custom-anim-top">
+                    <div class="product-img">
+                        <span class="tag">Sculptor</span>
+                        <img src="{{ asset('assets/img/product/' ~ product.img) }}" alt="{{ product.name }}">
+                        <div class="actions">
+                            <a href="{{ path('cart')|default('#') }}" class="icon-btn"><i class="fas fa-shopping-cart"></i></a>
+                            <a href="#" class="icon-btn"><i class="far fa-heart"></i></a>
+                            <a href="#QuickView" class="icon-btn popup-content"><i class="far fa-eye"></i></a>
+                        </div>
+                    </div>
+                    <div class="product-content">
+                        <span class="price">${{ product.price }} <del>${{ product.old_price }}</del></span>
+                        <h3 class="product-title"><a href="#">{{ product.name }}</a></h3>
+                        <div class="star-rating">
+                            {% for i in 1..5 %}<i class="fas fa-star"></i>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

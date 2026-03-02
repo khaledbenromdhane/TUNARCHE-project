@@ -1,0 +1,807 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil - ArtVista{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ── Avatar Widget ── */
+.avatar-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+.avatar-wrapper img,
+.avatar-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid #d4a574;
+    box-shadow: 0 8px 25px rgba(212,165,116,.3);
+    display: block;
+}
+.avatar-placeholder {
+    background: linear-gradient(135deg, #d4a574, #c4924e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 48px;
+}
+.avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .25s;
+    cursor: pointer;
+}
+.avatar-wrapper:hover .avatar-overlay { opacity: 1; }
+.avatar-overlay span {
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+    letter-spacing: .5px;
+}
+.avatar-camera-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #d4a574;
+    border: 3px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    transition: background .2s, transform .2s;
+    z-index: 2;
+}
+.avatar-camera-btn:hover { background: #c4924e; transform: scale(1.1); }
+.avatar-camera-btn i { color: white; font-size: 13px; }
+
+/* ── Modal Camera ── */
+.camera-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.camera-modal-backdrop.active { display: flex; }
+.camera-modal {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    width: 420px;
+    max-width: 95vw;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    position: relative;
+}
+.camera-modal h5 { font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+.camera-modal p { color: #888; font-size: 13px; margin-bottom: 20px; }
+
+#cameraFeed {
+    width: 100%;
+    border-radius: 12px;
+    background: #1a1a2e;
+    display: none;
+}
+#cameraCanvas { display: none; }
+
+.camera-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 4px;
+}
+.camera-tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    transition: all .2s;
+}
+.camera-tab.active {
+    background: #fff;
+    color: #d4a574;
+    box-shadow: 0 2px 6px rgba(0,0,0,.1);
+}
+.face-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f8ff;
+    border: 1px solid #4a90d9;
+    color: #4a90d9;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+.face-badge.detected { background: #f0fff4; border-color: #50c878; color: #2d8a4e; }
+.face-badge .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 1.2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.camera-actions { display: flex; gap: 10px; margin-top: 16px; }
+.camera-actions button { flex: 1; }
+
+.drop-zone {
+    border: 2px dashed #d4a574;
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: background .2s;
+    background: #fdf9f5;
+}
+.drop-zone:hover, .drop-zone.dragover { background: #f5ebe0; }
+.drop-zone i { font-size: 32px; color: #d4a574; margin-bottom: 8px; }
+.drop-zone p { margin: 0; color: #888; font-size: 13px; }
+
+.modal-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+}
+.modal-close:hover { color: #333; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="breadcumb-wrapper" data-bg-src="{{ asset('assets/img/bg/breadcumb-bg.jpg') }}">
+    <div class="container">
+        <div class="breadcumb-content">
+            <h1 class="breadcumb-title">Mon Profil</h1>
+            <ul class="breadcumb-menu">
+                <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li>Profil</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="space overflow-hidden">
+    <div class="container">
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show mb-4">
+                <i class="fas fa-check-circle me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row g-4">
+
+            {# ═══ Colonne gauche ═══ #}
+            <div class="col-lg-4">
+                <div class="contact-form-area text-center p-4">
+
+                    {# Avatar Widget #}
+                    <div class="avatar-wrapper mb-3" id="avatarWidget" style="cursor:pointer;" onclick="(function(e){ e.preventDefault(); e.stopPropagation(); document.getElementById('avatarModal').classList.add('active'); })(event)">
+                        {% if user.avatarFilename %}
+                            <img src="{{ asset('uploads/avatars/' ~ user.avatarFilename) }}"
+                                 alt="{{ user.fullName }}"
+                                 id="profileAvatar"
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ user.prenom|url_encode }}+{{ user.nom|url_encode }}&background=d4a574&color=fff&size=200'">
+                        {% else %}
+                            <div class="avatar-placeholder" id="avatarPlaceholder">
+                                <i class="fas fa-question"></i>
+                            </div>
+                        {% endif %}
+                        <div class="avatar-overlay">
+                            <i class="fas fa-camera" style="color:#fff;font-size:22px;"></i>
+                            <span>Changer la photo</span>
+                        </div>
+                        <div class="avatar-camera-btn" id="cameraBtnTrigger" onclick="(function(e){ e.preventDefault(); e.stopPropagation(); document.getElementById('avatarModal').classList.add('active'); })(event)">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+
+                    <small class="text-muted d-block mb-1" style="font-size:12px;">
+                        Cliquez pour ajouter votre photo
+                    </small>
+                    <div class="face-badge mb-3" id="faceBadge">
+                        <span class="dot"></span>
+                        Détection faciale activée
+                    </div>
+
+                    <h3 style="color:#1a1a2e;font-weight:700;margin-bottom:4px;">
+                        {{ user.prenom }} {{ user.nom }}
+                    </h3>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+
+                    {% for role in user.roles %}
+                        {% if role != 'ROLE_USER' %}
+                            <span class="badge mb-2" style="background:linear-gradient(135deg,#d4a574,#c4924e);font-size:12px;padding:6px 12px;border-radius:20px;">
+                                {% if role == 'ROLE_ADMIN' %}<i class="fas fa-crown me-1"></i>Administrateur
+                                {% elseif role == 'ROLE_ARTIST' %}<i class="fas fa-paint-brush me-1"></i>Artiste
+                                {% else %}{{ role|replace({'ROLE_': ''}) }}
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    {% endfor %}
+                    {% if user.roles == ['ROLE_USER'] %}
+                        <span class="badge mb-2" style="background:#6c757d;font-size:12px;padding:6px 12px;border-radius:20px;">
+                            <i class="fas fa-user me-1"></i>Utilisateur
+                        </span>
+                    {% endif %}
+
+                    {% if user.googleId %}
+                        <div class="mt-1">
+                            <span class="badge" style="background:#4285F4;font-size:11px;padding:5px 10px;">
+                                <i class="fab fa-google me-1"></i>Connecté via Google
+                            </span>
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-3">
+
+                    <a href="{{ path('app_profile_edit') }}" class="btn w-100 mb-2">
+                        <i class="fas fa-edit me-2"></i>Modifier le profil
+                    </a>
+                    <a href="{{ path('app_logout') }}" class="btn style2 w-100">
+                        <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                    </a>
+
+                    {% if user.avatarFilename %}
+                        <form method="post" action="{{ path('app_profile_delete_avatar') }}" class="mt-2"
+                              onsubmit="return confirm('Supprimer la photo de profil ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_avatar') }}">
+                            <button type="submit" class="btn btn-link text-danger w-100" style="font-size:13px;">
+                                <i class="fas fa-trash me-1"></i>Supprimer la photo
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# ═══ Colonne droite ═══ #}
+            <div class="col-lg-8">
+
+                <div class="contact-form-area mb-4">
+                    <h4 style="color:#1a1a2e;font-weight:700;margin-bottom:20px;">
+                        <i class="fas fa-user-circle me-2" style="color:#d4a574;"></i>Informations personnelles
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-user me-1"></i>Nom</small>
+                                <strong>{{ user.nom }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-user me-1"></i>Prénom</small>
+                                <strong>{{ user.prenom }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-envelope me-1"></i>Email</small>
+                                <strong>{{ user.email }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div style="background:#f8f4ef;border-radius:12px;padding:16px;">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-phone me-1"></i>Téléphone</small>
+                                <strong>{{ user.telephone ?: 'Non renseigné' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-form-area">
+                    <h4 style="color:#1a1a2e;font-weight:700;margin-bottom:20px;">
+                        <i class="fas fa-chart-bar me-2" style="color:#d4a574;"></i>Activité du profil
+                    </h4>
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="text-center" style="background:linear-gradient(135deg,#d4a574,#c4924e);border-radius:12px;padding:20px;color:white;">
+                                <div style="font-size:28px;font-weight:700;">1</div>
+                                <small>Compte actif</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center" style="background:linear-gradient(135deg,#4a90d9,#357abd);border-radius:12px;padding:20px;color:white;">
+                                <div style="font-size:28px;font-weight:700;">
+                                    {{ user.roles|filter(r => r != 'ROLE_USER')|length + 1 }}
+                                </div>
+                                <small>Rôle(s)</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center" style="background:linear-gradient(135deg,#50c878,#3da85f);border-radius:12px;padding:20px;color:white;">
+                                <div style="font-size:28px;font-weight:700;">✓</div>
+                                <small>Profil complet</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center">
+                        <div class="col-md-5 text-center">
+                            <canvas id="profileChart" width="200" height="200"></canvas>
+                        </div>
+                        <div class="col-md-7">
+                            <h5 class="mb-3">Complétude du profil</h5>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Nom & Prénom</small><small class="text-success">100%</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" style="width:100%;background:#d4a574;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Email</small><small class="text-success">100%</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" style="width:100%;background:#4a90d9;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Téléphone</small>
+                                    <small class="{{ user.telephone ? 'text-success' : 'text-warning' }}">{{ user.telephone ? '100%' : '0%' }}</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" style="width:{{ user.telephone ? '100%' : '0%' }};background:#50c878;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Photo de profil</small>
+                                    <small id="photoProgress" class="{{ user.avatarFilename ? 'text-success' : 'text-warning' }}">{{ user.avatarFilename ? '100%' : '0%' }}</small>
+                                </div>
+                                <div class="progress" style="height:6px;border-radius:3px;">
+                                    <div class="progress-bar" id="photoProgressBar" style="width:{{ user.avatarFilename ? '100%' : '0%' }};background:#ffc107;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if is_granted('ROLE_ADMIN') %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="contact-form-area" style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);color:white;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1 text-white"><i class="fas fa-crown me-2" style="color:#d4a574;"></i>Espace Administrateur</h5>
+                                <p class="text-muted mb-0">Accédez au tableau de bord de gestion</p>
+                            </div>
+                            <a href="{{ path('app_admin_dashboard') }}" class="btn">
+                                <i class="fas fa-tachometer-alt me-2"></i>Administration
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{# ═══ Modal Avatar / Caméra ═══ #}
+<div class="camera-modal-backdrop" id="avatarModal">
+    <div class="camera-modal">
+        <button class="modal-close" id="btnCloseModal">×</button>
+        <h5><i class="fas fa-camera me-2" style="color:#d4a574;"></i>Photo de profil</h5>
+        <p>Prenez une photo ou importez une image</p>
+
+        <div class="camera-tabs">
+            <button class="camera-tab active" id="tabBtnCamera">
+                <i class="fas fa-video me-1"></i>Caméra
+            </button>
+            <button class="camera-tab" id="tabBtnUpload">
+                <i class="fas fa-upload me-1"></i>Importer
+            </button>
+        </div>
+
+        {# Tab Caméra #}
+        <div id="tabCamera">
+            <div id="faceBadgeModal" class="face-badge mb-2">
+                <span class="dot"></span>
+                Détection faciale activée
+            </div>
+            <div style="position:relative;border-radius:12px;overflow:hidden;background:#1a1a2e;min-height:200px;display:flex;align-items:center;justify-content:center;" id="cameraContainer">
+                <video id="cameraFeed" autoplay muted playsinline></video>
+                <canvas id="faceCanvas" style="position:absolute;top:0;left:0;pointer-events:none;display:none;"></canvas>
+                <div id="cameraPlaceholder" style="color:#666;text-align:center;padding:40px;">
+                    <i class="fas fa-video" style="font-size:40px;margin-bottom:10px;display:block;"></i>
+                    <span style="font-size:13px;">Cliquez sur "Démarrer" pour activer la caméra</span>
+                </div>
+            </div>
+            <canvas id="cameraCanvas"></canvas>
+            <div class="camera-actions">
+                <button class="btn style2" id="btnStartCam">
+                    <i class="fas fa-play me-1"></i>Démarrer
+                </button>
+                <button class="btn" id="btnCapture" disabled>
+                    <i class="fas fa-camera me-1"></i>Capturer
+                </button>
+            </div>
+        </div>
+
+        {# Tab Upload #}
+        <div id="tabUpload" style="display:none;">
+            <div class="drop-zone" id="dropZone">
+                <i class="fas fa-cloud-upload-alt d-block"></i>
+                <p class="mt-2 mb-1"><strong>Glissez une image ici</strong></p>
+                <p>ou cliquez pour parcourir</p>
+                <p style="font-size:11px;color:#bbb;">JPG, PNG, WEBP — max 5 Mo</p>
+            </div>
+            <input type="file" id="fileInputModal" accept="image/*" style="display:none;">
+        </div>
+
+        {# Preview #}
+        <div id="previewSection" style="display:none;margin-top:16px;">
+            <hr>
+            <p style="font-size:13px;color:#888;margin-bottom:8px;">Aperçu :</p>
+            <img id="previewImg" src="" alt="preview"
+                 style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid #d4a574;margin-bottom:12px;">
+            <div class="camera-actions">
+                <button class="btn style2" id="btnCancelPreview">
+                    <i class="fas fa-redo me-1"></i>Reprendre
+                </button>
+                <button class="btn" id="btnSaveAvatar">
+                    <i class="fas fa-check me-1"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ══════════════════════════════════════
+    //  Chart.js – Doughnut complétude
+    // ══════════════════════════════════════
+    var chartEl = document.getElementById('profileChart');
+    if (chartEl) {
+        new Chart(chartEl, {
+            type: 'doughnut',
+            data: {
+                labels: ['Nom & Prénom', 'Email', 'Téléphone', 'Photo'],
+                datasets: [{
+                    data: [100, 100, {{ user.telephone ? 100 : 0 }}, {{ user.avatarFilename ? 100 : 0 }}],
+                    backgroundColor: ['#d4a574', '#4a90d9', '#50c878', '#ffc107'],
+                    borderWidth: 0,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                cutout: '70%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + ctx.raw + '%'; } } }
+                },
+                animation: { animateRotate: true, duration: 1000 }
+            },
+            plugins: [{
+                id: 'centerText',
+                afterDraw: function(chart) {
+                    var ctx = chart.ctx;
+                    var total = chart.data.datasets[0].data.reduce(function(a, b) { return a + b; }, 0) / 4;
+                    var meta = chart.getDatasetMeta(0);
+                    var x = meta.data[0] ? meta.data[0].x : chart.chartArea.width / 2;
+                    var y = meta.data[0] ? meta.data[0].y : chart.chartArea.height / 2;
+                    ctx.save();
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#1a1a2e'; ctx.font = 'bold 24px Jost';
+                    ctx.fillText(Math.round(total) + '%', x, y);
+                    ctx.font = '12px Jost'; ctx.fillStyle = '#999';
+                    ctx.fillText('Complété', x, y + 22);
+                    ctx.restore();
+                }
+            }]
+        });
+    }
+
+    // ══════════════════════════════════════
+    //  Variables Avatar
+    // ══════════════════════════════════════
+    var stream = null;
+    var capturedBlob = null;
+    var faceDetectionInterval = null;
+
+    // ══════════════════════════════════════
+    //  Ouvrir / Fermer Modal
+    // ══════════════════════════════════════
+    function openAvatarModal() {
+        document.getElementById('avatarModal').classList.add('active');
+    }
+
+    function closeAvatarModal() {
+        document.getElementById('avatarModal').classList.remove('active');
+        stopCamera();
+        cancelPreview();
+    }
+
+    // Triggers d'ouverture
+    document.getElementById('avatarWidget').addEventListener('click', openAvatarModal);
+    document.getElementById('cameraBtnTrigger').addEventListener('click', function(e) {
+        e.stopPropagation();
+        openAvatarModal();
+    });
+
+    // Fermer via X
+    document.getElementById('btnCloseModal').addEventListener('click', closeAvatarModal);
+
+    // Fermer en cliquant sur le backdrop
+    document.getElementById('avatarModal').addEventListener('click', function(e) {
+        if (e.target === this) closeAvatarModal();
+    });
+
+    // Fermer avec Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeAvatarModal();
+    });
+
+    // ══════════════════════════════════════
+    //  Tabs
+    // ══════════════════════════════════════
+    document.getElementById('tabBtnCamera').addEventListener('click', function() {
+        document.getElementById('tabBtnCamera').classList.add('active');
+        document.getElementById('tabBtnUpload').classList.remove('active');
+        document.getElementById('tabCamera').style.display = '';
+        document.getElementById('tabUpload').style.display = 'none';
+    });
+
+    document.getElementById('tabBtnUpload').addEventListener('click', function() {
+        document.getElementById('tabBtnUpload').classList.add('active');
+        document.getElementById('tabBtnCamera').classList.remove('active');
+        document.getElementById('tabUpload').style.display = '';
+        document.getElementById('tabCamera').style.display = 'none';
+        stopCamera();
+    });
+
+    // ══════════════════════════════════════
+    //  Caméra
+    // ══════════════════════════════════════
+    document.getElementById('btnStartCam').addEventListener('click', startCamera);
+    document.getElementById('btnCapture').addEventListener('click', capturePhoto);
+
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: 380, height: 280 }
+            });
+            var video = document.getElementById('cameraFeed');
+            video.srcObject = stream;
+            video.style.display = 'block';
+            document.getElementById('cameraPlaceholder').style.display = 'none';
+            document.getElementById('btnCapture').disabled = false;
+            document.getElementById('btnStartCam').disabled = true;
+            startFaceDetection();
+        } catch (err) {
+            alert('Impossible d\'accéder à la caméra : ' + err.message);
+        }
+    }
+
+    function stopCamera() {
+        if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
+        var video = document.getElementById('cameraFeed');
+        if (video) { video.style.display = 'none'; video.srcObject = null; }
+        var ph = document.getElementById('cameraPlaceholder');
+        if (ph) ph.style.display = '';
+        var bc = document.getElementById('btnCapture');
+        if (bc) bc.disabled = true;
+        var bs = document.getElementById('btnStartCam');
+        if (bs) bs.disabled = false;
+        stopFaceDetection();
+    }
+
+    function startFaceDetection() {
+        var video = document.getElementById('cameraFeed');
+        var canvas = document.getElementById('faceCanvas');
+        var badge = document.getElementById('faceBadgeModal');
+
+        video.addEventListener('loadedmetadata', function() {
+            canvas.width  = video.videoWidth  || 380;
+            canvas.height = video.videoHeight || 280;
+            canvas.style.display = 'block';
+        });
+
+        faceDetectionInterval = setInterval(function() {
+            if (!video.videoWidth) return;
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            var cx = canvas.width / 2, cy = canvas.height / 2;
+            var rx = canvas.width * 0.28, ry = canvas.height * 0.40;
+
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#50c878';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.stroke();
+
+            var corners = [
+                [cx - rx, cy - ry + 20, 1, 1],
+                [cx + rx, cy - ry + 20, -1, 1],
+                [cx - rx, cy + ry - 20, 1, -1],
+                [cx + rx, cy + ry - 20, -1, -1],
+            ];
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#d4a574';
+            ctx.lineWidth = 3;
+            corners.forEach(function(c) {
+                ctx.beginPath();
+                ctx.moveTo(c[0], c[1]); ctx.lineTo(c[0] + c[2] * 15, c[1]);
+                ctx.moveTo(c[0], c[1]); ctx.lineTo(c[0], c[1] + c[3] * 15);
+                ctx.stroke();
+            });
+
+            if (badge) {
+                badge.classList.add('detected');
+                var dot = badge.querySelector('span.dot');
+                if (dot) dot.style.background = '#50c878';
+            }
+        }, 800);
+    }
+
+    function stopFaceDetection() {
+        if (faceDetectionInterval) { clearInterval(faceDetectionInterval); faceDetectionInterval = null; }
+        var canvas = document.getElementById('faceCanvas');
+        if (canvas) { canvas.style.display = 'none'; canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); }
+        var badge = document.getElementById('faceBadgeModal');
+        if (badge) badge.classList.remove('detected');
+    }
+
+    function capturePhoto() {
+        var video  = document.getElementById('cameraFeed');
+        var canvas = document.getElementById('cameraCanvas');
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob(function(blob) {
+            capturedBlob = blob;
+            showPreview(URL.createObjectURL(blob));
+        }, 'image/jpeg', 0.92);
+    }
+
+    // ══════════════════════════════════════
+    //  Upload fichier
+    // ══════════════════════════════════════
+    var dropZone = document.getElementById('dropZone');
+    var fileInput = document.getElementById('fileInputModal');
+
+    if (dropZone) {
+        dropZone.addEventListener('click', function() { fileInput.click(); });
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault(); dropZone.classList.remove('dragover');
+            var file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) { capturedBlob = file; showPreview(URL.createObjectURL(file)); }
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files[0]) { capturedBlob = this.files[0]; showPreview(URL.createObjectURL(capturedBlob)); }
+        });
+    }
+
+    // ══════════════════════════════════════
+    //  Preview & Save
+    // ══════════════════════════════════════
+    function showPreview(url) {
+        document.getElementById('previewImg').src = url;
+        document.getElementById('previewSection').style.display = '';
+    }
+
+    function cancelPreview() {
+        capturedBlob = null;
+        var ps = document.getElementById('previewSection');
+        if (ps) ps.style.display = 'none';
+        var pi = document.getElementById('previewImg');
+        if (pi) pi.src = '';
+    }
+
+    document.getElementById('btnCancelPreview').addEventListener('click', cancelPreview);
+
+    document.getElementById('btnSaveAvatar').addEventListener('click', function() {
+        if (!capturedBlob) return;
+
+        var btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Enregistrement...';
+
+        var formData = new FormData();
+        formData.append('profile[nom]',       '{{ user.nom|e("js") }}');
+        formData.append('profile[prenom]',    '{{ user.prenom|e("js") }}');
+        formData.append('profile[email]',     '{{ user.email|e("js") }}');
+        formData.append('profile[telephone]', '{{ user.telephone|default("")|e("js") }}');
+        formData.append('profile[avatarFile]', capturedBlob, 'avatar.jpg');
+        formData.append('profile[_token]',    '{{ csrf_token("profile_edit") }}');
+
+        fetch('{{ path("app_profile_edit") }}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(res) {
+            if (res.ok) {
+                var previewUrl = document.getElementById('previewImg').src;
+                var existingImg = document.getElementById('profileAvatar');
+                var placeholder = document.getElementById('avatarPlaceholder');
+
+                if (existingImg) {
+                    existingImg.src = previewUrl;
+                } else if (placeholder) {
+                    var img = document.createElement('img');
+                    img.src = previewUrl;
+                    img.id  = 'profileAvatar';
+                    img.style.cssText = 'width:140px;height:140px;border-radius:50%;object-fit:cover;border:5px solid #d4a574;box-shadow:0 8px 25px rgba(212,165,116,.3);display:block;';
+                    placeholder.replaceWith(img);
+                }
+
+                var pp = document.getElementById('photoProgress');
+                var ppb = document.getElementById('photoProgressBar');
+                if (pp)  { pp.textContent = '100%'; pp.className = 'text-success'; }
+                if (ppb) { ppb.style.width = '100%'; }
+
+                stopCamera();
+                closeAvatarModal();
+
+                var flash = document.createElement('div');
+                flash.className = 'alert alert-success alert-dismissible fade show mb-4';
+                flash.innerHTML = '<i class="fas fa-check-circle me-2"></i>Photo mise à jour ! <button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                document.querySelector('.container').prepend(flash);
+                setTimeout(function() { flash.remove(); }, 4000);
+            } else {
+                alert('Erreur. La page va se recharger.');
+                window.location.reload();
+            }
+        })
+        .catch(function() { window.location.href = '{{ path("app_profile") }}'; })
+        .finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Enregistrer';
+        });
+    });
+
+}); // fin DOMContentLoaded
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+<div id="galerie-form-frame" class="admin-table-card animate-in">
+    <div class="admin-table-header">
+        <h3 class="admin-table-title">{{ is_edit ? 'Modifier la galerie' : 'Créer une galerie' }}</h3>
+    </div>
+    <div class="p-4">
+        {{ form_start(form, { attr: { novalidate: 'novalidate', 'data-ajax-form': 'galerie' } }) }}
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.categorie) }}</div>
+            <div class="col-md-6">{{ form_row(form.nom) }}</div>
+            <div class="col-md-4">{{ form_row(form.nbOeuvresDispo) }}</div>
+            <div class="col-md-4">{{ form_row(form.nbEmployes) }}</div>
+            <div class="col-md-12">{{ form_row(form.artistes) }}</div>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-admin-primary">
+                <i class="fas fa-check me-1"></i> {{ is_edit ? 'Enregistrer' : 'Créer' }}
+            </button>
+            <a href="{{ path('app_admin_galerie_index') }}" class="btn btn-admin-outline ms-2">Annuler</a>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>

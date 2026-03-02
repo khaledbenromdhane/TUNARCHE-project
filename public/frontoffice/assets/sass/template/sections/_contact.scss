@@ -1,0 +1,258 @@
+/*Contact Area 1 style******************/
+.contact-form-area {
+    padding: 60px;
+    background: rgba(13, 13, 14, 0.62);
+    border: 1px solid #2D2D2D;
+    .from-title {
+        font-size: 22px;
+        font-weight: 600;
+        margin-top: -0.3em;
+    }
+    @include lg {
+        padding: 40px;
+    }
+}
+.contact-form {
+    position: relative;
+    z-index: 1;
+    select, .single-select, .form-control, .form-select, input {
+        height: 60px;
+
+    }
+    .form-group.form-icon-left > i {
+        color: $white-color;
+    }
+}
+/*Countdown style******************/
+.contact-area-1 {
+    .sec-text {
+        max-width: 548px;
+    }
+}
+.countdown-wrap {
+    padding: 80px 50px;
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    &:after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(13, 14, 14, 0.56);
+        z-index: -1;
+    }
+    @include ml {
+        padding: 70px 50px;
+    }
+    @include lg {
+        padding: 50px;
+        display: block;
+    }
+    @include md {
+        display: inline-block;
+    }
+    @include vxs {
+        padding: 25px;
+    }
+}
+.countdown-list {
+    display: inline-flex;
+    padding: 0;
+    margin: 0;
+    gap: 0;
+    border: 1px solid rgba(132, 132, 132, 0.4);
+    li {
+        display: block;
+        text-align: center;
+        padding: 26px 30px;
+        width: 132px;
+        &:after {
+            display: none;
+        }
+        &:not(:last-child) {
+            border-right: 1px solid rgba(132, 132, 132, 0.4);
+        }
+        .count-number {
+            color: $theme-color;
+            font-size: 40px;
+            font-weight: 600;
+            font-family: $title-font;
+            margin-bottom: 20px;
+        }
+        .count-name {
+            color: $white-color;
+            font-family: $title-font;
+            font-weight: 400;
+            font-size: 18px;
+            margin-bottom: -0.3em;
+            display: block;
+        }
+        @include ml {
+            padding: 26px 13px;
+            width: 104px;
+            .count-number {
+                font-size: 32px;
+            }
+        }
+        @include lg {
+            width: 88px;  
+            padding: 20px 13px;  
+            .count-number {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+            .count-name {
+                font-size: 14px;
+            }
+        }
+        @include sm {
+            .count-number {
+                font-size: 24px;
+            }
+            .count-name {
+                font-size: 14px;
+            }
+        }
+        
+    }
+    @include xs {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        li {
+            width: 120px;
+            &:nth-child(1) {
+                border-bottom: 1px solid rgba(132, 132, 132, 0.4);
+            }
+            &:nth-child(2) {
+                border-right: 0;
+                border-bottom: 1px solid rgba(132, 132, 132, 0.4);
+            }
+        }
+    }
+}
+
+/*Location page style******************/
+.location-area {
+    position: relative;
+    .location-page-thumb {
+        position: absolute;
+        right: 0;
+        width: 50%;
+        top: 0;
+        bottom: 0;
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        @include md {
+            position: relative;
+            width: 100%;
+            bottom: auto;
+            margin-bottom: 40px;
+        }
+    }
+}
+.location-map {
+    .map-sec {
+        line-height: 0;
+        filter: grayscale(1);
+        iframe {
+            width: 100%;
+            height: 520px;
+            @include lg {
+                height: 440px;
+            }
+        }
+    }
+}
+/*contact page******************/
+.contact-info {
+    background: $white-color;
+    padding: 60px 30px 50px;
+    text-align: center;
+    min-height: 393px;
+    .contact-icon {
+        background: #FFF7F4;
+        border-radius: 50%;
+        height: 100px;
+        width: 100px;
+        line-height: 100px;
+        text-align: center;
+        position: relative;
+        display: inline-block;
+        margin-bottom: 20px;
+        &:after {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: -10px;
+            height: 100%;
+            width: 100%;
+            border: 1px solid $theme-color;
+            border-radius: 50%;
+            transition: 0.4s;
+        }
+    }
+    .contact-details {
+        .title {
+            font-size: 30px;
+            font-weight: 400;
+            margin-bottom: -2px;
+        }
+        span {
+            font-size: 14px;
+            font-weight: 300;
+            color: $body-color;
+            display: block;
+            margin-bottom: 24px;
+        }
+        p {
+            font-size: 16px;
+            font-weight: 300;
+            margin-bottom: 0;
+            &:last-child {
+                margin-bottom: -0.5em;
+            }
+        }
+    }
+    &:hover {
+        .contact-icon:after {
+            left: 0;
+            top: 0;
+        }
+    }
+}
+.map-sec {
+    line-height: 0;
+    filter: grayscale(1);
+    iframe {
+        width: 100%;
+        height: 610px;
+        @include sm {
+            height: 300px;
+        }
+    }
+}
+/*reservation page******************/
+.contact-page-wrap,
+.reservation-page {
+    background: #F8F7F4;
+}
+.contact-form-wrap,
+.reservation-form-wrap {
+    background: #F8F7F4;
+    padding: 90px;
+}
+@include ml {
+    .contact-form-wrap,
+    .reservation-form-wrap {
+        padding: 50px;
+    }
+}
+@include xs {
+    .contact-form-wrap,
+    .reservation-form-wrap {
+        padding: 50px 30px;
+    }
+}

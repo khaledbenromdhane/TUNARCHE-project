@@ -1,0 +1,132 @@
+{% extends 'back/base_admin.html.twig' %}
+
+{% block page_title %}🤖 Générateur de Questions IA{% endblock %}
+
+{% block body %}
+
+{# FLASH MESSAGES #}
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>{{ message }}</div>
+{% endfor %}
+
+<div class="row">
+    {# LEFT - FORM #}
+    <div class="col-md-4">
+        <div class="card card-outline card-primary shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-robot me-2"></i> Paramètres IA
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ path('app_question_generate_ia') }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Sujet / Thème</label>
+                        <input type="text" name="topic" class="form-control"
+                               placeholder="ex: PHP, Symfony, Management..."
+                               required>
+                        <div class="form-text">Gemini va générer des questions sur ce sujet.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre de questions</label>
+                        <select name="count" class="form-select">
+                            <option value="3">3 questions</option>
+                            <option value="5" selected>5 questions</option>
+                            <option value="10">10 questions</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quiz associé</label>
+                        <select name="quiz_id" class="form-select">
+                            <option value="">-- Aperçu seulement --</option>
+                            {% for quiz in quizzes %}
+                                <option value="{{ quiz.id }}">{{ quiz.title }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Sélectionnez un quiz pour sauvegarder.</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="save" value="0" class="btn btn-primary">
+                            <i class="fas fa-eye me-1"></i> Aperçu seulement
+                        </button>
+                        <button type="submit" name="save" value="1" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i> Générer & Sauvegarder
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# RIGHT - RESULTS #}
+    <div class="col-md-8">
+
+        {% if error %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i> {{ error }}
+            </div>
+        {% endif %}
+
+        {% if generatedQuestions is not empty %}
+            <div class="card card-outline card-success shadow-sm">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-list-ul me-2"></i>
+                        {{ generatedQuestions|length }} Questions générées par IA
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Question</th>
+                                <th>A</th>
+                                <th>B</th>
+                                <th>C</th>
+                                <th>✅ Bonne réponse</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i, q in generatedQuestions %}
+                            <tr>
+                                <td>{{ i + 1 }}</td>
+                                <td><strong>{{ q.question }}</strong></td>
+                                <td>{{ q.choiceA }}</td>
+                                <td>{{ q.choiceB }}</td>
+                                <td>{{ q.choiceC }}</td>
+                                <td>
+                                    <span class="badge bg-success fs-6">{{ q.correctAnswer }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        {% elseif app.request.isMethod('POST') and not error %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Aucune question générée. Vérifiez votre clé API Gemini.
+            </div>
+
+        {% else %}
+            <div class="card card-outline card-secondary shadow-sm h-100">
+                <div class="card-body text-center py-5 text-muted">
+                    <i class="fas fa-robot fa-5x mb-4 text-primary"></i>
+                    <h4>Prêt à générer des questions avec l'IA</h4>
+                    <p>Remplissez le formulaire et cliquez sur <strong>Aperçu</strong> ou <strong>Générer & Sauvegarder</strong>.</p>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

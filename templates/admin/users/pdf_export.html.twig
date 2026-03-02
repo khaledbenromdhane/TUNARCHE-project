@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Utilisateurs – Export PDF</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #fff;
+            color: #333;
+            font-size: 13px;
+        }
+
+        /* ── En-tête ── */
+        .pdf-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%);
+            color: #fff;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pdf-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .pdf-header h1 span { color: #c9a84c; }
+        .pdf-header .meta { text-align: right; font-size: 11px; opacity: 0.8; }
+        .pdf-header .meta strong { color: #c9a84c; font-size: 13px; }
+
+        /* ── Cartes stats ── */
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            padding: 20px 40px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #eee;
+        }
+        .stat-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border-top: 4px solid;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stat-card.primary  { border-color: #c9a84c; }
+        .stat-card.danger   { border-color: #dc3545; }
+        .stat-card.warning  { border-color: #ffc107; }
+        .stat-card.success  { border-color: #198754; }
+        .stat-card h2 { font-size: 28px; font-weight: 800; color: #1a1a2e; }
+        .stat-card p  { font-size: 11px; color: #777; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ── Tableau ── */
+        .table-section { padding: 20px 40px 40px; }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            border-bottom: 2px solid #c9a84c;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead tr {
+            background: #1a1a2e;
+            color: #c9a84c;
+        }
+        thead th {
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tbody tr:nth-child(even) { background: #f8f8f8; }
+        tbody tr:hover { background: #fff8e7; }
+        tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-admin   { background: #dc3545; color: #fff; }
+        .badge-artist  { background: #ffc107; color: #000; }
+        .badge-user    { background: #0d6efd; color: #fff; }
+
+        /* ── Footer ── */
+        .pdf-footer {
+            background: #1a1a2e;
+            color: #aaa;
+            text-align: center;
+            padding: 15px;
+            font-size: 11px;
+            margin-top: auto;
+        }
+        .pdf-footer span { color: #c9a84c; }
+
+        /* ── Bouton impression ── */
+        .print-bar {
+            background: #c9a84c;
+            color: #1a1a2e;
+            text-align: center;
+            padding: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .print-bar button {
+            background: #1a1a2e;
+            color: #c9a84c;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .print-bar button:hover { background: #2d2d4e; }
+
+        @media print {
+            .print-bar { display: none !important; }
+            body { background: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+    {# ── Barre d'impression (ne s'imprime pas) ── #}
+    <div class="print-bar">
+        <span>📄 Export Liste des Utilisateurs – {{ generated|date('d/m/Y à H:i') }}</span>
+        <button onclick="window.print()">🖨️ Imprimer / Enregistrer PDF</button>
+        <button onclick="window.close()">✕ Fermer</button>
+    </div>
+
+    {# ── En-tête ── #}
+    <div class="pdf-header">
+        <div>
+            <h1><span>Artis</span>Event</h1>
+            <div style="margin-top:6px;font-size:13px;opacity:0.8;">Panneau d'Administration</div>
+            <div style="margin-top:4px;font-size:12px;color:#c9a84c;">Liste des Utilisateurs</div>
+        </div>
+        <div class="meta">
+            <strong>{{ stats.total }} utilisateurs</strong><br>
+            Généré le {{ generated|date('d/m/Y') }}<br>
+            à {{ generated|date('H:i') }}<br><br>
+            par {{ app.user.prenom }} {{ app.user.nom }}
+        </div>
+    </div>
+
+    {# ── Statistiques ── #}
+    <div class="stats-row">
+        <div class="stat-card primary">
+            <h2>{{ stats.total }}</h2>
+            <p>Total</p>
+        </div>
+        <div class="stat-card danger">
+            <h2>{{ stats.admins }}</h2>
+            <p>Administrateurs</p>
+        </div>
+        <div class="stat-card warning">
+            <h2>{{ stats.artists }}</h2>
+            <p>Artistes</p>
+        </div>
+        <div class="stat-card success">
+            <h2>{{ stats.users }}</h2>
+            <p>Utilisateurs</p>
+        </div>
+    </div>
+
+    {# ── Tableau ── #}
+    <div class="table-section">
+        <div class="section-title">📋 Liste complète des utilisateurs</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ID</th>
+                    <th>Prénom</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Rôle(s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td style="color:#aaa;">{{ loop.index }}</td>
+                        <td><strong>#{{ user.id }}</strong></td>
+                        <td>{{ user.prenom }}</td>
+                        <td>{{ user.nom }}</td>
+                        <td style="color:#555;">{{ user.email }}</td>
+                        <td>{{ user.telephone ?: '—' }}</td>
+                        <td>
+                            {% for role in user.role %}
+                                {% if role == 'ROLE_ADMIN' %}
+                                    <span class="badge badge-admin">Admin</span>
+                                {% elseif role == 'ROLE_ARTIST' %}
+                                    <span class="badge badge-artist">Artiste</span>
+                                {% elseif role == 'ROLE_USER' %}
+                                    <span class="badge badge-user">User</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:30px;color:#aaa;">Aucun utilisateur</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ── Footer ── #}
+    <div class="pdf-footer">
+        © {{ "now"|date("Y") }} <span>Tun'Arche / ArtisEvent</span> — Document généré automatiquement
+    </div>
+
+</body>
+</html>
