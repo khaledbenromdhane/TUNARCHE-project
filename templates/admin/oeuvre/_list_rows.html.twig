@@ -1,0 +1,31 @@
+{% for oeuvre in oeuvres %}
+<tr>
+    <td>{{ oeuvre.id }}</td>
+    <td><strong>{{ oeuvre.titre }}</strong></td>
+    <td>{{ oeuvre.galerie ? oeuvre.galerie.nom : '-' }}</td>
+    <td>{{ oeuvre.artiste ? oeuvre.artiste.nomComplet : '-' }}</td>
+    <td>{{ oeuvre.prix|number_format(2, ',', ' ') }} DT</td>
+    <td>
+        <span class="status-badge {{ oeuvre.etat == 'neuve' ? 'active' : 'pending' }}">
+            {{ oeuvre.etat == 'neuve' ? 'Neuve' : 'Défectueuse' }}
+        </span>
+    </td>
+    <td>
+        <span class="status-badge {{ oeuvre.statut == 'vendue' ? 'pending' : 'active' }}">
+            {{ oeuvre.statut == 'vendue' ? 'Vendue' : 'Disponible' }}
+        </span>
+    </td>
+    <td>{{ oeuvre.anneeRealisation }}</td>
+    <td>
+        <div class="table-actions">
+            <a href="{{ path('app_admin_oeuvre_edit', {id: oeuvre.id}) }}" class="table-action-btn" title="Modifier"><i class="fas fa-pen"></i></a>
+            <form method="post" action="{{ path('app_admin_oeuvre_delete', {id: oeuvre.id}) }}" class="d-inline" onsubmit="return confirm('Supprimer cette œuvre ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ oeuvre.id) }}">
+                <button type="submit" class="table-action-btn delete" title="Supprimer"><i class="fas fa-trash-alt"></i></button>
+            </form>
+        </div>
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="9" class="text-center text-muted py-4">Aucune œuvre trouvée</td></tr>
+{% endfor %}

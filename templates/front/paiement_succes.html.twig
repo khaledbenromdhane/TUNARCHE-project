@@ -1,0 +1,39 @@
+{% set fa = asset('frontoffice/assets') %}
+{% extends 'front/oeuvre.html.twig' %}
+
+{% block page_title %}Paiement réussi - Tun'Arche{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcumb-wrapper text-center" data-bg-src="{{ fa }}/img/bg/breadcrumb-bg.png">
+    <div class="container">
+        <div class="breadcumb-content">
+            <h1 class="breadcumb-title">Paiement réussi</h1>
+        </div>
+        <ul class="breadcumb-menu">
+            <li><a href="{{ path('app_front_index') }}">ACCUEIL</a></li>
+            <li class="active">PAIEMENT</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="product-details space">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h2 class="sec-title mb-3">Merci pour votre achat</h2>
+                <p class="mb-4">Votre paiement a bien été enregistré.</p>
+                {% if oeuvre %}
+                    <p class="mb-2"><strong>Œuvre :</strong> {{ oeuvre.titre }}</p>
+                    <p class="text-muted mb-4">{{ oeuvre.prix|number_format(2, ',', ' ') }} DT</p>
+                {% endif %}
+                <a href="{{ path('app_front_oeuvre') }}" class="btn"><i class="fas fa-th-large me-2"></i>Retour au catalogue</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

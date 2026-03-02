@@ -18,9 +18,9 @@
         <button class="btn btn-admin-outline">
             <i class="fas fa-download me-1"></i> Export
         </button>
-        <button class="btn btn-admin-primary">
-            <i class="fas fa-plus me-1"></i> Create Event
-        </button>
+        <a href="{{ path('app_admin_evenements') }}" class="btn btn-admin-primary">
+            <i class="fas fa-plus me-1"></i> Créer un événement
+        </a>
     </div>
 {% endblock %}
 
@@ -425,8 +425,8 @@
     </div>
 
     {# ── Floating Action Button ── #}
-    <button class="fab-button" title="Quick Action" data-bs-toggle="tooltip" data-bs-placement="left">
+    <a href="{{ path('app_admin_evenements') }}" class="fab-button" title="Créer un événement" data-bs-toggle="tooltip" data-bs-placement="left">
         <i class="fas fa-plus"></i>
-    </button>
+    </a>
 
 {% endblock %}

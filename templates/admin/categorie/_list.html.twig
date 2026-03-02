@@ -1,0 +1,35 @@
+<tbody id="galerie-list-body">
+    {% for galerie in galeries %}
+        <tr>
+            <td>{{ galerie.idGalerie }}</td>
+            <td>{{ galerie.categorie }}</td>
+            <td><strong>{{ galerie.nom }}</strong></td>
+            <td>{{ galerie.nbOeuvresDispo }}</td>
+            <td>
+                {% for artiste in galerie.artistes %}
+                    <span class="status-badge active me-1">{{ artiste.nomComplet }}</span>
+                {% else %}
+                    -
+                {% endfor %}
+            </td>
+            <td>{{ galerie.nbEmployes }}</td>
+            <td>
+                <div class="table-actions">
+                    <a href="{{ path('app_admin_galerie_edit', {idGalerie: galerie.idGalerie}) }}" class="table-action-btn" title="Modifier">
+                        <i class="fas fa-pen"></i>
+                    </a>
+                    <form method="post" action="{{ path('app_admin_galerie_delete', {idGalerie: galerie.idGalerie}) }}" class="d-inline" onsubmit="return confirm('Supprimer cette galerie ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ galerie.idGalerie) }}">
+                        <button type="submit" class="table-action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="7" class="text-center text-muted py-4">Aucune galerie trouvée</td>
+        </tr>
+    {% endfor %}
+</tbody>

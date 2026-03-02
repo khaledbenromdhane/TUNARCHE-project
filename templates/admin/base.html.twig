@@ -18,6 +18,16 @@
     <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
 
     {% block stylesheets %}{% endblock %}
+
+    {# Messages d'erreur des formulaires toujours en rouge (priorité max) #}
+    <style>
+        .form-errors-list,
+        .form-errors-list li,
+        .invalid-feedback,
+        .alert-danger {
+            color: #ef4444 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -246,7 +256,7 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="sidebar-item {% if 'galerie' in app.request.get('_route')|default('') %}active{% endif %}">
+                    <li class="sidebar-item {% if 'galerie' in app.request.get('_route')|default('') or 'oeuvre' in app.request.get('_route')|default('') or 'stats_ventes' in app.request.get('_route')|default('') %}active{% endif %}">
                         <a href="#" class="sidebar-link sidebar-dropdown-toggle" data-dropdown="galerie-submenu">
                             <i class="fas fa-images"></i>
                             <span class="sidebar-text">Galerie</span>
@@ -254,15 +264,21 @@
                         </a>
                         <ul class="sidebar-submenu" id="galerie-submenu">
                             <li class="sidebar-submenu-item">
-                                <a href="{{ path('app_admin_galeries') }}" class="sidebar-submenu-link">
+                                <a href="{{ path('app_admin_galerie_index') }}" class="sidebar-submenu-link">
                                     <i class="fas fa-images"></i>
                                     <span>Galerie</span>
                                 </a>
                             </li>
                             <li class="sidebar-submenu-item">
-                                <a href="{{ path('app_admin_oeuvres') }}" class="sidebar-submenu-link">
+                                <a href="{{ path('app_admin_oeuvre_index') }}" class="sidebar-submenu-link">
                                     <i class="fas fa-palette"></i>
                                     <span>Œuvre</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-submenu-item">
+                                <a href="{{ path('app_admin_stats_ventes') }}" class="sidebar-submenu-link">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Statistiques ventes</span>
                                 </a>
                             </li>
                         </ul>
@@ -292,6 +308,17 @@
             </div>
 
             {# ── Secondary Navigation ── #}
+            <div class="sidebar-section">
+                <span class="sidebar-section-title">Navigation</span>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-item">
+                        <a href="{{ path('app_front_index') }}" class="sidebar-link" target="_blank">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span class="sidebar-text">Voir le site (Frontoffice)</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <div class="sidebar-section">
                 <span class="sidebar-section-title">Settings</span>
                 <ul class="sidebar-nav">

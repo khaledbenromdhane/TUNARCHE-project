@@ -49,21 +49,12 @@ class AdminController extends AbstractController
     }
 
     /**
-     * Galeries – Full gallery management page (list, add, edit, delete).
+     * Œuvres – Alias vers CRUD œuvres
      */
-    #[Route('/galerie', name: 'galeries')]
-    public function galeries(): Response
-    {
-        return $this->render('admin/galeries.html.twig');
-    }
-
-    /**
-     * Œuvres – Full artwork management page (list, add, edit, delete).
-     */
-    #[Route('/oeuvre', name: 'oeuvres')]
+    #[Route('/oeuvres', name: 'oeuvres')]
     public function oeuvres(): Response
     {
-        return $this->render('admin/oeuvres.html.twig');
+        return $this->redirectToRoute('app_admin_oeuvre_index');
     }
 
     /**

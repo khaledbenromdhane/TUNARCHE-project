@@ -1,0 +1,76 @@
+{% set fa = asset('frontoffice/assets') %}
+{% set imgOeuvre = oeuvre.image ? asset('uploads/oeuvres/' ~ oeuvre.image) : (fa ~ '/img/product/1-1.png') %}
+{% extends 'front/oeuvre.html.twig' %}
+
+{% block page_title %}{{ oeuvre.titre }} - Tun'Arche{% endblock %}
+
+{% block breadcrumb %}
+        <div class="breadcumb-wrapper text-center" data-bg-src="{{ fa }}/img/bg/breadcrumb-bg.png">
+            <div class="container">
+                <div class="breadcumb-content">
+                    <h1 class="breadcumb-title">{{ oeuvre.titre }}</h1>
+                </div>
+                <ul class="breadcumb-menu">
+                    <li><a href="{{ path('app_front_index') }}">ACCUEIL</a></li>
+                    <li><a href="{{ path('app_front_oeuvre') }}">ŒUVRES</a></li>
+                    <li class="active">{{ oeuvre.titre|slice(0, 30) }}{% if oeuvre.titre|length > 30 %}...{% endif %}</li>
+                </ul>
+            </div>
+        </div>
+{% endblock %}
+
+{% block content %}
+        <section class="product-details space">
+            <div class="container">
+                {% for message in app.flashes('error') %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                    </div>
+                {% endfor %}
+                <div class="row">
+                    <div class="col-lg-5">
+                        <div class="product-thumb">
+                            <div class="img"><img src="{{ imgOeuvre }}" alt="{{ oeuvre.titre }}"></div>
+                        </div>
+                    </div>
+                    <div class="col-xl-6 col-lg-7 align-self-center">
+                        <div class="product-about">
+                            <span class="tag d-inline-block mb-2">{{ oeuvre.etat == 'neuve' ? 'Neuve' : 'Défectueuse' }}</span>
+                            <p class="price">{{ oeuvre.prix|number_format(2, ',', ' ') }} DT</p>
+                            <h2 class="product-title">{{ oeuvre.titre }}</h2>
+                            <div class="product-rating mb-3">
+                                {% if oeuvre.galerie %}
+                                <p class="mb-1"><i class="fas fa-images me-2 text-theme"></i><strong>Galerie :</strong> {{ oeuvre.galerie.nom }}</p>
+                                {% endif %}
+                                <p class="mb-1"><i class="far fa-user me-2 text-theme"></i><strong>Artiste :</strong> {{ oeuvre.artiste ? oeuvre.artiste.nomComplet : '-' }}</p>
+                                <p class="mb-1"><i class="far fa-calendar me-2 text-theme"></i><strong>Année :</strong> {{ oeuvre.anneeRealisation }}</p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ path('app_front_oeuvre') }}" class="btn"><i class="fas fa-arrow-left me-2"></i>Retour aux œuvres</a>
+                                {% if oeuvre.statut == 'vendue' %}
+                                    <span class="btn btn-secondary disabled"><i class="fas fa-check me-2"></i>Vendue</span>
+                                {% elseif oeuvre.statut == 'disponible' %}
+                                    <a href="{{ path('app_stripe_acheter', { id: oeuvre.id }) }}" class="btn btn-theme"><i class="fas fa-shopping-cart me-2"></i>Acheter</a>
+                                {% else %}
+                                    <span class="btn btn-secondary disabled"><i class="fas fa-ban me-2"></i>Non disponible</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if oeuvre.description %}
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <div class="product-tab-area">
+                            <h4 class="mb-3"><i class="fas fa-align-left me-2 text-theme"></i>Description</h4>
+                            <div class="product-description">
+                                {{ oeuvre.description|raw|nl2br }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+{% endblock %}
